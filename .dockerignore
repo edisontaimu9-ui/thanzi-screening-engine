@@ -1,0 +1,14 @@
+.git
+.github
+.gitignore
+.pytest_cache
+__pycache__
+*.pyc
+.venv
+.env
+data
+docs
+tests
+scripts
+*.md
+!models/MODEL_CARD.md

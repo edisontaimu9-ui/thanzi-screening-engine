@@ -2,6 +2,6 @@
 
 Explanations describe. They never change a classification, tier, referral, warning or flag (D9).
 """
-from .compose import Explanation, explain, explain_parts
+from .compose import Explanation, explain, explain_parts, explain_rules_only
 
-__all__ = ["Explanation", "explain", "explain_parts"]
+__all__ = ["Explanation", "explain", "explain_parts", "explain_rules_only"]

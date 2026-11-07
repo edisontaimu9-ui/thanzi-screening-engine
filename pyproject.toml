@@ -4,13 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "thanzi-screen"
-version = "0.5.0"
+version = "0.6.0"
 description = "Independent under-five malnutrition screening engine for Thanzi AI (Malawi)"
 requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest", "openpyxl"]
+dev = ["pytest", "openpyxl", "httpx~=0.28.1"]
+# HTTP edge only (Phase 6). The engine itself stays standard library.
+api = ["fastapi~=0.162.2", "pydantic~=2.14.3", "uvicorn~=0.54.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

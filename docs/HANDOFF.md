@@ -30,7 +30,7 @@ Reply in English, terse. For each update: build on the existing repo, zip only c
 - Phase 3 (data engineering): COMPLETE, closed by Edison 2026-11-07. 229 tests passing. See docs/modules/data.md, decision-log D35-D44. Pending inputs: R8 (WHO MUAC tables), R9 (Malawi prevalence), district list check (D43).
 - Phase 4 (advisory flags): COMPLETE, closed by Edison 2026-11-07. See docs/modules/ml.md, models/MODEL_CARD.md, decision-log D45-D57.
 - Phase 5 (explainability): COMPLETE, closed by Edison 2026-11-07. 273 tests passing. See docs/modules/explain.md, decision-log D58-D73. Wording review pending (I18).
-- Phase 6 (FastAPI packaging): SPEC APPROVED 2026-11-07 (docs/specs/phase-6-spec.md, decision-log D74-D85) with three conditions: no HIV information in worker responses (D82), access restricted to Hope's gateway (D83), full API tests in CI (D84). NOT implemented. Wait for Edison's go. Worker-facing API uses the Explanation worker summary, never raw referral_text (D71). Phase 6 closes only when CI is green on main.
+- Phase 6 (FastAPI packaging): IMPLEMENTED 2026-11-07 on Edison's "go" (spec docs/specs/phase-6-spec.md, decision-log D74-D91). 373 tests passing in the build environment (Python 3.12). NOT CLOSED: the first CI run is I22 (Docker job and Python 3.11 not run by the assistant). Closes only when CI is green on main. I20 decided (D86): no programme and no HIV information in any worker response; real values in the audit view only. Open: I21 (Hope: network isolation), I22 (CI), I23 (Maria: neutral MAM wording), I24 (Hope: who holds the audit key), I25 (D82-D84 confirmation). See docs/modules/api.md.
 - Run tests: `pip install pytest && python -m pytest -q` from the repo root.
 
 ## Open issues

@@ -74,6 +74,14 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D83. Gateway restriction: `THANZI_GATEWAY_KEY` required (no start without it unless `THANZI_DEV_MODE=1`); header `X-Gateway-Key` on every route except a minimal `/health`; audit view needs a second key (`THANZI_AUDIT_KEY`), off if unset; docs and OpenAPI routes off outside dev mode; no CORS. Network isolation, TLS and rate limits are Hope's and are not enforced by code.
 - D84. CI: GitHub Actions on push and pull request to `main`, Python 3.11 and 3.12, full test suite with `THANZI_REQUIRE_API_TESTS=1` (API tests cannot skip), OpenAPI drift check, Docker build and smoke job. Phase 6 does not close until CI is green on `main`.
 
+## Phase 6 implementation decisions (Edison "go" 2026-11-07)
+- D86. I20 decided by Edison: no programme in the worker view, neutral referral wording, real programme in the restricted audit view only. Applied to every MAM child (not just the HIV rule), because neutral wording on only the OTP case would itself reveal it. Worker view for MAM: `programme` is null, rule codes `MAM.HIV_OTP` and `MAM.SFP` both show as `MAM.REFER`, summary line 2 is the neutral action (`api/wording.py`), and every MAM response carries the same neutral warning, so its presence says nothing. Amends D75, D76 and D82 (which named `MAM.OTP_ELIGIBLE`). The worker response is identical for `hiv_positive` true, false and null (tested over about 1,700 records).
+- D87. `oedema` is required: the engine has no "not assessed" for it, so a default of "none" would be a normal value filled in. Omitted `appetite` means `not_done`. Omitted or null danger signs, complications and the boolean findings mean not assessed (D25). `[]` means assessed, none present.
+- D88. Keys must be at least 16 characters and the audit key must differ from the gateway key; otherwise the service does not start. Audit view without a valid audit key, or with audit off, returns the same generic 403.
+- D89. `Explanation.flag_trace` may be None (rules-only explanation in degraded mode); `explain_rules_only` added. No existing function changed. Degraded `model_version` is `none`.
+- D90. The gateway key is checked in middleware before routing and body validation, so unauthenticated callers cannot probe routes or validation. Only `/health` is open. Request bodies over 16 KB (declared length) are refused with 413 after authentication.
+- D91. Runtime dependencies are pinned with compatible-release ranges in the `api` extra (`fastapi~=0.162.2`, `pydantic~=2.14.3`, `uvicorn~=0.54.0`; dev `httpx~=0.28.1`) so the committed OpenAPI file stays reproducible in CI. Engine dependencies stay empty.
+
 ## Approved (Phase 5 spec answers, Edison 2026-11-07)
 - D58. Scope: one `Explanation` covers the rules classification, the ML recording-error flag and the rules review flag.
 - D59. Method: exact linear contributions for the logistic model and the tree path. No SHAP or LIME.
@@ -141,6 +149,10 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - I17. (closed) Decided by D71: the Phase 6 worker view never uses raw `referral_text`.
 - I18. Phase 5 wording (`explain/messages.py`) needs review by Maria Talimire or another qualified clinician, and health-worker testing (D72). Pending.
 - I19. Chichewa translation of the message catalogue pending; owner per D34.
-- I20. A MAM child sent to OTP (not SFP) is only possible under the HIV rule, so the programme itself lets a knowledgeable reader infer HIV status. Kept because the worker needs the action. Edison to accept or decide otherwise.
+- I20. (closed) Decided by Edison 2026-11-07: no programme in the worker view, neutral wording, details in the audit view. Implemented as D86. Residual: a worker who is told the real programme by a clinician can still infer it; that is outside the API.
 - I21. Network isolation of the API (private network, no public port, only Hope's gateway) is deployment work for Hope. Needs her confirmation before any deployment.
-- I22. First CI run unverified until Edison pushes. GitHub Actions pinned to major versions, not commit SHAs.
+- I22. First CI run unverified until Edison pushes. GitHub Actions pinned to major versions, not commit SHAs. Phase 6 closes only when CI is green on `main`; the Docker job and Python 3.11 were not run in the build environment (no Docker, Python 3.12 only).
+- I23. The neutral MAM wording (`api/wording.py`) is a draft. Maria Talimire or another clinician must confirm a worker can act on it, and workers must be able to learn the programme through the clinic's own process (D72).
+- I24. The audit view carries HIV information and the real programme. Who may hold the audit key, and how access is logged, is Hope's decision (D83).
+- I25. D82-D84 interpretations were not explicitly confirmed by Edison in the go message. Treated as accepted unless he says otherwise.
+- I26. Not load tested. Not tested on UniPod servers. `starlette.testclient` prints a deprecation notice about `httpx`; harmless today, revisit when the pinned versions move.

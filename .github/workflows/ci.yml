@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    env:
+      # API tests must run in CI. If FastAPI is missing they fail instead of skipping (D84).
+      THANZI_REQUIRE_API_TESTS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e ".[dev,api]"
+      - name: Tests (Phases 1-6)
+        run: python -m pytest -q
+      - name: OpenAPI contract is up to date
+        run: python scripts/export_openapi.py --check
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t thanzi-screen:ci .
+      - name: Start with test keys
+        run: |
+          docker run -d --name thanzi \
+            -e THANZI_GATEWAY_KEY=ci-gateway-key-0123456789 \
+            -e THANZI_AUDIT_KEY=ci-audit-key-0123456789ab \
+            -p 127.0.0.1:8080:8080 thanzi-screen:ci
+      - name: Health check
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/health; then echo; exit 0; fi
+            sleep 1
+          done
+          docker logs thanzi
+          exit 1
+      - name: One screening request
+        run: |
+          curl -fsS -X POST http://127.0.0.1:8080/v1/screen \
+            -H 'X-Gateway-Key: ci-gateway-key-0123456789' \
+            -H 'Content-Type: application/json' \
+            -d '{"sex":"male","age_days":500,"weight_kg":9.5,"length_height_cm":75.0,"measure_position":"length","oedema":"none","muac_cm":14.0,"appetite":"passed","danger_signs":[],"complications":[],"clinically_well_and_alert":true}' \
+            | tee response.json
+          grep -q '"classification"' response.json
+      - name: No gateway key is refused
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8080/v1/screen -H 'Content-Type: application/json' -d '{}')" = "401"
+      - name: Runs as a non-root user
+        run: test "$(docker exec thanzi id -u)" != "0"
+      - name: Refuses to start without a gateway key
+        run: |
+          if docker run --rm thanzi-screen:ci; then echo "started without a key"; exit 1; fi
+      - name: Container logs
+        if: always()
+        run: docker logs thanzi

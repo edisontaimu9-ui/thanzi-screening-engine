@@ -1,6 +1,6 @@
 # Phase 6 specification: FastAPI packaging
 
-Status: Q1-Q8 approved by Edison 2026-11-07 (D74-D81) with three conditions: HIV privacy in worker responses (Q3), access restricted to Hope's gateway (Q5), full API tests in CI (Q8). Interpretations of the conditions: D82-D84. **Specification only. No implementation until Edison says go.**
+Status: IMPLEMENTED 2026-11-07, CI result pending (I22). See "Amendments at implementation" at the end. Q1-Q8 approved by Edison 2026-11-07 (D74-D81) with three conditions: HIV privacy in worker responses (Q3), access restricted to Hope's gateway (Q5), full API tests in CI (Q8). Interpretations of the conditions: D82-D84. **Specification only. No implementation until Edison says go.**
 
 ## Objective
 Package the engine (Phases 1-5) as a small, stateless HTTP service that Hope's app and gateway can call, with a published contract, Docker-ready for UniPod servers. No change to any existing interface.
@@ -122,3 +122,9 @@ Phase 6 does not close until CI is green on `main` (you report the result).
 
 ## Exit criteria
 Tests pass, OpenAPI file and `docs/modules/api.md` written, decision log and register updated, limits stated plainly (including what was not tested), open issues listed. Then WAIT before Phase 7.
+
+## Amendments at implementation (2026-11-07)
+- **I20 decided by Edison (D86).** The worker view names no programme for any MAM child. `programme` is null; `MAM.HIV_OTP` and `MAM.SFP` both display as `MAM.REFER` (replacing the `MAM.OTP_ELIGIBLE` alias in D82); summary line 2 is a neutral referral line; every MAM response carries the same neutral warning. The audit view keeps the real programme, rule codes, warnings and `referral_text`.
+- **Tests** therefore assert that the whole worker response is identical for `hiv_positive` true, false and null, and that the fail-closed scan never fires in normal operation.
+- **Added** (D87-D91): `oedema` required; keys at least 16 characters and distinct; authentication in middleware before routing; 16 KB body cap; pinned dependency ranges.
+- **Not verified here:** the Docker image build and the CI workflow itself (no Docker and no GitHub Actions in the build environment), Python 3.11.

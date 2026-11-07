@@ -6,7 +6,7 @@ from dataclasses import asdict, dataclass
 
 from ..ml.features import features_from_inputs, vector
 from ..ml.flags import MlFlags, Models, flag_record
-from ..rules import ClinicalInputs
+from ..rules import ClinicalInputs, review
 from ..rules.rules_v2016 import PLACEHOLDER
 from . import messages as M
 from .ml_explain import FlagTrace, build_flag_trace
@@ -21,11 +21,16 @@ IGNORED_IN_WHY = ("DATA.IMPLAUSIBLE_IGNORED", "LOW.NONE")
 class Explanation:
     summary: tuple[str, ...]                 # worker view, at most 3 lines
     classification_trace: ClassificationTrace
-    flag_trace: FlagTrace
+    flag_trace: FlagTrace | None             # None only for explain_rules_only (models unavailable)
     review_trace: ReviewTrace
     limits: tuple[str, ...]
     rule_set_version: str
     model_version: str
+
+    @property
+    def worker_summary(self) -> tuple[str, ...]:
+        """Read-only alias of `summary` used by the Phase 6 API (D77). Nothing is renamed."""
+        return self.summary
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -99,3 +104,34 @@ def explain(sex: str, age_days: int, weight_kg: float, length_height_cm: float, 
     features, anthro, result = features_from_inputs(sex, age_days, weight_kg, length_height_cm, measure_position, clinical)
     flags = flag_record(sex, age_days, weight_kg, length_height_cm, measure_position, clinical, models)
     return explain_parts(anthro, result, clinical, flags, features, models)
+
+
+def _line_review(review_result) -> str | None:
+    """Review line without ML flags. Same wording as the review part of `_line_flags`."""
+    if not review_result.needed:
+        return None
+    extra = len(review_result.messages) - 1
+    more = f" (+{extra} more reason{'s' if extra > 1 else ''})" if extra else ""
+    return f"Review: {review_result.messages[0]}{more}"
+
+
+ML_UNAVAILABLE_LIMIT = "ML flags are unavailable in this response. The rules result and the review check are unaffected."
+
+
+def explain_rules_only(sex: str, age_days: int, weight_kg: float, length_height_cm: float, measure_position: str,
+                       clinical: ClinicalInputs) -> Explanation:
+    """Explain the rules result when the ML models are unavailable (Phase 6 degraded mode, D79).
+
+    Same classification, action and review lines as `explain`; there is no recording-error flag, so
+    `flag_trace` is None. Raises InputError on invalid input.
+    """
+    _, anthro, result = features_from_inputs(sex, age_days, weight_kg, length_height_cm, measure_position, clinical)
+    rev = review(anthro, result, clinical.muac_cm, clinical.oedema.value != "none")
+    trace = build_trace(anthro, clinical, result)
+    rtrace = build_review_trace(anthro, result, clinical, rev)
+    lines = [_line_classification(result, trace, context(anthro, clinical)), _line_action(result)]
+    review_line = _line_review(rev)
+    if review_line:
+        lines.append(review_line)
+    return Explanation(tuple(lines[:MAX_SUMMARY_LINES]), trace, None, rtrace, M.LIMITS + (ML_UNAVAILABLE_LIMIT,),
+                       result.rule_set_version, "none")
