@@ -24,7 +24,7 @@ Record source, version, date, licence and intended use for each in the register.
 4. `docs/modules/data.md` and a data card.
 
 ## Generation design
-1. Sample sex and age (days) from a configurable age distribution (default uniform 0-1856 days, ASSUMPTION).
+1. Sample sex, a coarse `district` (coded value from a config list of Malawi districts, D33; no facility, community or coordinates) and age (days) from a configurable age distribution (default uniform 0-1856 days, ASSUMPTION).
 2. Sample target z-scores: LHFA z, then WFLH z with a configurable correlation. Defaults N(mean, sd) with prevalence-driven shift, parameters from R9 once supplied.
 3. Invert the WHO LMS tables (Phase 1 `lms`/`tables`) to get length/height and weight, then round to realistic precision (length 0.1 cm, weight 0.01 kg).
 4. MUAC from R8 via a configurable correlation with WFLH z (ASSUMPTION), rounded to 0.1 cm, only for 6-59 months (D2).
@@ -37,6 +37,7 @@ Age heaping, MUAC digit preference, transposition and unit errors (injected, wit
 
 ## Validation and safety
 - Reject any dataset where `is_synthetic` is not true. A real-data loader is out of scope until ethics and data-sharing approval exists.
+- District only for geography. Small-cell suppression is the dashboard owner's concern.
 - No identifiers: child IDs are random surrogate keys; no names, dates of birth or locations. Age stored in days only.
 - Same seed and config produce a byte-identical file and the same SHA-256 (as D15).
 - Splits by child ID, fixed seed, stratified by Phase 2 class; no ID in two splits.

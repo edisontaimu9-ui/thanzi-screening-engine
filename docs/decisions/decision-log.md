@@ -37,6 +37,9 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 ## Scope (Edison 2026-11-07)
 - D31. Reuse of the Chakudya Nutrition Registry, its MCP server and Thanzi Coach, proposed in the team work plan (R11), was dropped because of added complexity. This repository stays independent. Team roles: Edison (engine, AI design), Hope Kalitera (architecture, backend and frontend, deployment, security), Maria Talimire (clinical validation). See `docs/challenge-alignment.md`.
 
+- D32. WhatsApp channel dropped from the prototype because of the privacy policy (Edison 2026-11-07).
+- D33. Synthetic data (Phase 3) carries a coarse district field, needed for the team's hotspot dashboard. Edison is not responsible for the dashboard.
+
 ## Implementation interpretations in Phase 2 (D23-D28 and A1, A2 confirmed by Edison 2026-11-07)
 - D23. Stricter reading of D16: if WFL/H is flagged implausible and MUAC is normal, return UNABLE_TO_CLASSIFY rather than low risk (a suspect weight or height could hide wasting). A valid abnormal MUAC or oedema still classifies.
 - D24. Added input `clinically_well_and_alert` (R3 OTP criterion). Lethargy or unconsciousness as danger signs force "not well and alert".

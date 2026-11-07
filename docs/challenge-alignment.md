@@ -26,18 +26,21 @@ The work plan proposed extending the Chakudya Nutrition Registry (API and MCP se
 | Screening engine v0.1 (Wk 3) | Edison | Phases 1-2 built; Phases 3-5 add synthetic data, AI flags, explanations |
 | System design, architecture, deployment, security | Hope | `ClassificationResult` and `ClinicalInputs` as the interface; standard-library Python engine, Docker-ready |
 | End-to-end screening, offline mobile web app | Hope (Edison responsible for engine side) | Engine package or Phase 6 API |
-| WhatsApp channel | Not settled after D31 | Open question Q-A below |
-| Analytics dashboard, de-identification, aggregation by district, facility, community | Hope | Result records. Phase 3 synthetic data may carry coarse geography (open) |
-| Validation and testing report (Wk 6) | Maria | Test suites, rule traceability; agreement with clinical classification needs Ministry data |
+| WhatsApp channel | Dropped (D32, privacy policy) | None |
+| Analytics dashboard, de-identification, aggregation by district, facility, community | Hope | Result records. Phase 3 synthetic data carries a coarse district field (D33) |
+| Validation and testing report (Wk 6) | Maria | She tests the prototype (Edison, 2026-11-07). Test suites and rule traceability support this; agreement with clinical classification needs Ministry data |
 | Plain-language explanations of contributing factors | Edison | Phase 5 |
 | Data-sharing arrangement (Wk 1) | Edison (A, R) | Until agreed, synthetic data only |
-| Local languages, nutrition guidance at point of care | Not assigned in the work plan | Open question Q-B below |
+| Local languages, nutrition guidance at point of care | Team members, owner not named. Not Edison's | Stable reason and warning codes to translate. Guidance needs approved Malawi sources |
 
 ## Interface contract
 `ClassificationResult` and its reason, warning and rule codes are the interface for Hope and Maria. Changes are logged in the decision log.
 
-## Open questions
-- Q-A. With Chakudya and Thanzi Coach reuse dropped, is a WhatsApp channel still in scope (new build by Hope) or removed from the prototype?
-- Q-B. Who owns local-language support and point-of-care nutrition guidance, given the brief asks for them and the work plan does not assign them? Guidance content needs approved Malawi sources.
-- Q-C. Should Phase 3 synthetic data carry a coarse district field for dashboard testing?
-- Q-D. Maria's clinical review of the Phase 2 rules: when, and in what form? Open items for her: decision log D23-D28, A1, A2, I10, and the CMAM criteria themselves.
+## Resolved (Edison 2026-11-07)
+- WhatsApp channel dropped because of the privacy policy (D32).
+- Synthetic data carries a coarse district field (D33).
+- Maria Talimire tests the prototype.
+- Edison is not responsible for the dashboard or the other team-owned items.
+
+## Open
+- Owner of local-language support and point-of-care nutrition guidance is not named. Not Edison's; no action in this repo.
