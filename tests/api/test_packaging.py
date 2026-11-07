@@ -74,3 +74,16 @@ def test_api_tests_cannot_be_skipped_when_required(monkeypatch):
             need_api()
     else:
         need_api()                                                  # present: returns quietly
+
+
+def test_ci_file_is_valid_yaml_with_the_expected_jobs():
+    """The text checks above cannot see a YAML syntax error, which GitHub reports as an invalid workflow."""
+    import pytest
+    yaml = pytest.importorskip("yaml")
+    doc = yaml.safe_load(CI)
+    assert set(doc["jobs"]) == {"test", "docker"}
+    assert doc["jobs"]["test"]["strategy"]["matrix"]["python-version"] == ["3.11", "3.12"]
+    assert doc["jobs"]["test"]["env"]["THANZI_REQUIRE_API_TESTS"] == "1"
+    steps = doc["jobs"]["docker"]["steps"]
+    assert all("uses" in s or "run" in s for s in steps)
+    assert doc["jobs"]["docker"]["needs"] == "test"

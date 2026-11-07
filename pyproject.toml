@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest", "openpyxl", "httpx~=0.28.1"]
+dev = ["pytest", "openpyxl", "httpx~=0.28.1", "pyyaml"]
 # HTTP edge only (Phase 6). The engine itself stays standard library.
 api = ["fastapi~=0.162.2", "pydantic~=2.14.3", "uvicorn~=0.54.0"]
 

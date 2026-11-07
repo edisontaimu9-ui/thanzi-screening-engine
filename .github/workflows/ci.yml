@@ -61,9 +61,15 @@ jobs:
             | tee response.json
           grep -q '"classification"' response.json
       - name: No gateway key is refused
-        run: test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8080/v1/screen -H 'Content-Type: application/json' -d '{}')" = "401"
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8080/v1/screen -H 'Content-Type: application/json' -d '{}')
+          echo "status: $code"
+          test "$code" = "401"
       - name: Runs as a non-root user
-        run: test "$(docker exec thanzi id -u)" != "0"
+        run: |
+          uid=$(docker exec thanzi id -u)
+          echo "uid: $uid"
+          test "$uid" != "0"
       - name: Refuses to start without a gateway key
         run: |
           if docker run --rm thanzi-screen:ci; then echo "started without a key"; exit 1; fi
