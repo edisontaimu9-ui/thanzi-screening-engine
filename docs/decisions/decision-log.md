@@ -29,7 +29,7 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D21 (Q6). MUAC under 6 months is ignored with a warning.
 - D22 (Q7). Referral text is clearly marked placeholder until official wording is extracted. Destinations (NRU, OTP, SFP) come from R3.
 
-## Implementation interpretations in Phase 2 (need Edison's confirmation)
+## Implementation interpretations in Phase 2 (D23-D28 and A1, A2 confirmed by Edison 2026-11-07)
 - D23. Stricter reading of D16: if WFL/H is flagged implausible and MUAC is normal, return UNABLE_TO_CLASSIFY rather than low risk (a suspect weight or height could hide wasting). A valid abnormal MUAC or oedema still classifies.
 - D24. Added input `clinically_well_and_alert` (R3 OTP criterion). Lethargy or unconsciousness as danger signs force "not well and alert".
 - D25. Danger signs or complications are `None` when not assessed, empty set when assessed and absent.
@@ -46,8 +46,8 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - I4. Confirm with MoH Nutrition Unit that no edition newer than 2016 applies.
 - I2. (closed in Phase 2) Danger signs, complications and appetite role extracted from R3 pp.11, 16.
 - I6. (closed) Resolved by D16, D23.
-- I7. R3 Table 5 infant column says "if infant is > 6 months and weighs < 3.0 kg". Likely a typo for <6 months. Not implemented. Confirm with MoH Nutrition Unit.
-- I8. Confirm D26 (tier for HIV-positive MAM admitted to OTP).
-- I9. Confirm A2: infant WFA < -3 mapped to MAM tier.
+- I7. R3 Table 5 infant column says "if infant is > 6 months and weighs < 3.0 kg". Likely a typo for <6 months. Not implemented. Confirm with MoH Nutrition Unit. Edison's decision on handling still pending.
+- I8. (closed) D26 confirmed 2026-11-07.
+- I9. (closed) A2 confirmed 2026-11-07.
 - I10. Official referral wording not in R3 Table 5; placeholders remain.
-- I11. Confirm A1 (z = -2.00 boundary) and D23.
+- I11. (closed) A1 and D23 confirmed 2026-11-07.
