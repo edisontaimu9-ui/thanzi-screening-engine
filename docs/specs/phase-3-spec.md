@@ -1,6 +1,6 @@
 # Phase 3 specification: data engineering
 
-Status: DRAFT, awaiting Edison's review. No implementation until approved.
+Status: Q1-Q6 answered and approved by Edison 2026-11-07 (D35-D39); implemented. Interpretations: D40-D44.
 
 ## Objective
 Build a reproducible, versioned synthetic data pipeline for under-fives (0-59 months) that exercises the whole engine (Phase 1 z-scores, Phase 2 rules) and prepares the data layer for Phase 4. Synthetic only (data policy). Standard library only at runtime; no code or data from any other project.

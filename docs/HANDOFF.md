@@ -27,7 +27,7 @@ Reply in English, terse. For each update: build on the existing repo, zip only c
 - Phase 1 (anthropometric engine): COMPLETE, approved by Edison 2026-11-07. 126 tests passing. See docs/modules/anthro.md.
 - Phase 2 (CMAM classification and referral): COMPLETE, closed by Edison 2026-11-07. 203 tests passing. See docs/modules/rules.md, decision-log D16-D30. Only I10 (referral slip wording, placeholder) remains.
 - Point-of-care nutrition guidance: owned by Edison (D34), not yet in a phase; needs approved Malawi sources and a spec first.
-- Phase 3 (data engineering): SPEC DRAFTED (docs/specs/phase-3-spec.md), awaiting Edison's review. No implementation until approved.
+- Phase 3 (data engineering): IMPLEMENTED, tests passing. See docs/modules/data.md and decision-log D35-D44. Awaiting Edison's review. Pending inputs: R8 (WHO MUAC tables), R9 (Malawi prevalence figures), district list check (D43). Phase 4 spec not started.
 - Run tests: `pip install pytest && python -m pytest -q` from the repo root.
 
 ## Open issues

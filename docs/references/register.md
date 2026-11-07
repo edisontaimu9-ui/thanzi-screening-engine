@@ -14,6 +14,8 @@ Tags: DOCUMENTED (stated in a source), ASSUMPTION, RECOMMENDATION.
 | R7 | WHO Growth Velocity standards, Methods and development (ISBN 978 92 4 154763 5) | 2009 | Uploaded by Edison | WHO copyright | Not used in Phase 1; possible later growth-faltering features | Held, unused |
 | R10 | AI for Public Good Challenge Briefs, Brief 3: AI-Assisted Malnutrition Screening (Ministry of Health and Sanitation) | Current programme year | Uploaded by Edison (UniPod Malawi, MUBAS, timbuktoo, UNDP) | To confirm | Challenge requirements and role split (`docs/challenge-alignment.md`). Not a clinical source | Held, not in git |
 | R11 | Thanzi AI 8-Week Work Plan (AI for Public Good Challenge) | Current programme year | Uploaded by Edison | Internal | Team roles, responsibility matrix, weekly deliverables, risks. Its Chakudya/Thanzi Coach reuse was dropped (D31) | Held, not in git |
+| R8 | WHO arm-circumference-for-age tables, 3-59 months | n/a | Pending upload by Edison | WHO | Future MUAC model. Not used yet (D38) | Not held |
+| R9 | Published Malawi prevalence figures (reports only) | n/a | Pending from Edison | To check | Replace placeholder parameters (D37) | Not held |
 
 ## Extracted rules (R3), all DOCUMENTED
 | Rule | Value | Location |

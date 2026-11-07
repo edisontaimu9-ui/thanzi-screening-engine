@@ -41,6 +41,20 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D33. Synthetic data (Phase 3) carries a coarse district field, needed for the team's hotspot dashboard. Edison is not responsible for the dashboard.
 - D34. Ownership (Edison 2026-11-07): local languages belong to the NLP/AI technical team with Edison's clinical input; point-of-care nutrition guidance belongs to Edison as Clinical Nutrition Lead (develop, validate, align with Malawi guidelines). Guidance content must come from approved Malawi sources, never invented. Not yet scheduled in a phase.
 
+## Approved (Phase 3 spec answers, Edison 2026-11-07)
+- D35. ML target for Phase 4 is A (detect measurement and data-entry errors) and B (flag borderline or inconsistent cases for clinician review) only. C (predict deterioration) is not implemented at this stage.
+- D36. Single visit per child.
+- D37. Prevalence and clinical-rate parameters are neutral placeholders marked ASSUMPTION; Edison will supply published Malawi figures later (reports only, no microdata).
+- D38. MUAC-for-age z-score logic is not hard-coded until Edison uploads the official WHO tables (R8). MUAC is a configurable placeholder linked to WFL/H z.
+- D39. 50,000 random records plus a small boundary set. CSV with SHA-256 manifest, standard library only.
+
+## Implementation interpretations in Phase 3 (need Edison's confirmation)
+- D40. Target B labels (`review_reasons`) are built deterministically from engine outputs: unable to classify, missing assessment, implausible value, weight under 3 kg verify, MUAC vs WFL/H discordance, near MUAC threshold (within 0.2 cm), near WFL/H threshold (within 0.1 z). Margins are assumptions. A model can only learn this function, not clinical truth.
+- D41. Four injected error types: weight decimal shift, length digit transposition, MUAC unit error (cm recorded as mm), age heaping to 6-month multiples. Overall rate 4% (assumption). `injected_error` records the true label.
+- D42. Boundary set has 16 records: MUAC 11.4/11.5/12.4/12.5, WFL/H near -3.01/-3.00/-2.01/-2.00 (weights are rounded to 0.01 kg, so z lands within about 0.01 of target), ages 182 and 183 days, weights 2.99/3.00/3.01 kg at 8 months, oedema +/++/+++. They carry split `boundary` and are excluded from training.
+- D43. The 28-district list in `config.py` is from my own knowledge and must be checked against the official list. Districts are assigned uniformly with no spatial pattern.
+- D44. Generated CSV (about 11 MB) is git-ignored. It is regenerated from seed and config. The SHA-256 can differ between Python versions or platforms because of floating-point math; the manifest records the Python version.
+
 ## Implementation interpretations in Phase 2 (D23-D28 and A1, A2 confirmed by Edison 2026-11-07)
 - D23. Stricter reading of D16: if WFL/H is flagged implausible and MUAC is normal, return UNABLE_TO_CLASSIFY rather than low risk (a suspect weight or height could hide wasting). A valid abnormal MUAC or oedema still classifies.
 - D24. Added input `clinically_well_and_alert` (R3 OTP criterion). Lethargy or unconsciousness as danger signs force "not well and alert".
@@ -63,3 +77,5 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - I9. (closed) A2 confirmed 2026-11-07.
 - I10. Official referral slip wording: placeholders remain by decision (D30); refine later.
 - I11. (closed) A1 and D23 confirmed 2026-11-07.
+- I12. R8 (WHO arm-circumference-for-age tables) pending upload from Edison. Until then MUAC stays a placeholder (D38).
+- I13. R9 (published Malawi prevalence figures) pending from Edison (D37).
