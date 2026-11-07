@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+# Raw third-party downloads stay out of git until licences are confirmed
+data/raw/
