@@ -2,7 +2,7 @@
 
 Independent, modular under-five (0-59 months) malnutrition screening engine for Thanzi AI, Malawi.
 
-**Status:** Phases 0 and 1 complete (Phase 1 approved 2026-11-07). Phase 2 (CMAM classification) closed 2026-11-07. Phase 3 (synthetic data) closed 2026-11-07. Phase 4 (advisory ML flags) closed 2026-11-07. Phase 5 (explainability) closed 2026-11-07. Phase 6 (FastAPI packaging) spec drafted, awaiting approval. See `docs/HANDOFF.md` for the current state and how to continue.
+**Status:** Phases 0 and 1 complete (Phase 1 approved 2026-11-07). Phase 2 (CMAM classification) closed 2026-11-07. Phase 3 (synthetic data) closed 2026-11-07. Phase 4 (advisory ML flags) closed 2026-11-07. Phase 5 (explainability) closed 2026-11-07. Phase 6 (FastAPI packaging) spec approved, not yet implemented. See `docs/HANDOFF.md` for the current state and how to continue.
 
 ## Principles
 - Independent codebase: no dependency on, or reuse of, any other project's code or data.

@@ -30,7 +30,7 @@ Reply in English, terse. For each update: build on the existing repo, zip only c
 - Phase 3 (data engineering): COMPLETE, closed by Edison 2026-11-07. 229 tests passing. See docs/modules/data.md, decision-log D35-D44. Pending inputs: R8 (WHO MUAC tables), R9 (Malawi prevalence), district list check (D43).
 - Phase 4 (advisory flags): COMPLETE, closed by Edison 2026-11-07. See docs/modules/ml.md, models/MODEL_CARD.md, decision-log D45-D57.
 - Phase 5 (explainability): COMPLETE, closed by Edison 2026-11-07. 273 tests passing. See docs/modules/explain.md, decision-log D58-D73. Wording review pending (I18).
-- Phase 6 (FastAPI packaging): SPEC DRAFT written (docs/specs/phase-6-spec.md). Awaiting Edison's answers to Q1-Q8. Do not implement before approval. Worker-facing API uses the Explanation worker summary, never raw referral_text (D71).
+- Phase 6 (FastAPI packaging): SPEC APPROVED 2026-11-07 (docs/specs/phase-6-spec.md, decision-log D74-D85) with three conditions: no HIV information in worker responses (D82), access restricted to Hope's gateway (D83), full API tests in CI (D84). NOT implemented. Wait for Edison's go. Worker-facing API uses the Explanation worker summary, never raw referral_text (D71). Phase 6 closes only when CI is green on main.
 - Run tests: `pip install pytest && python -m pytest -q` from the repo root.
 
 ## Open issues

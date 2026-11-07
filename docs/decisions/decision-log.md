@@ -58,6 +58,22 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D49. Output is a separate `MlFlags` object. `ClassificationResult` is unchanged.
 - D50. Trained `models/*.json` are committed to git with their metrics.
 
+## Approved (Phase 6 spec answers, Edison 2026-11-07)
+- D74. Endpoints: `GET /health`, `GET /version`, `POST /v1/screen?view=worker|audit`. Single child per call, no batch.
+- D75. Worker view: summary plus codes, no `referral_text`. Audit view adds the full `Explanation` and `referral_text`.
+- D76. The Phase 2 HIV warning is neutralised in the worker view, original kept in the audit view. Condition from Edison: protect HIV privacy in worker responses.
+- D77. Read-only alias `Explanation.worker_summary` added; `summary` stays.
+- D78. Stateless, no body logging, unknown fields rejected. Condition from Edison: access restricted to Hope's gateway.
+- D79. Degraded mode (rules only) if models are unavailable, with `explain_rules_only`.
+- D80. Age input is `age_days` only.
+- D81. FastAPI and pydantic at the HTTP edge only, framework-free `service.py`. Condition from Edison: run the full API tests in CI.
+- D85. Phase 6 specification approved. No implementation until Edison says go.
+
+## Interpretations of the Phase 6 conditions (need Edison's confirmation)
+- D82. HIV privacy: no HIV information in any key or value of a worker response. Rule code `MAM.HIV_OTP` is shown as `MAM.OTP_ELIGIBLE` in the worker view (audit view keeps the real code), the HIV warning is replaced, request values are never echoed, and a fail-closed scan drops any field containing the text hiv. This is a display alias in the API only. Engine codes and the Phase 2 interface are unchanged.
+- D83. Gateway restriction: `THANZI_GATEWAY_KEY` required (no start without it unless `THANZI_DEV_MODE=1`); header `X-Gateway-Key` on every route except a minimal `/health`; audit view needs a second key (`THANZI_AUDIT_KEY`), off if unset; docs and OpenAPI routes off outside dev mode; no CORS. Network isolation, TLS and rate limits are Hope's and are not enforced by code.
+- D84. CI: GitHub Actions on push and pull request to `main`, Python 3.11 and 3.12, full test suite with `THANZI_REQUIRE_API_TESTS=1` (API tests cannot skip), OpenAPI drift check, Docker build and smoke job. Phase 6 does not close until CI is green on `main`.
+
 ## Approved (Phase 5 spec answers, Edison 2026-11-07)
 - D58. Scope: one `Explanation` covers the rules classification, the ML recording-error flag and the rules review flag.
 - D59. Method: exact linear contributions for the logistic model and the tree path. No SHAP or LIME.
@@ -76,7 +92,7 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D70. Wording is a draft. Phase 5 messages need review by clinicians and health workers before any use.
 - D71. I17 decided (Option 1): Phase 2 stays unchanged. The Phase 6 worker-facing API uses the `Explanation` worker summary (exposed as `worker_summary`) and never raw `ClassificationResult.referral_text`.
 - D72. I18 approved: Phase 5 wording stays a draft until a qualified clinician (Maria Talimire or another) has reviewed it and health-worker testing is done. Both pending.
-- D73. Phase 5 closed by Edison 2026-11-07. Phase 6 spec drafted, awaiting his answers to Q1-Q8.
+- D73. Phase 5 closed by Edison 2026-11-07. Phase 6 spec drafted; approved the same day (D74-D85).
 
 ## Implementation interpretations in Phase 4 (confirmed by Edison 2026-11-07)
 - D51. Features use only recorded values, Phase 1 z-scores and flags, and Phase 2 outputs (36 features, listed in `ml/features.py`). They include "would a digit swap or a 10x weight shift make this plausible" checks and the distance of the age to an exact 6-month multiple.
@@ -125,3 +141,6 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - I17. (closed) Decided by D71: the Phase 6 worker view never uses raw `referral_text`.
 - I18. Phase 5 wording (`explain/messages.py`) needs review by Maria Talimire or another qualified clinician, and health-worker testing (D72). Pending.
 - I19. Chichewa translation of the message catalogue pending; owner per D34.
+- I20. A MAM child sent to OTP (not SFP) is only possible under the HIV rule, so the programme itself lets a knowledgeable reader infer HIV status. Kept because the worker needs the action. Edison to accept or decide otherwise.
+- I21. Network isolation of the API (private network, no public port, only Hope's gateway) is deployment work for Hope. Needs her confirmation before any deployment.
+- I22. First CI run unverified until Edison pushes. GitHub Actions pinned to major versions, not commit SHAs.
