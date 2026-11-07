@@ -23,6 +23,6 @@
 - I1. Licences for WHO tables and the CMAM PDF unconfirmed; raw files kept out of git.
 - I2. Inputs needed for the OTP vs inpatient split: appetite test, danger signs, medical complications.
 - I3. (closed) Phase 1 decisions resolved: D10-D11.
-- I5. Cross-check against WHO Anthro software output on sample records; WHO Chap_7.pdf not yet retrieved (R6 is secondary).
+- I5. Cross-check against WHO Anthro software output on sample records (still open). Chapter 7 now verified from the WHO book (R6): adjusted method and worked examples confirmed. Oedema rule and plausibility limits are not in the book chapter and rest on WHO anthro documentation (R6b).
 - I6. Phase 2 must define how implausible-flagged values affect classification.
 - I4. Confirm with MoH Nutrition Unit that no edition newer than 2016 applies.

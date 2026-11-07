@@ -24,20 +24,21 @@ Malformed input raises `InputError`. Valid input outside the WHO standards retur
 | WFL/H table | <=730 days uses weight-for-length (45-110 cm), else weight-for-height (65-120 cm) | DOCUMENTED | R1, R6 |
 | Between 0.5 cm rows | linear interpolation of L, M, S | DECISION (D10), tested against published cut-offs | Edison |
 | z-score | LMS: ((y/M)^L - 1)/(L*S) | DOCUMENTED | R6 |
-| Beyond +/-3 SD | weight-based indicators (WFA, WFL/H): WHO adjusted method, linear extension using the SD2-SD3 distance; flag `adjusted_beyond_3sd` | DOCUMENTED | R6; confirmed by WHO's own +/-4 SD columns in the supplied WFA tables |
+| Beyond +/-3 SD | weight-based indicators (WFA, WFL/H): WHO adjusted method, linear extension using the SD2-SD3 distance; flag `adjusted_beyond_3sd` | DOCUMENTED | R6 (book ch. 7, pp. 302-304); confirmed by WHO's own +/-4 SD columns in the supplied WFA tables and by WHO's worked examples |
 | Length/height-for-age | never adjusted | DOCUMENTED | confirmed by WHO's +/-4 SD columns in the supplied LHFA tables |
-| Oedema | weight-based z-scores not calculated (`oedema_weight_unreliable`); LHFA still computed | DOCUMENTED | R6 (WHO anthro) |
-| Plausibility | flag `implausible_recheck_measurements` if WFA <-6 or >+5, LHFA outside +/-6, WFL/H outside +/-5 | DOCUMENTED | R6 |
+| Oedema | weight-based z-scores not calculated (`oedema_weight_unreliable`); LHFA still computed | DOCUMENTED | R6b (WHO anthro documentation, not the book) |
+| Plausibility | flag `implausible_recheck_measurements` if WFA <-6 or >+5, LHFA outside +/-6, WFL/H outside +/-5 | DOCUMENTED | R6b (WHO anthro documentation, not the book) |
 
 Flags are information for review. They do not change the z-score. Phase 2 decides how flagged values affect classification.
 
 ## Reference tables
 CSV conversions of the WHO Excel files live in `src/thanzi_screen/anthro/reference_tables/` with `MANIFEST.json` (SHA-256 of each source and CSV). Loading fails on a checksum mismatch. Rebuild with `python scripts/build_reference_tables.py <folder-with-xlsx>` (needs openpyxl).
 
-## Tests (`tests/anthro`, 122 passing)
+## Tests (`tests/anthro`, 126 passing)
 - LMS maths: median is 0, SD round-trips, L=0 branch, adjusted extension.
 - Every row of every table reproduces WHO's published -3..+3 SD columns (3 decimals for age tables, 1 decimal for WFL/H).
 - WHO's published +/-4 SD columns for WFA match the adjusted method and LHFA's match the plain method.
+- WHO's own worked examples from the book, chapter 7 (independent of the supplied tables).
 - Interpolation (nodes, midpoints, monotonicity), range limits, 730/731 boundaries, position conversion, oedema, flags, input validation, checksum tamper detection.
 
 ## Not yet validated
