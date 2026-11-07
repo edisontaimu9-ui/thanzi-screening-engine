@@ -48,7 +48,9 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D38. MUAC-for-age z-score logic is not hard-coded until Edison uploads the official WHO tables (R8). MUAC is a configurable placeholder linked to WFL/H z.
 - D39. 50,000 random records plus a small boundary set. CSV with SHA-256 manifest, standard library only.
 
-## Implementation interpretations in Phase 3 (need Edison's confirmation)
+- Phase 3 closed by Edison 2026-11-07; D40-D44 confirmed.
+
+## Implementation interpretations in Phase 3 (confirmed by Edison 2026-11-07)
 - D40. Target B labels (`review_reasons`) are built deterministically from engine outputs: unable to classify, missing assessment, implausible value, weight under 3 kg verify, MUAC vs WFL/H discordance, near MUAC threshold (within 0.2 cm), near WFL/H threshold (within 0.1 z). Margins are assumptions. A model can only learn this function, not clinical truth.
 - D41. Four injected error types: weight decimal shift, length digit transposition, MUAC unit error (cm recorded as mm), age heaping to 6-month multiples. Overall rate 4% (assumption). `injected_error` records the true label.
 - D42. Boundary set has 16 records: MUAC 11.4/11.5/12.4/12.5, WFL/H near -3.01/-3.00/-2.01/-2.00 (weights are rounded to 0.01 kg, so z lands within about 0.01 of target), ages 182 and 183 days, weights 2.99/3.00/3.01 kg at 8 months, oedema +/++/+++. They carry split `boundary` and are excluded from training.
