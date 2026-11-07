@@ -29,6 +29,11 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D21 (Q6). MUAC under 6 months is ignored with a warning.
 - D22 (Q7). Referral text is clearly marked placeholder until official wording is extracted. Destinations (NRU, OTP, SFP) come from R3.
 
+## Approved (Phase 2 close, Edison 2026-11-07)
+- D29 (I7). Implement the R3 Table 5 p.16 criterion "infant > 6 months and weighs < 3.0 kg" as an inpatient (NRU) trigger. Applied from 6.0 months (conservative at the boundary, consistent with D20) up to 59 months, independent of other inputs, ignoring implausible flags, with a "verify the measurement" warning. Rule ID `INF.WEIGHT_LT3KG`. `AnthropometryResult` gained an optional `weight_kg` field (backward compatible) to carry the weight.
+- D30 (I10). Referral wording remains placeholder. Clinical referral rules are defined; only slip text is refined later.
+- Phase 2 closed.
+
 ## Implementation interpretations in Phase 2 (D23-D28 and A1, A2 confirmed by Edison 2026-11-07)
 - D23. Stricter reading of D16: if WFL/H is flagged implausible and MUAC is normal, return UNABLE_TO_CLASSIFY rather than low risk (a suspect weight or height could hide wasting). A valid abnormal MUAC or oedema still classifies.
 - D24. Added input `clinically_well_and_alert` (R3 OTP criterion). Lethargy or unconsciousness as danger signs force "not well and alert".
@@ -46,8 +51,8 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - I4. Confirm with MoH Nutrition Unit that no edition newer than 2016 applies.
 - I2. (closed in Phase 2) Danger signs, complications and appetite role extracted from R3 pp.11, 16.
 - I6. (closed) Resolved by D16, D23.
-- I7. R3 Table 5 infant column says "if infant is > 6 months and weighs < 3.0 kg". Likely a typo for <6 months. Not implemented. Confirm with MoH Nutrition Unit. Edison's decision on handling still pending.
+- I7. (closed) Implemented as D29.
 - I8. (closed) D26 confirmed 2026-11-07.
 - I9. (closed) A2 confirmed 2026-11-07.
-- I10. Official referral wording not in R3 Table 5; placeholders remain.
+- I10. Official referral slip wording: placeholders remain by decision (D30); refine later.
 - I11. (closed) A1 and D23 confirmed 2026-11-07.

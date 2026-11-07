@@ -3,6 +3,7 @@
 ## 0.2.0 - Phase 2
 - CMAM 2016 classification and referral (`thanzi_screen.rules`): low risk, MAM, SAM-OTP, SAM-inpatient, SAM-assess, unable to classify.
 - Rule registry with source, page and tag per rule; infant (<6 months) pathway; HIV-positive MAM rule.
+- Weight <3.0 kg at 6 months or older triggers inpatient (R3 Table 5, D29). `AnthropometryResult.weight_kg` added.
 - Safety tests: never less urgent than the most severe criterion; never OTP without complete information.
 
 ## 0.1.0 - Phase 1

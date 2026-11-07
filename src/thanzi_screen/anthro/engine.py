@@ -61,6 +61,7 @@ class AnthropometryResult:
     lhfa: IndicatorResult
     wflh: IndicatorResult
     warnings: tuple[str, ...] = ()
+    weight_kg: float | None = None  # validated input weight, used by Phase 2 (CMAM Table 5 weight criterion)
 
 
 def _positive(name: str, v: object) -> float:
@@ -142,7 +143,7 @@ def compute_anthropometry(
 
     if out_of_range:
         r = "age_out_of_range_0_1856_days"
-        return AnthropometryResult(days, months, used, _nc("wfa", r), _nc("lhfa", r), _nc(wflh_name, r), tuple(warnings))
+        return AnthropometryResult(days, months, used, _nc("wfa", r), _nc("lhfa", r), _nc(wflh_name, r), tuple(warnings), weight_kg=weight)
 
     # height/length-for-age: plain LMS (WHO does not adjust it)
     lhfa = _finish("lhfa", f"lhfa_{'boys' if sx == 'male' else 'girls'}.csv", used, tables.age_table("lhfa", sx)[days], adjust=False)
@@ -150,7 +151,7 @@ def compute_anthropometry(
     if oedema:
         # WHO: weight-based z-scores are not calculated when oedema is present
         r = "oedema_weight_unreliable"
-        return AnthropometryResult(days, months, used, _nc("wfa", r), lhfa, _nc(wflh_name, r), tuple(warnings))
+        return AnthropometryResult(days, months, used, _nc("wfa", r), lhfa, _nc(wflh_name, r), tuple(warnings), weight_kg=weight)
 
     wfa = _finish("wfa", f"wfa_{'boys' if sx == 'male' else 'girls'}.csv", weight, tables.age_table("wfa", sx)[days], adjust=True)
 
@@ -160,4 +161,4 @@ def compute_anthropometry(
         wflh = _nc(wflh_name, f"{wflh_name}_out_of_table_range_{tbl.min:g}_{tbl.max:g}_cm")
     else:
         wflh = _finish(wflh_name, f"{wflh_name}_{'boys' if sx == 'male' else 'girls'}.csv", weight, lms, adjust=True)
-    return AnthropometryResult(days, months, used, wfa, lhfa, wflh, tuple(warnings))
+    return AnthropometryResult(days, months, used, wfa, lhfa, wflh, tuple(warnings), weight_kg=weight)

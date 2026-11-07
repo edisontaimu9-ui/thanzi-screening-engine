@@ -44,11 +44,12 @@ class _Ind:
 
 
 class _A:
-    def __init__(self, z, flags=(), age_months=10.0, length=70.0, wfa=None, status="ok"):
+    def __init__(self, z, flags=(), age_months=10.0, length=70.0, wfa=None, status="ok", weight=8.0):
         self.wflh = _Ind(z, flags, status)
         self.wfa = wfa or _Ind(0.0)
         self.lhfa = _Ind(0.0)
         self.age_months, self.length_height_used_cm, self.warnings = age_months, length, ()
+        self.weight_kg = weight
 
 
 @pytest.mark.parametrize("z,expected", [
@@ -243,3 +244,27 @@ def test_real_anthro_integration_severe_wasting():
     a = anthro(weight=6.0, length=68.0)  # z about -3.6
     r = cls(a, **FULL)
     assert r.classification == C.SAM_OTP and "SAM.WFLH" in r.rules_fired
+
+
+# ---- I7 / D29: weight <3.0 kg at 6 months or older ----
+@pytest.mark.parametrize("age,w,expected", [
+    (7.0, 2.9, C.SAM_INPATIENT), (7.0, 3.0, C.LOW_RISK), (6.0, 2.9, C.SAM_INPATIENT), (24.0, 2.5, C.SAM_INPATIENT)])
+def test_weight_under_3kg_at_or_above_6_months(age, w, expected):
+    r = cls(_A(0.0, age_months=age, weight=w), muac_cm=13.0, **FULL)
+    assert r.classification == expected
+    if expected == C.SAM_INPATIENT:
+        assert "INF.WEIGHT_LT3KG" in r.rules_fired and r.tier == Tier.URGENT and r.programme == "NRU"
+
+
+def test_weight_under_3kg_beats_implausible_and_missing_info():
+    r = cls(_A(-9.0, flags=("implausible_recheck_measurements",), age_months=8.0, weight=2.5))
+    assert r.classification == C.SAM_INPATIENT and r.warnings
+
+
+def test_weight_under_3kg_not_applied_below_6_months():
+    r = cls(_A(0.0, age_months=3.0, length=50.0, weight=2.8), **INF, visible_severe_wasting=False)
+    assert r.classification == C.LOW_RISK
+
+
+def test_real_anthro_carries_weight():
+    assert anthro(weight=8.6).weight_kg == 8.6

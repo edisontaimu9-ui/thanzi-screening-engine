@@ -36,7 +36,7 @@ Tags: DOCUMENTED (stated in a source), ASSUMPTION, RECOMMENDATION.
 | Infant failure to gain weight / WFA | Infants <6 months faltering or WFA z <-3: refer to clinician for further assessment; those not gaining weight after counselling/treatment: refer to NRU | Table 5 footnote, p.16 |
 | OTP, HIV-positive MAM | MUAC <12.5 or WFH/L -3 to -2, AND appetite passed, no complications, well and alert | Table 5, p.17 |
 | Out of scope | OTP-to-NRU referral criteria (deterioration, oedema increase, weight loss, no response at 3 months); ages 5-15 years; pregnant and lactating women | Table 5, pp.16-17 |
-| Source ambiguity | Infant column lists "If infant is > 6 months and weighs < 3.0 kg" under infants <6 months. Not implemented (issue I7) | Table 5, p.16 |
+| Infant weight criterion | Infant column: "If infant is > 6 months and weighs < 3.0 kg" is an NRU admission criterion. Implemented from 6.0 months (D29) | Table 5, p.16 |
 
 ## Assumptions and recommendations
 - ASSUMPTION A1 (Phase 2): WFL/H z exactly -2.00 is not moderate (WHO convention z < -2). Table 5 says "-3 to -2".

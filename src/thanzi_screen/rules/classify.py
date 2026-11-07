@@ -66,6 +66,11 @@ def _classify_child(anthro, cl: ClinicalInputs, oedema: bool, warnings: list[str
 
     if sam:
         rules += [r for r, on in (("SAM.MUAC", sev_muac), ("SAM.WFLH", sev_wfl), ("SAM.OEDEMA", oedema)) if on]
+    w = getattr(anthro, "weight_kg", None)
+    if w is not None and w < R.INFANT_WEIGHT_NRU_KG:
+        warnings.append("Weight under 3.0 kg at 6 months or older: verify the measurement.")
+        return _result(C.SAM_INPATIENT, rules + ["INF.WEIGHT_LT3KG"], [], warnings, programme="NRU")
+    if sam:
         return _classify_sam(cl, severe_wasting, rules, warnings)
 
     if mod_muac or mod_wfl:

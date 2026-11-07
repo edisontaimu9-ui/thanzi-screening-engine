@@ -14,6 +14,7 @@ WFLH_SEVERE_Z = -3.0
 WFLH_MODERATE_Z = -2.0   # ASSUMPTION A1: z = -2.00 is not moderate (WHO convention, z < -2)
 INFANT_WFL_MIN_LENGTH_CM = 45.0
 INFANT_WFA_REFER_Z = -3.0
+INFANT_WEIGHT_NRU_KG = 3.0  # Table 5 p.16: infant >6 months weighing <3.0 kg (I7, D29)
 CHILD_PATHWAY_MIN_MONTHS = 6.0  # D-Q5: exactly 6 months is the child pathway
 
 DOCUMENTED, ASSUMPTION, RECOMMENDATION = "DOCUMENTED", "ASSUMPTION", "RECOMMENDATION"
@@ -53,6 +54,7 @@ RULES: dict[str, Rule] = dict([
     _r("INF.VISIBLE_WASTING", "Infant <6 months: visible severe wasting", "Table 5 p.16"),
     _r("INF.TOO_WEAK", "Infant <6 months: too weak to suckle effectively", "Table 5 p.16"),
     _r("INF.NO_GAIN", "Infant <6 months: failure to gain weight (refer to NRU)", "Table 5 p.16 footnote"),
+    _r("INF.WEIGHT_LT3KG", "Infant at or above 6 months weighing <3.0 kg: inpatient (printed as '> 6 months'; applied from 6.0 months, D29)", "Table 5 p.16"),
     _r("INF.WFA_CLINICIAN", "Infant <6 months with WFA z <-3: refer to clinician for further assessment; tier mapping to MAM is an assumption (I9)", "Table 5 p.16 footnote", ASSUMPTION),
     _r("DATA.IMPLAUSIBLE_IGNORED", "Implausible-flagged z-score not used (Q1)", "D12; Q1", RECOMMENDATION),
 ])
