@@ -58,13 +58,15 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D49. Output is a separate `MlFlags` object. `ClassificationResult` is unchanged.
 - D50. Trained `models/*.json` are committed to git with their metrics.
 
-## Implementation interpretations in Phase 4 (need Edison's confirmation)
+## Implementation interpretations in Phase 4 (confirmed by Edison 2026-11-07)
 - D51. Features use only recorded values, Phase 1 z-scores and flags, and Phase 2 outputs (36 features, listed in `ml/features.py`). They include "would a digit swap or a 10x weight shift make this plausible" checks and the distance of the age to an exact 6-month multiple.
 - D52. "Errors Phase 1 misses" means injected-error records with no Phase 1 implausible flag.
 - D53. `MlFlags` carries the ML error flag and the rules-based review result side by side, each labelled by source.
 - D54. Age heaping is detected almost perfectly only because the synthetic injection rounds ages exactly. Real heaping is fuzzy, so this will not transfer. The same feature flags a child legitimately aged exactly 12 months (the boundary stress test shows this).
 - D55. Results on synthetic data are high (AUC about 0.997). That reflects clean synthetic errors, not real-world performance.
 - D56. Threshold chosen on validation by maximising recall on Phase-1-missed errors under the 10% alert cap.
+
+- D57. Phase 4 closed by Edison 2026-11-07 (D45-D56 confirmed). Phase 5 spec drafted, awaiting his answers to Q1-Q7.
 
 ## Implementation interpretations in Phase 3 (confirmed by Edison 2026-11-07)
 - D40. Target B labels (`review_reasons`) are built deterministically from engine outputs: unable to classify, missing assessment, implausible value, weight under 3 kg verify, MUAC vs WFL/H discordance, near MUAC threshold (within 0.2 cm), near WFL/H threshold (within 0.1 z). Margins are assumptions. A model can only learn this function, not clinical truth.

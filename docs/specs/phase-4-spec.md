@@ -1,6 +1,6 @@
 # Phase 4 specification: risk-flagging ML (targets A and B)
 
-Status: Q1-Q6 approved by Edison 2026-11-07 (D45-D50); implemented. Interpretations: D51-D56.
+Status: Q1-Q6 approved by Edison 2026-11-07 (D45-D50); implemented; closed by Edison 2026-11-07. Interpretations: D51-D56 (confirmed).
 
 ## Objective
 Add advisory ML flags that help health workers catch bad measurements and cases needing a second look. Targets approved in D35: **A** detect measurement and data-entry errors; **B** flag borderline or inconsistent cases for clinician review. No deterioration prediction (C).

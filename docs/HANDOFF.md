@@ -28,7 +28,8 @@ Reply in English, terse. For each update: build on the existing repo, zip only c
 - Phase 2 (CMAM classification and referral): COMPLETE, closed by Edison 2026-11-07. 203 tests passing. See docs/modules/rules.md, decision-log D16-D30. Only I10 (referral slip wording, placeholder) remains.
 - Point-of-care nutrition guidance: owned by Edison (D34), not yet in a phase; needs approved Malawi sources and a spec first.
 - Phase 3 (data engineering): COMPLETE, closed by Edison 2026-11-07. 229 tests passing. See docs/modules/data.md, decision-log D35-D44. Pending inputs: R8 (WHO MUAC tables), R9 (Malawi prevalence), district list check (D43).
-- Phase 4 (advisory flags): IMPLEMENTED, tests passing. See docs/modules/ml.md, models/MODEL_CARD.md, decision-log D45-D56. Awaiting Edison's review. Phase 5 (explainability) not started.
+- Phase 4 (advisory flags): COMPLETE, closed by Edison 2026-11-07. See docs/modules/ml.md, models/MODEL_CARD.md, decision-log D45-D57.
+- Phase 5 (explainability): SPEC DRAFT written (docs/specs/phase-5-spec.md). Awaiting Edison's answers to Q1-Q7. Do not implement before approval.
 - Run tests: `pip install pytest && python -m pytest -q` from the repo root.
 
 ## Open issues
