@@ -1,0 +1,42 @@
+# Module: ml and review flags (Phase 4)
+
+Advisory flags only. They never change a Phase 1-2 classification, tier, referral or warning (D9). Pure Python, offline, models stored as JSON.
+
+## What it flags
+- **Target A, possible recording error (ML).** Logistic regression gives a probability. Above the threshold it raises a flag, and a shallow decision tree suggests the field to recheck: weight, length/height, MUAC or age.
+- **Target B, review needed (rules).** `thanzi_screen.rules.review` is deterministic: unable to classify, missing assessment, implausible value, weight under 3 kg, MUAC versus WFL/H disagreement, MUAC within 0.2 cm of a cut-off, WFL/H within 0.1 z of a cut-off. Each reason has a code and a plain-language message (D45).
+- An ML replica of B (`models/review_replica_diagnostic.json`) is a diagnostic only, marked `production: false`.
+
+## Use
+```python
+from thanzi_screen.ml import flag_record, load_models
+from thanzi_screen.rules import ClinicalInputs
+
+models = load_models()                      # reads models/ in the repo
+f = flag_record("male", 300, 86.0, 70.0, "length", ClinicalInputs(muac_cm=13.5), models)
+f.recording_error.flagged, f.recording_error.suggested_field, f.recording_error.messages
+f.review.needed, f.review.reasons, f.review.messages
+```
+`flag_record` runs Phases 1 and 2 itself. `ClassificationResult` has no flag fields (D49).
+
+## Train
+```
+python scripts/generate_synthetic.py            # makes data/synthetic/ (git-ignored)
+python scripts/train_models.py                  # writes models/*.json and models/MODEL_CARD.md
+python scripts/compare_sklearn.py               # optional, dev-only; skips if scikit-learn is missing
+```
+Training refuses datasets without a valid manifest or not marked synthetic. Same dataset and seed give identical JSON.
+
+## Features
+Recorded values, Phase 1 z-scores and flags, cross-indicator gaps, "would a digit swap or 10x weight change fix it" checks, MUAC unit checks, distance of age to a 6-month multiple, missingness indicators, Phase 2 class. Never `true_*`, `injected_error`, `review_*`, `split`, `record_type`, `child_id` (a test enforces this).
+
+## Results on synthetic data (seed 42 dataset, test split)
+See `models/MODEL_CARD.md`. In short: ML recall 97% at a 4.8% alert rate against 43% recall for Phase 1 flags alone; 95% recall on errors Phase 1 misses; field suggestion 99.6% accurate. scikit-learn gave the same AUC (0.998) and field accuracy (99.6%).
+
+## Limits
+- Synthetic, clean, injected errors. Real performance is unknown (I14). Not validated on real children, not for clinical deployment.
+- Age heaping works here only because the injection rounds exactly (D54). The same feature flags a child aged exactly 12 months (I16).
+- Fairness cannot be tested without real data (I15).
+
+## Tests (`tests/ml`, 19)
+Leakage guard, determinism, refusal of unverified data, operating point and quality floors, subgroup report, labels and model card, JSON round trip, inference on normal, erroneous and missing-input records, flags never alter a classification, review rules and their agreement with the Phase 3 labels, model code, shipped models.

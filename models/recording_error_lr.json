@@ -1,0 +1,1073 @@
+{
+ "boundary_stress_test": {
+  "alerts_with_exact_6_month_age": 12,
+  "ml_alerts": 15,
+  "n": 16,
+  "note": "Boundary records have no injected errors; alerts here are false alarms."
+ },
+ "metadata": {
+  "dataset_rows": 50016,
+  "epochs": 12,
+  "feature_names": [
+   "age_months",
+   "sex_male",
+   "position_height",
+   "weight_kg",
+   "length_height_cm",
+   "muac_cm",
+   "muac_missing",
+   "muac_ge_30",
+   "muac_unit_suspect",
+   "wfa_z",
+   "lhfa_z",
+   "wflh_z",
+   "wfa_missing",
+   "lhfa_missing",
+   "wflh_missing",
+   "implaus_wfa",
+   "implaus_lhfa",
+   "implaus_wflh",
+   "implaus_count",
+   "abs_wfa_minus_wflh",
+   "abs_wfa_minus_lhfa",
+   "abs_wflh_minus_lhfa",
+   "length_swap_lhfa_gain",
+   "length_swap_wflh_gain",
+   "weight_div10_abs_wflh",
+   "weight_mul10_abs_wflh",
+   "age_dist_6m_days",
+   "age_heap_exact",
+   "is_sam",
+   "is_mam",
+   "is_unable",
+   "oedema_present",
+   "appetite_not_done",
+   "danger_unknown",
+   "compl_unknown",
+   "well_unknown"
+  ],
+  "rows_skipped_invalid_input": 0,
+  "seed": 0,
+  "statement": "Demonstration model trained on synthetic data only. Not validated on real children. Not for clinical deployment. Advisory flags only: it never changes a clinical classification.",
+  "trained_on_manifest_sha256": "2104b2c2a373486134b4677c629f60166093dc8a69ead781b6bf6d4c2bcd1bbb",
+  "validated_on_real_data": false,
+  "version": "0.4.0"
+ },
+ "metrics": {
+  "test": {
+   "auc": 0.9967345956868465,
+   "by_age_band": {
+    "0-5m": {
+     "alert_rate": 0.02663115845539281,
+     "f1": 0.7096774193548387,
+     "n": 751,
+     "note": "",
+     "positives": 11,
+     "precision": 0.55,
+     "recall": 1.0
+    },
+    "24-59m": {
+     "alert_rate": 0.05032143648858346,
+     "f1": 0.8501228501228502,
+     "n": 4511,
+     "note": "",
+     "positives": 180,
+     "precision": 0.762114537444934,
+     "recall": 0.9611111111111111
+    },
+    "6-23m": {
+     "alert_rate": 0.050491510277033066,
+     "f1": 0.876847290640394,
+     "n": 2238,
+     "note": "",
+     "positives": 90,
+     "precision": 0.7876106194690266,
+     "recall": 0.9888888888888889
+    },
+    "_max_recall_gap": 0.03888888888888886
+   },
+   "by_district": {
+    "Balaka": {
+     "alert_rate": 0.03146853146853147,
+     "f1": 1.0,
+     "n": 286,
+     "note": "",
+     "positives": 9,
+     "precision": 1.0,
+     "recall": 1.0
+    },
+    "Blantyre": {
+     "alert_rate": 0.0546875,
+     "f1": 0.6956521739130435,
+     "n": 256,
+     "note": "",
+     "positives": 9,
+     "precision": 0.5714285714285714,
+     "recall": 0.8888888888888888
+    },
+    "Chikwawa": {
+     "alert_rate": 0.07420494699646643,
+     "f1": 0.8,
+     "n": 283,
+     "note": "",
+     "positives": 14,
+     "precision": 0.6666666666666666,
+     "recall": 1.0
+    },
+    "Chiradzulu": {
+     "alert_rate": 0.03292181069958848,
+     "f1": 0.7692307692307693,
+     "n": 243,
+     "note": "",
+     "positives": 5,
+     "precision": 0.625,
+     "recall": 1.0
+    },
+    "Chitipa": {
+     "alert_rate": 0.057971014492753624,
+     "f1": 0.8571428571428571,
+     "n": 276,
+     "note": "",
+     "positives": 12,
+     "precision": 0.75,
+     "recall": 1.0
+    },
+    "Dedza": {
+     "alert_rate": 0.049429657794676805,
+     "f1": 0.8799999999999999,
+     "n": 263,
+     "note": "",
+     "positives": 12,
+     "precision": 0.8461538461538461,
+     "recall": 0.9166666666666666
+    },
+    "Dowa": {
+     "alert_rate": 0.044,
+     "f1": 0.8421052631578948,
+     "n": 250,
+     "note": "",
+     "positives": 8,
+     "precision": 0.7272727272727273,
+     "recall": 1.0
+    },
+    "Karonga": {
+     "alert_rate": 0.06181818181818182,
+     "f1": 0.8666666666666666,
+     "n": 275,
+     "note": "",
+     "positives": 13,
+     "precision": 0.7647058823529411,
+     "recall": 1.0
+    },
+    "Kasungu": {
+     "alert_rate": 0.041474654377880185,
+     "f1": 0.7142857142857143,
+     "n": 217,
+     "note": "",
+     "positives": 5,
+     "precision": 0.5555555555555556,
+     "recall": 1.0
+    },
+    "Likoma": {
+     "alert_rate": 0.02666666666666667,
+     "f1": 0.7999999999999999,
+     "n": 300,
+     "note": "",
+     "positives": 7,
+     "precision": 0.75,
+     "recall": 0.8571428571428571
+    },
+    "Lilongwe": {
+     "alert_rate": 0.038461538461538464,
+     "f1": 0.9523809523809523,
+     "n": 286,
+     "note": "",
+     "positives": 10,
+     "precision": 0.9090909090909091,
+     "recall": 1.0
+    },
+    "Machinga": {
+     "alert_rate": 0.05862068965517241,
+     "f1": 0.9032258064516129,
+     "n": 290,
+     "note": "",
+     "positives": 14,
+     "precision": 0.8235294117647058,
+     "recall": 1.0
+    },
+    "Mangochi": {
+     "alert_rate": 0.0449438202247191,
+     "f1": 0.8571428571428571,
+     "n": 267,
+     "note": "",
+     "positives": 9,
+     "precision": 0.75,
+     "recall": 1.0
+    },
+    "Mchinji": {
+     "alert_rate": 0.07664233576642336,
+     "f1": 0.8421052631578947,
+     "n": 274,
+     "note": "",
+     "positives": 17,
+     "precision": 0.7619047619047619,
+     "recall": 0.9411764705882353
+    },
+    "Mulanje": {
+     "alert_rate": 0.045627376425855515,
+     "f1": 0.9565217391304348,
+     "n": 263,
+     "note": "",
+     "positives": 11,
+     "precision": 0.9166666666666666,
+     "recall": 1.0
+    },
+    "Mwanza": {
+     "alert_rate": 0.042704626334519574,
+     "f1": 0.8571428571428571,
+     "n": 281,
+     "note": "",
+     "positives": 9,
+     "precision": 0.75,
+     "recall": 1.0
+    },
+    "Mzimba": {
+     "alert_rate": 0.03272727272727273,
+     "f1": 0.7142857142857143,
+     "n": 275,
+     "note": "",
+     "positives": 5,
+     "precision": 0.5555555555555556,
+     "recall": 1.0
+    },
+    "Neno": {
+     "alert_rate": 0.04452054794520548,
+     "f1": 0.9166666666666666,
+     "n": 292,
+     "note": "",
+     "positives": 11,
+     "precision": 0.8461538461538461,
+     "recall": 1.0
+    },
+    "Nkhata Bay": {
+     "alert_rate": 0.03745318352059925,
+     "f1": 0.8235294117647058,
+     "n": 267,
+     "note": "",
+     "positives": 7,
+     "precision": 0.7,
+     "recall": 1.0
+    },
+    "Nkhotakota": {
+     "alert_rate": 0.06037735849056604,
+     "f1": 0.9333333333333333,
+     "n": 265,
+     "note": "",
+     "positives": 14,
+     "precision": 0.875,
+     "recall": 1.0
+    },
+    "Nsanje": {
+     "alert_rate": 0.03474903474903475,
+     "f1": 0.75,
+     "n": 259,
+     "note": "",
+     "positives": 7,
+     "precision": 0.6666666666666666,
+     "recall": 0.8571428571428571
+    },
+    "Ntcheu": {
+     "alert_rate": 0.06716417910447761,
+     "f1": 0.7333333333333334,
+     "n": 268,
+     "note": "",
+     "positives": 12,
+     "precision": 0.6111111111111112,
+     "recall": 0.9166666666666666
+    },
+    "Ntchisi": {
+     "alert_rate": 0.050980392156862744,
+     "f1": 0.9600000000000001,
+     "n": 255,
+     "note": "",
+     "positives": 12,
+     "precision": 0.9230769230769231,
+     "recall": 1.0
+    },
+    "Phalombe": {
+     "alert_rate": 0.029850746268656716,
+     "f1": 0.8571428571428571,
+     "n": 268,
+     "note": "",
+     "positives": 6,
+     "precision": 0.75,
+     "recall": 1.0
+    },
+    "Rumphi": {
+     "alert_rate": 0.057971014492753624,
+     "f1": 0.8148148148148148,
+     "n": 276,
+     "note": "",
+     "positives": 11,
+     "precision": 0.6875,
+     "recall": 1.0
+    },
+    "Salima": {
+     "alert_rate": 0.029914529914529916,
+     "f1": 0.923076923076923,
+     "n": 234,
+     "note": "",
+     "positives": 6,
+     "precision": 0.8571428571428571,
+     "recall": 1.0
+    },
+    "Thyolo": {
+     "alert_rate": 0.06007067137809187,
+     "f1": 0.8484848484848485,
+     "n": 283,
+     "note": "",
+     "positives": 16,
+     "precision": 0.8235294117647058,
+     "recall": 0.875
+    },
+    "Zomba": {
+     "alert_rate": 0.05241935483870968,
+     "f1": 0.8695652173913044,
+     "n": 248,
+     "note": "",
+     "positives": 10,
+     "precision": 0.7692307692307693,
+     "recall": 1.0
+    },
+    "_max_recall_gap": 0.1428571428571429
+   },
+   "by_error_type": {
+    "age_heaping": {
+     "ml_recall": 1.0,
+     "n": 73,
+     "phase1_recall": 0.0,
+     "union_recall": 1.0
+    },
+    "length_digit_transposition": {
+     "ml_recall": 0.8771929824561403,
+     "n": 57,
+     "phase1_recall": 0.6666666666666666,
+     "union_recall": 0.8771929824561403
+    },
+    "muac_unit_error": {
+     "ml_recall": 1.0,
+     "n": 67,
+     "phase1_recall": 0.0,
+     "union_recall": 1.0
+    },
+    "weight_decimal_shift": {
+     "ml_recall": 0.9880952380952381,
+     "n": 84,
+     "phase1_recall": 0.9880952380952381,
+     "union_recall": 0.9880952380952381
+    }
+   },
+   "by_sex": {
+    "_max_recall_gap": 0.01566301703163009,
+    "female": {
+     "alert_rate": 0.04986522911051213,
+     "f1": 0.8571428571428571,
+     "n": 3710,
+     "note": "",
+     "positives": 144,
+     "precision": 0.7621621621621621,
+     "recall": 0.9791666666666666
+    },
+    "male": {
+     "alert_rate": 0.04617414248021108,
+     "f1": 0.8461538461538461,
+     "n": 3790,
+     "note": "",
+     "positives": 137,
+     "precision": 0.7542857142857143,
+     "recall": 0.9635036496350365
+    }
+   },
+   "calibration": [
+    {
+     "bin": "0.0-0.1",
+     "mean_probability": 0.003792702288143306,
+     "n": 7122,
+     "observed_rate": 0.0009828699803426004
+    },
+    {
+     "bin": "0.1-0.2",
+     "mean_probability": 0.1343692112851351,
+     "n": 31,
+     "observed_rate": 0.03225806451612903
+    },
+    {
+     "bin": "0.2-0.3",
+     "mean_probability": 0.23997112225929168,
+     "n": 5,
+     "observed_rate": 0.0
+    },
+    {
+     "bin": "0.3-0.4",
+     "mean_probability": 0.3514662801083298,
+     "n": 2,
+     "observed_rate": 0.5
+    },
+    {
+     "bin": "0.4-0.5",
+     "mean_probability": 0.4330484792596499,
+     "n": 2,
+     "observed_rate": 0.0
+    },
+    {
+     "bin": "0.5-0.6",
+     "mean_probability": 0.5872843291484791,
+     "n": 2,
+     "observed_rate": 0.0
+    },
+    {
+     "bin": "0.6-0.7",
+     "mean_probability": 0.6723121803637057,
+     "n": 6,
+     "observed_rate": 0.5
+    },
+    {
+     "bin": "0.7-0.8",
+     "mean_probability": 0.766158219142311,
+     "n": 23,
+     "observed_rate": 0.391304347826087
+    },
+    {
+     "bin": "0.8-0.9",
+     "mean_probability": 0.8538213600860108,
+     "n": 29,
+     "observed_rate": 0.5172413793103449
+    },
+    {
+     "bin": "0.9-1.0",
+     "mean_probability": 0.9902895387488156,
+     "n": 278,
+     "observed_rate": 0.8812949640287769
+    }
+   ],
+   "errors": 281,
+   "errors_missed_by_phase1": 160,
+   "ml": {
+    "alert_rate": 0.048,
+    "f1": 0.8517940717628705,
+    "n": 7500,
+    "positives": 281,
+    "precision": 0.7583333333333333,
+    "recall": 0.9715302491103203
+   },
+   "ml_recall_on_missed_by_phase1": 0.95,
+   "n": 7500,
+   "phase1_only": {
+    "alert_rate": 0.016133333333333333,
+    "f1": 0.6019900497512437,
+    "n": 7500,
+    "positives": 281,
+    "precision": 1.0,
+    "recall": 0.4306049822064057
+   },
+   "union": {
+    "alert_rate": 0.048,
+    "f1": 0.8517940717628705,
+    "n": 7500,
+    "positives": 281,
+    "precision": 0.7583333333333333,
+    "recall": 0.9715302491103203
+   }
+  },
+  "val": {
+   "auc": 0.9988182598625996,
+   "by_age_band": {
+    "0-5m": {
+     "alert_rate": 0.021601016518424398,
+     "f1": 0.9032258064516129,
+     "n": 787,
+     "note": "",
+     "positives": 14,
+     "precision": 0.8235294117647058,
+     "recall": 1.0
+    },
+    "24-59m": {
+     "alert_rate": 0.047983780130660056,
+     "f1": 0.8670212765957447,
+     "n": 4439,
+     "note": "",
+     "positives": 163,
+     "precision": 0.7652582159624414,
+     "recall": 1.0
+    },
+    "6-23m": {
+     "alert_rate": 0.04661389621811785,
+     "f1": 0.8900523560209425,
+     "n": 2274,
+     "note": "",
+     "positives": 85,
+     "precision": 0.8018867924528302,
+     "recall": 1.0
+    },
+    "_max_recall_gap": 0.0
+   },
+   "by_district": {
+    "Balaka": {
+     "alert_rate": 0.029197080291970802,
+     "f1": 0.8571428571428571,
+     "n": 274,
+     "note": "",
+     "positives": 6,
+     "precision": 0.75,
+     "recall": 1.0
+    },
+    "Blantyre": {
+     "alert_rate": 0.07539682539682539,
+     "f1": 0.972972972972973,
+     "n": 252,
+     "note": "",
+     "positives": 18,
+     "precision": 0.9473684210526315,
+     "recall": 1.0
+    },
+    "Chikwawa": {
+     "alert_rate": 0.03558718861209965,
+     "f1": 0.888888888888889,
+     "n": 281,
+     "note": "",
+     "positives": 8,
+     "precision": 0.8,
+     "recall": 1.0
+    },
+    "Chiradzulu": {
+     "alert_rate": 0.038869257950530034,
+     "f1": 0.8421052631578948,
+     "n": 283,
+     "note": "",
+     "positives": 8,
+     "precision": 0.7272727272727273,
+     "recall": 1.0
+    },
+    "Chitipa": {
+     "alert_rate": 0.028688524590163935,
+     "f1": 0.923076923076923,
+     "n": 244,
+     "note": "",
+     "positives": 6,
+     "precision": 0.8571428571428571,
+     "recall": 1.0
+    },
+    "Dedza": {
+     "alert_rate": 0.030303030303030304,
+     "f1": 0.8571428571428571,
+     "n": 264,
+     "note": "",
+     "positives": 6,
+     "precision": 0.75,
+     "recall": 1.0
+    },
+    "Dowa": {
+     "alert_rate": 0.05668016194331984,
+     "f1": 0.923076923076923,
+     "n": 247,
+     "note": "",
+     "positives": 12,
+     "precision": 0.8571428571428571,
+     "recall": 1.0
+    },
+    "Karonga": {
+     "alert_rate": 0.06072874493927125,
+     "f1": 0.888888888888889,
+     "n": 247,
+     "note": "",
+     "positives": 12,
+     "precision": 0.8,
+     "recall": 1.0
+    },
+    "Kasungu": {
+     "alert_rate": 0.05653710247349823,
+     "f1": 0.8571428571428571,
+     "n": 283,
+     "note": "",
+     "positives": 12,
+     "precision": 0.75,
+     "recall": 1.0
+    },
+    "Likoma": {
+     "alert_rate": 0.03597122302158273,
+     "f1": 0.7499999999999999,
+     "n": 278,
+     "note": "",
+     "positives": 6,
+     "precision": 0.6,
+     "recall": 1.0
+    },
+    "Lilongwe": {
+     "alert_rate": 0.037037037037037035,
+     "f1": 0.888888888888889,
+     "n": 270,
+     "note": "",
+     "positives": 8,
+     "precision": 0.8,
+     "recall": 1.0
+    },
+    "Machinga": {
+     "alert_rate": 0.05454545454545454,
+     "f1": 0.9655172413793104,
+     "n": 275,
+     "note": "",
+     "positives": 14,
+     "precision": 0.9333333333333333,
+     "recall": 1.0
+    },
+    "Mangochi": {
+     "alert_rate": 0.07983193277310924,
+     "f1": 0.8823529411764706,
+     "n": 238,
+     "note": "",
+     "positives": 15,
+     "precision": 0.7894736842105263,
+     "recall": 1.0
+    },
+    "Mchinji": {
+     "alert_rate": 0.025179856115107913,
+     "f1": 0.8333333333333333,
+     "n": 278,
+     "note": "",
+     "positives": 5,
+     "precision": 0.7142857142857143,
+     "recall": 1.0
+    },
+    "Mulanje": {
+     "alert_rate": 0.03678929765886288,
+     "f1": 0.7777777777777778,
+     "n": 299,
+     "note": "",
+     "positives": 7,
+     "precision": 0.6363636363636364,
+     "recall": 1.0
+    },
+    "Mwanza": {
+     "alert_rate": 0.042105263157894736,
+     "f1": 0.8,
+     "n": 285,
+     "note": "",
+     "positives": 8,
+     "precision": 0.6666666666666666,
+     "recall": 1.0
+    },
+    "Mzimba": {
+     "alert_rate": 0.05976095617529881,
+     "f1": 0.8,
+     "n": 251,
+     "note": "",
+     "positives": 10,
+     "precision": 0.6666666666666666,
+     "recall": 1.0
+    },
+    "Neno": {
+     "alert_rate": 0.0539568345323741,
+     "f1": 0.7499999999999999,
+     "n": 278,
+     "note": "",
+     "positives": 9,
+     "precision": 0.6,
+     "recall": 1.0
+    },
+    "Nkhata Bay": {
+     "alert_rate": 0.07196969696969698,
+     "f1": 0.972972972972973,
+     "n": 264,
+     "note": "",
+     "positives": 18,
+     "precision": 0.9473684210526315,
+     "recall": 1.0
+    },
+    "Nkhotakota": {
+     "alert_rate": 0.04150943396226415,
+     "f1": 0.9,
+     "n": 265,
+     "note": "",
+     "positives": 9,
+     "precision": 0.8181818181818182,
+     "recall": 1.0
+    },
+    "Nsanje": {
+     "alert_rate": 0.04230769230769231,
+     "f1": 0.8421052631578948,
+     "n": 260,
+     "note": "",
+     "positives": 8,
+     "precision": 0.7272727272727273,
+     "recall": 1.0
+    },
+    "Ntcheu": {
+     "alert_rate": 0.0353356890459364,
+     "f1": 0.9473684210526316,
+     "n": 283,
+     "note": "",
+     "positives": 9,
+     "precision": 0.9,
+     "recall": 1.0
+    },
+    "Ntchisi": {
+     "alert_rate": 0.028070175438596492,
+     "f1": 0.8571428571428571,
+     "n": 285,
+     "note": "",
+     "positives": 6,
+     "precision": 0.75,
+     "recall": 1.0
+    },
+    "Phalombe": {
+     "alert_rate": 0.0695970695970696,
+     "f1": 0.8484848484848484,
+     "n": 273,
+     "note": "",
+     "positives": 14,
+     "precision": 0.7368421052631579,
+     "recall": 1.0
+    },
+    "Rumphi": {
+     "alert_rate": 0.04285714285714286,
+     "f1": 0.8,
+     "n": 280,
+     "note": "",
+     "positives": 8,
+     "precision": 0.6666666666666666,
+     "recall": 1.0
+    },
+    "Salima": {
+     "alert_rate": 0.03529411764705882,
+     "f1": 0.9411764705882353,
+     "n": 255,
+     "note": "",
+     "positives": 8,
+     "precision": 0.8888888888888888,
+     "recall": 1.0
+    },
+    "Thyolo": {
+     "alert_rate": 0.03292181069958848,
+     "f1": 0.8571428571428571,
+     "n": 243,
+     "note": "",
+     "positives": 6,
+     "precision": 0.75,
+     "recall": 1.0
+    },
+    "Zomba": {
+     "alert_rate": 0.026415094339622643,
+     "f1": 0.923076923076923,
+     "n": 265,
+     "note": "",
+     "positives": 6,
+     "precision": 0.8571428571428571,
+     "recall": 1.0
+    },
+    "_max_recall_gap": 0.0
+   },
+   "by_error_type": {
+    "age_heaping": {
+     "ml_recall": 1.0,
+     "n": 69,
+     "phase1_recall": 0.0,
+     "union_recall": 1.0
+    },
+    "length_digit_transposition": {
+     "ml_recall": 1.0,
+     "n": 57,
+     "phase1_recall": 0.6491228070175439,
+     "union_recall": 1.0
+    },
+    "muac_unit_error": {
+     "ml_recall": 1.0,
+     "n": 57,
+     "phase1_recall": 0.0,
+     "union_recall": 1.0
+    },
+    "weight_decimal_shift": {
+     "ml_recall": 1.0,
+     "n": 79,
+     "phase1_recall": 1.0,
+     "union_recall": 1.0
+    }
+   },
+   "by_sex": {
+    "_max_recall_gap": 0.0,
+    "female": {
+     "alert_rate": 0.047453083109919574,
+     "f1": 0.8653846153846153,
+     "n": 3730,
+     "note": "",
+     "positives": 135,
+     "precision": 0.7627118644067796,
+     "recall": 1.0
+    },
+    "male": {
+     "alert_rate": 0.04217506631299735,
+     "f1": 0.8881118881118881,
+     "n": 3770,
+     "note": "",
+     "positives": 127,
+     "precision": 0.7987421383647799,
+     "recall": 1.0
+    }
+   },
+   "calibration": [
+    {
+     "bin": "0.0-0.1",
+     "mean_probability": 0.0038145290531953415,
+     "n": 7152,
+     "observed_rate": 0.0
+    },
+    {
+     "bin": "0.1-0.2",
+     "mean_probability": 0.13466654005844905,
+     "n": 24,
+     "observed_rate": 0.041666666666666664
+    },
+    {
+     "bin": "0.2-0.3",
+     "mean_probability": 0.21187087964623752,
+     "n": 4,
+     "observed_rate": 0.0
+    },
+    {
+     "bin": "0.3-0.4",
+     "mean_probability": 0.34401377158610436,
+     "n": 2,
+     "observed_rate": 0.0
+    },
+    {
+     "bin": "0.4-0.5",
+     "mean_probability": 0.4594265507621863,
+     "n": 4,
+     "observed_rate": 0.25
+    },
+    {
+     "bin": "0.5-0.6",
+     "mean_probability": 0.567430809102826,
+     "n": 4,
+     "observed_rate": 0.75
+    },
+    {
+     "bin": "0.6-0.7",
+     "mean_probability": 0.665837003307074,
+     "n": 4,
+     "observed_rate": 0.5
+    },
+    {
+     "bin": "0.7-0.8",
+     "mean_probability": 0.7621560235569749,
+     "n": 14,
+     "observed_rate": 0.7142857142857143
+    },
+    {
+     "bin": "0.8-0.9",
+     "mean_probability": 0.8575664328764985,
+     "n": 25,
+     "observed_rate": 0.64
+    },
+    {
+     "bin": "0.9-1.0",
+     "mean_probability": 0.9903526175182501,
+     "n": 267,
+     "observed_rate": 0.8576779026217228
+    }
+   ],
+   "errors": 262,
+   "errors_missed_by_phase1": 146,
+   "ml": {
+    "alert_rate": 0.0448,
+    "f1": 0.8762541806020068,
+    "n": 7500,
+    "positives": 262,
+    "precision": 0.7797619047619048,
+    "recall": 1.0
+   },
+   "ml_recall_on_missed_by_phase1": 1.0,
+   "n": 7500,
+   "phase1_only": {
+    "alert_rate": 0.015466666666666667,
+    "f1": 0.6137566137566137,
+    "n": 7500,
+    "positives": 262,
+    "precision": 1.0,
+    "recall": 0.44274809160305345
+   },
+   "union": {
+    "alert_rate": 0.0448,
+    "f1": 0.8762541806020068,
+    "n": 7500,
+    "positives": 262,
+    "precision": 0.7797619047619048,
+    "recall": 1.0
+   }
+  }
+ },
+ "model": {
+  "bias": -5.679424420038317,
+  "coef": [
+   -0.5798351756758816,
+   -0.06286361556205895,
+   0.3003788994659095,
+   0.8182085150293431,
+   0.04106252530224016,
+   0.6184867017820795,
+   0.2579855069066473,
+   0.9714738487035979,
+   0.9714738487035979,
+   0.05001298210409932,
+   0.06286077234902367,
+   -0.07918510491231025,
+   -0.2629316044387519,
+   0.0,
+   0.9522134879538677,
+   0.6924104215868218,
+   0.6496827886295392,
+   0.7087661049818992,
+   0.8836491747624595,
+   0.5515234951643672,
+   0.9725193612234928,
+   0.4458245834122339,
+   1.075698458124761,
+   0.11941619215443333,
+   -0.36629841026568877,
+   -0.5813171862289862,
+   0.21076182560075385,
+   1.236098143040121,
+   0.1548097081118264,
+   0.0960159975349493,
+   -0.03375612983113684,
+   -0.2629316044387519,
+   0.07075434454741654,
+   0.04787097326415203,
+   0.19350847337007251,
+   0.03936281569289301
+  ],
+  "mean": [
+   30.491346905250808,
+   0.49857142857142855,
+   0.6088571428571429,
+   12.531224285714286,
+   87.21067714285715,
+   13.160291428571428,
+   0.14322857142857143,
+   0.008914285714285715,
+   0.008914285714285715,
+   -0.5465597804947736,
+   -0.5315744586429278,
+   -0.38086414830573917,
+   0.010114285714285715,
+   0.0,
+   0.015857142857142858,
+   0.010285714285714285,
+   0.0066,
+   0.011314285714285714,
+   0.0282,
+   0.5468767136968092,
+   0.8009912745767973,
+   1.2194500534207269,
+   -5.801673359594127,
+   -1.3174342175714713,
+   9.952267335145814,
+   9.956200567815717,
+   44.846525,
+   0.0152,
+   0.05885714285714286,
+   0.09677142857142858,
+   0.011085714285714286,
+   0.010114285714285715,
+   0.030485714285714286,
+   0.029857142857142856,
+   0.02945714285714286,
+   0.029085714285714284
+  ],
+  "names": [
+   "age_months",
+   "sex_male",
+   "position_height",
+   "weight_kg",
+   "length_height_cm",
+   "muac_cm",
+   "muac_missing",
+   "muac_ge_30",
+   "muac_unit_suspect",
+   "wfa_z",
+   "lhfa_z",
+   "wflh_z",
+   "wfa_missing",
+   "lhfa_missing",
+   "wflh_missing",
+   "implaus_wfa",
+   "implaus_lhfa",
+   "implaus_wflh",
+   "implaus_count",
+   "abs_wfa_minus_wflh",
+   "abs_wfa_minus_lhfa",
+   "abs_wflh_minus_lhfa",
+   "length_swap_lhfa_gain",
+   "length_swap_wflh_gain",
+   "weight_div10_abs_wflh",
+   "weight_mul10_abs_wflh",
+   "age_dist_6m_days",
+   "age_heap_exact",
+   "is_sam",
+   "is_mam",
+   "is_unable",
+   "oedema_present",
+   "appetite_not_done",
+   "danger_unknown",
+   "compl_unknown",
+   "well_unknown"
+  ],
+  "std": [
+   17.589861630272996,
+   0.49999795917950857,
+   0.488006272960686,
+   9.49014028594092,
+   15.782480648719067,
+   13.332553686401704,
+   0.35030579178069843,
+   0.09399372970836829,
+   0.09399372970836829,
+   1.4860244344979514,
+   1.3473201824608976,
+   1.5195151489810241,
+   0.1000599167437966,
+   1e-09,
+   0.1249227516409682,
+   0.10089558150556911,
+   0.08097184695929814,
+   0.10576517693958264,
+   0.22342570513324048,
+   0.5080193203968285,
+   1.2574420703074447,
+   1.3523395337826543,
+   3.765379757159261,
+   2.528323909849337,
+   0.6547271173579426,
+   0.6255970451860574,
+   26.63996821666815,
+   0.12234770124526247,
+   0.23535713201820915,
+   0.2956462737523906,
+   0.10470349194028725,
+   0.1000599167437966,
+   0.1719195611622019,
+   0.1701931076088307,
+   0.16908406072671883,
+   0.16804682534997226
+  ],
+  "type": "logistic"
+ },
+ "operating_point": {
+  "alert_rate": 0.0448,
+  "operating_point_met": true,
+  "recall_on_missed": 1.0,
+  "threshold": 0.13222772807084718
+ },
+ "production": true,
+ "role": "recording_error_flag",
+ "threshold": 0.13222772807084718
+}

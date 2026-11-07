@@ -1,0 +1,197 @@
+{
+ "metadata": {
+  "dataset_rows": 50016,
+  "epochs": 12,
+  "feature_names": [
+   "age_months",
+   "sex_male",
+   "position_height",
+   "weight_kg",
+   "length_height_cm",
+   "muac_cm",
+   "muac_missing",
+   "muac_ge_30",
+   "muac_unit_suspect",
+   "wfa_z",
+   "lhfa_z",
+   "wflh_z",
+   "wfa_missing",
+   "lhfa_missing",
+   "wflh_missing",
+   "implaus_wfa",
+   "implaus_lhfa",
+   "implaus_wflh",
+   "implaus_count",
+   "abs_wfa_minus_wflh",
+   "abs_wfa_minus_lhfa",
+   "abs_wflh_minus_lhfa",
+   "length_swap_lhfa_gain",
+   "length_swap_wflh_gain",
+   "weight_div10_abs_wflh",
+   "weight_mul10_abs_wflh",
+   "age_dist_6m_days",
+   "age_heap_exact",
+   "is_sam",
+   "is_mam",
+   "is_unable",
+   "oedema_present",
+   "appetite_not_done",
+   "danger_unknown",
+   "compl_unknown",
+   "well_unknown"
+  ],
+  "rows_skipped_invalid_input": 0,
+  "seed": 0,
+  "statement": "Demonstration model trained on synthetic data only. Not validated on real children. Not for clinical deployment. Advisory flags only: it never changes a clinical classification.",
+  "trained_on_manifest_sha256": "2104b2c2a373486134b4677c629f60166093dc8a69ead781b6bf6d4c2bcd1bbb",
+  "validated_on_real_data": false,
+  "version": "0.4.0"
+ },
+ "metrics": {
+  "n_test_error_records": 281,
+  "test_accuracy_on_error_records": 0.99644128113879,
+  "train_error_records": 1310
+ },
+ "model": {
+  "classes": [
+   "weight",
+   "length_height",
+   "muac",
+   "age"
+  ],
+  "names": [
+   "age_months",
+   "sex_male",
+   "position_height",
+   "weight_kg",
+   "length_height_cm",
+   "muac_cm",
+   "muac_missing",
+   "muac_ge_30",
+   "muac_unit_suspect",
+   "wfa_z",
+   "lhfa_z",
+   "wflh_z",
+   "wfa_missing",
+   "lhfa_missing",
+   "wflh_missing",
+   "implaus_wfa",
+   "implaus_lhfa",
+   "implaus_wflh",
+   "implaus_count",
+   "abs_wfa_minus_wflh",
+   "abs_wfa_minus_lhfa",
+   "abs_wflh_minus_lhfa",
+   "length_swap_lhfa_gain",
+   "length_swap_wflh_gain",
+   "weight_div10_abs_wflh",
+   "weight_mul10_abs_wflh",
+   "age_dist_6m_days",
+   "age_heap_exact",
+   "is_sam",
+   "is_mam",
+   "is_unable",
+   "oedema_present",
+   "appetite_not_done",
+   "danger_unknown",
+   "compl_unknown",
+   "well_unknown"
+  ],
+  "root": {
+   "feature": "implaus_wfa",
+   "index": 15,
+   "left": {
+    "feature": "muac_cm",
+    "index": 5,
+    "left": {
+     "feature": "age_heap_exact",
+     "index": 27,
+     "left": {
+      "feature": "is_sam",
+      "index": 28,
+      "left": {
+       "leaf": {
+        "age": 0.0,
+        "length_height": 1.0,
+        "muac": 0.0,
+        "weight": 0.0
+       },
+       "n": 297
+      },
+      "right": {
+       "leaf": {
+        "age": 0.0,
+        "length_height": 0.8,
+        "muac": 0.0,
+        "weight": 0.2
+       },
+       "n": 30
+      },
+      "threshold": 0.5
+     },
+     "right": {
+      "feature": "length_height_cm",
+      "index": 4,
+      "left": {
+       "leaf": {
+        "age": 0.95,
+        "length_height": 0.05,
+        "muac": 0.0,
+        "weight": 0.0
+       },
+       "n": 20
+      },
+      "right": {
+       "leaf": {
+        "age": 1.0,
+        "length_height": 0.0,
+        "muac": 0.0,
+        "weight": 0.0
+       },
+       "n": 291
+      },
+      "threshold": 61.8
+     },
+     "threshold": 0.5
+    },
+    "right": {
+     "leaf": {
+      "age": 0.0,
+      "length_height": 0.0,
+      "muac": 1.0,
+      "weight": 0.0
+     },
+     "n": 312
+    },
+    "threshold": 59.3
+   },
+   "right": {
+    "feature": "abs_wfa_minus_wflh",
+    "index": 19,
+    "left": {
+     "leaf": {
+      "age": 0.0,
+      "length_height": 0.0,
+      "muac": 0.0,
+      "weight": 1.0
+     },
+     "n": 342
+    },
+    "right": {
+     "leaf": {
+      "age": 0.1111111111111111,
+      "length_height": 0.0,
+      "muac": 0.0,
+      "weight": 0.8888888888888888
+     },
+     "n": 18
+    },
+    "threshold": 0.8468852309308366
+   },
+   "threshold": 0.5
+  },
+  "type": "tree"
+ },
+ "production": true,
+ "role": "suggested_field_to_recheck"
+}

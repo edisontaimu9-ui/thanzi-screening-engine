@@ -50,6 +50,22 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 
 - Phase 3 closed by Edison 2026-11-07; D40-D44 confirmed.
 
+## Approved (Phase 4 spec answers, Edison 2026-11-07)
+- D45. Target B is implemented as a **rules-based review flag**. An ML model for B exists only as a clearly labelled diagnostic replica, not production.
+- D46. Models are plain-Python logistic regression and a shallow decision tree, standard library only at runtime. scikit-learn is optional and dev-only: try it on Termux first; if it will not install, skip it. (Edison's message was cut off after "If it fails then"; I read it this way.)
+- D47. Target A is one flag for "possible recording error" plus a suggested field to recheck. No five-class classifier.
+- D48. Operating point for A: at least 80% recall on errors Phase 1 flags miss, at most 10% of records flagged.
+- D49. Output is a separate `MlFlags` object. `ClassificationResult` is unchanged.
+- D50. Trained `models/*.json` are committed to git with their metrics.
+
+## Implementation interpretations in Phase 4 (need Edison's confirmation)
+- D51. Features use only recorded values, Phase 1 z-scores and flags, and Phase 2 outputs (36 features, listed in `ml/features.py`). They include "would a digit swap or a 10x weight shift make this plausible" checks and the distance of the age to an exact 6-month multiple.
+- D52. "Errors Phase 1 misses" means injected-error records with no Phase 1 implausible flag.
+- D53. `MlFlags` carries the ML error flag and the rules-based review result side by side, each labelled by source.
+- D54. Age heaping is detected almost perfectly only because the synthetic injection rounds ages exactly. Real heaping is fuzzy, so this will not transfer. The same feature flags a child legitimately aged exactly 12 months (the boundary stress test shows this).
+- D55. Results on synthetic data are high (AUC about 0.997). That reflects clean synthetic errors, not real-world performance.
+- D56. Threshold chosen on validation by maximising recall on Phase-1-missed errors under the 10% alert cap.
+
 ## Implementation interpretations in Phase 3 (confirmed by Edison 2026-11-07)
 - D40. Target B labels (`review_reasons`) are built deterministically from engine outputs: unable to classify, missing assessment, implausible value, weight under 3 kg verify, MUAC vs WFL/H discordance, near MUAC threshold (within 0.2 cm), near WFL/H threshold (within 0.1 z). Margins are assumptions. A model can only learn this function, not clinical truth.
 - D41. Four injected error types: weight decimal shift, length digit transposition, MUAC unit error (cm recorded as mm), age heaping to 6-month multiples. Overall rate 4% (assumption). `injected_error` records the true label.
@@ -81,3 +97,6 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - I11. (closed) A1 and D23 confirmed 2026-11-07.
 - I12. R8 (WHO arm-circumference-for-age tables) pending upload from Edison. Until then MUAC stays a placeholder (D38).
 - I13. R9 (published Malawi prevalence figures) pending from Edison (D37).
+- I14. Real recording errors are messier than the four injected types. Revalidate on real data before any use.
+- I15. Fairness across districts, age bands and sex cannot be tested on synthetic data (districts carry no signal). Needs real data (work plan Week 6).
+- I16. Age flag treats exact 6-month-multiple ages as suspicious. Decide how to handle ages that come from a recorded date of birth.

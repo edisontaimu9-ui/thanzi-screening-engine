@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0 - Phase 4
+- Rules-based review flag (`thanzi_screen.rules.review`) for ML target B, with reason codes and plain-language messages (D45).
+- `thanzi_screen.ml`: leak-free features, plain-Python logistic regression and shallow decision tree (JSON models), recording-error flag with suggested field to recheck (target A), `flag_record` returning a separate `MlFlags`. `ClassificationResult` unchanged.
+- Trained models, metrics and model card in `models/`; ML replica of the review rules kept as a non-production diagnostic.
+- `scripts/train_models.py`; optional dev-only `scripts/compare_sklearn.py`.
+
 ## 0.3.0 - Phase 3
 - `thanzi_screen.data`: seeded synthetic generator (50,000 random records plus 16 boundary records), recorded-error injection with ground-truth labels, missingness, leak-free stratified splits, validation, SHA-256 manifest, loader that refuses unverified or non-synthetic data.
 - `scripts/generate_synthetic.py` CLI. Coarse `district` field (D33). MUAC is a placeholder assumption, not WHO MUAC-for-age.

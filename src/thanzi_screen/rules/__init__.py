@@ -4,9 +4,10 @@ from .models import (
     Appetite, Classification, ClassificationResult, ClinicalInputs, Complication,
     DangerSign, OedemaGrade, Tier,
 )
+from .review import ReviewResult, review
 from .rules_v2016 import RULE_SET_VERSION, RULES
 
 __all__ = [
     "Appetite", "Classification", "ClassificationResult", "ClinicalInputs", "Complication",
-    "DangerSign", "OedemaGrade", "Tier", "classify", "RULE_SET_VERSION", "RULES",
+    "DangerSign", "OedemaGrade", "ReviewResult", "Tier", "classify", "review", "RULE_SET_VERSION", "RULES",
 ]
