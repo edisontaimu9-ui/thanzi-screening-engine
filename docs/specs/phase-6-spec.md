@@ -1,6 +1,6 @@
 # Phase 6 specification: FastAPI packaging
 
-Status: IMPLEMENTED 2026-11-07, CI result pending (I22). See "Amendments at implementation" at the end. Q1-Q8 approved by Edison 2026-11-07 (D74-D81) with three conditions: HIV privacy in worker responses (Q3), access restricted to Hope's gateway (Q5), full API tests in CI (Q8). Interpretations of the conditions: D82-D84. **Specification only. No implementation until Edison says go.**
+Status: COMPLETE, closed 2026-11-07 (D92), CI #2 green. See "Amendments at implementation" at the end. Q1-Q8 approved by Edison 2026-11-07 (D74-D81) with three conditions: HIV privacy in worker responses (Q3), access restricted to Hope's gateway (Q5), full API tests in CI (Q8). Interpretations of the conditions: D82-D84. **Specification only. No implementation until Edison says go.**
 
 ## Objective
 Package the engine (Phases 1-5) as a small, stateless HTTP service that Hope's app and gateway can call, with a published contract, Docker-ready for UniPod servers. No change to any existing interface.

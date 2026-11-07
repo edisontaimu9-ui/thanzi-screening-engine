@@ -82,6 +82,9 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D90. The gateway key is checked in middleware before routing and body validation, so unauthenticated callers cannot probe routes or validation. Only `/health` is open. Request bodies over 16 KB (declared length) are refused with 413 after authentication.
 - D91. Runtime dependencies are pinned with compatible-release ranges in the `api` extra (`fastapi~=0.162.2`, `pydantic~=2.14.3`, `uvicorn~=0.54.0`; dev `httpx~=0.28.1`) so the committed OpenAPI file stays reproducible in CI. Engine dependencies stay empty.
 
+## Phase 6 close (Edison 2026-11-07)
+- D92. Phase 6 closed on Edison's instruction to start Phase 7. CI run #2 on `b817e9c` is green (Edison's screenshot). CI #1 failed on a YAML syntax error in `ci.yml` (unquoted `: ` in a `run:` value), fixed in `b817e9c` with a YAML parse test. The assistant did not see the individual Docker steps; Edison to confirm they ran (I22).
+
 ## Approved (Phase 5 spec answers, Edison 2026-11-07)
 - D58. Scope: one `Explanation` covers the rules classification, the ML recording-error flag and the rules review flag.
 - D59. Method: exact linear contributions for the logistic model and the tree path. No SHAP or LIME.
@@ -151,8 +154,9 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - I19. Chichewa translation of the message catalogue pending; owner per D34.
 - I20. (closed) Decided by Edison 2026-11-07: no programme in the worker view, neutral wording, details in the audit view. Implemented as D86. Residual: a worker who is told the real programme by a clinician can still infer it; that is outside the API.
 - I21. Network isolation of the API (private network, no public port, only Hope's gateway) is deployment work for Hope. Needs her confirmation before any deployment.
-- I22. First CI run unverified until Edison pushes. GitHub Actions pinned to major versions, not commit SHAs. Phase 6 closes only when CI is green on `main`; the Docker job and Python 3.11 were not run in the build environment (no Docker, Python 3.12 only).
+- I22. (closed D92, CI #2 green; Docker step list to be confirmed) First CI run unverified until Edison pushes. GitHub Actions pinned to major versions, not commit SHAs. Phase 6 closes only when CI is green on `main`; the Docker job and Python 3.11 were not run in the build environment (no Docker, Python 3.12 only).
 - I23. The neutral MAM wording (`api/wording.py`) is a draft. Maria Talimire or another clinician must confirm a worker can act on it, and workers must be able to learn the programme through the clinic's own process (D72).
 - I24. The audit view carries HIV information and the real programme. Who may hold the audit key, and how access is logged, is Hope's decision (D83).
 - I25. D82-D84 interpretations were not explicitly confirmed by Edison in the go message. Treated as accepted unless he says otherwise.
 - I26. Not load tested. Not tested on UniPod servers. `starlette.testclient` prints a deprecation notice about `httpx`; harmless today, revisit when the pinned versions move.
+- I27. Phase 7 draft spec `docs/specs/phase-7-spec.md` awaits approval of Q1-Q8. CI gaps found in review are listed there (weak smoke assertions, no timeouts, unpinned transitive dependencies, no audit or scan).

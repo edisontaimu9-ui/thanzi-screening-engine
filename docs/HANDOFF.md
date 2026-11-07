@@ -30,7 +30,8 @@ Reply in English, terse. For each update: build on the existing repo, zip only c
 - Phase 3 (data engineering): COMPLETE, closed by Edison 2026-11-07. 229 tests passing. See docs/modules/data.md, decision-log D35-D44. Pending inputs: R8 (WHO MUAC tables), R9 (Malawi prevalence), district list check (D43).
 - Phase 4 (advisory flags): COMPLETE, closed by Edison 2026-11-07. See docs/modules/ml.md, models/MODEL_CARD.md, decision-log D45-D57.
 - Phase 5 (explainability): COMPLETE, closed by Edison 2026-11-07. 273 tests passing. See docs/modules/explain.md, decision-log D58-D73. Wording review pending (I18).
-- Phase 6 (FastAPI packaging): IMPLEMENTED 2026-11-07 on Edison's "go" (spec docs/specs/phase-6-spec.md, decision-log D74-D91). 373 tests passing in the build environment (Python 3.12). NOT CLOSED: the first CI run is I22 (Docker job and Python 3.11 not run by the assistant). Closes only when CI is green on main. I20 decided (D86): no programme and no HIV information in any worker response; real values in the audit view only. Open: I21 (Hope: network isolation), I22 (CI), I23 (Maria: neutral MAM wording), I24 (Hope: who holds the audit key), I25 (D82-D84 confirmation). See docs/modules/api.md.
+- Phase 6 (FastAPI packaging): COMPLETE, closed 2026-11-07 (D92) with CI #2 green on `b817e9c`. 374 tests passing in the build environment (Python 3.12). See docs/specs/phase-6-spec.md, docs/modules/api.md, decision-log D74-D92. I20 decided (D86): no programme and no HIV information in any worker response; real values in the audit view only. Open: I21 (Hope: network isolation), I23 (Maria: neutral MAM wording), I24 (Hope: audit key holder), I25 (D82-D84 confirmation).
+- Phase 7 (testing and deployment readiness): SPEC DRAFT 2026-11-07, awaiting Edison's answers to Q1-Q8. No implementation until he says go. See docs/specs/phase-7-spec.md.
 - Run tests: `pip install pytest && python -m pytest -q` from the repo root.
 
 ## Open issues
