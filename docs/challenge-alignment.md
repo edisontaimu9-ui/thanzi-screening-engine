@@ -1,0 +1,43 @@
+# Challenge alignment and role split
+
+## Challenge
+AI for Public Good Challenge (UniPod Malawi, MUBAS, timbuktoo, UNDP). Brief 3: **AI-Assisted Malnutrition Screening**, Ministry of Health and Sanitation (R10). The team's work plan (R11) calls it Use Case 1. The brief describes the problem and does not prescribe a solution.
+
+## Team (from the work plan, R11)
+| Member | Role | Main responsibility |
+|---|---|---|
+| Edison Taimu (Team Leader) | Nutrition & AI Systems Lead | AI design, coordination and reporting. Owns this repository |
+| Hope Kalitera | Systems Architecture & Information Systems Lead | Architecture, databases, backend and frontend, deployment, security |
+| Maria Talimire | Nutrition & Clinical Validation Lead | Screening workflows, referral logic, clinical review of AI outputs |
+
+## Scope decision (D31)
+The work plan proposed extending the Chakudya Nutrition Registry (API and MCP server) and Thanzi Coach. **Reuse of existing projects was dropped by Edison because it added complexity.** This repository is therefore the independent screening engine, with no dependency on those projects (consistent with the standing rule). Where the work plan says "Chakudya API" or "Thanzi Coach", read "the independent engine and whatever interface Hope builds".
+
+## Edison's responsibility (this repository)
+- Anthropometric engine (Phase 1) and CMAM 2016 classification and referral rules (Phase 2): done.
+- Synthetic data pipeline (Phase 3), risk-flagging ML (Phase 4), explainability (Phase 5), API packaging (Phase 6), testing and deployment readiness (Phase 7).
+- Clinical safety: rules traced to references; AI never diagnoses or overrides a rule (D9); decision support only.
+- Screening engine v0.1 sign-off (work plan Week 3: Edison accountable).
+
+## Work plan deliverables and this repository
+| Work plan item | Accountable | What this repo provides or needs |
+|---|---|---|
+| Screening and referral logic specification (Wk 2) | Maria | Phase 2 rules and `docs/specs/phase-2-spec.md`, with the decision log, for her clinical review and sign-off. Phase 2 was closed by Edison; Maria's review is a pending dependency |
+| Screening engine v0.1 (Wk 3) | Edison | Phases 1-2 built; Phases 3-5 add synthetic data, AI flags, explanations |
+| System design, architecture, deployment, security | Hope | `ClassificationResult` and `ClinicalInputs` as the interface; standard-library Python engine, Docker-ready |
+| End-to-end screening, offline mobile web app | Hope (Edison responsible for engine side) | Engine package or Phase 6 API |
+| WhatsApp channel | Not settled after D31 | Open question Q-A below |
+| Analytics dashboard, de-identification, aggregation by district, facility, community | Hope | Result records. Phase 3 synthetic data may carry coarse geography (open) |
+| Validation and testing report (Wk 6) | Maria | Test suites, rule traceability; agreement with clinical classification needs Ministry data |
+| Plain-language explanations of contributing factors | Edison | Phase 5 |
+| Data-sharing arrangement (Wk 1) | Edison (A, R) | Until agreed, synthetic data only |
+| Local languages, nutrition guidance at point of care | Not assigned in the work plan | Open question Q-B below |
+
+## Interface contract
+`ClassificationResult` and its reason, warning and rule codes are the interface for Hope and Maria. Changes are logged in the decision log.
+
+## Open questions
+- Q-A. With Chakudya and Thanzi Coach reuse dropped, is a WhatsApp channel still in scope (new build by Hope) or removed from the prototype?
+- Q-B. Who owns local-language support and point-of-care nutrition guidance, given the brief asks for them and the work plan does not assign them? Guidance content needs approved Malawi sources.
+- Q-C. Should Phase 3 synthetic data carry a coarse district field for dashboard testing?
+- Q-D. Maria's clinical review of the Phase 2 rules: when, and in what form? Open items for her: decision log D23-D28, A1, A2, I10, and the CMAM criteria themselves.

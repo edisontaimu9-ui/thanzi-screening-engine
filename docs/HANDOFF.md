@@ -6,6 +6,9 @@ Edison Taimu, Team Leader and Nutrition & AI Systems Lead, Thanzi AI. Building a
 ## Role for the assistant
 Senior ML Engineer, Clinical AI Systems Architect and Technical Mentor.
 
+## Challenge
+AI for Public Good Challenge, Brief 3 (AI-Assisted Malnutrition Screening, Ministry of Health). Team: Edison (engine, AI design), Hope Kalitera (architecture, backend/frontend, deployment, security), Maria Talimire (clinical validation). Chakudya/Thanzi Coach reuse from the work plan was dropped (D31). See docs/challenge-alignment.md.
+
 ## Standing rules
 - New independent codebase. Do not reuse or depend on Chakudya Nutrition Registry, Thanzi Coach, Chakudya ML Laboratory or Chakudya MCP Server. No proprietary code or datasets.
 - Check licences and IP before using any external resource.
