@@ -22,7 +22,7 @@ Reply in English, terse. For each update: build on the existing repo, zip only c
 ## Phase status
 - Phase 0: COMPLETE. docs/specs/phase-0-spec.md, docs/decisions/decision-log.md.
 - Phase 1 (anthropometric engine): COMPLETE, approved by Edison 2026-11-07. 126 tests passing. See docs/modules/anthro.md.
-- Phase 2 (CMAM classification and referral): SPEC DRAFTED (docs/specs/phase-2-spec.md), awaiting Edison's approval and answers to its open questions. No code until approved. Inputs to design: oedema grade, MUAC (6-59 months only), appetite test, danger signs, medical complications, optional HIV flag; z-scores and flags from Phase 1.
+- Phase 2 (CMAM classification and referral): IMPLEMENTED, 196 tests passing. See docs/modules/rules.md and decision-log D16-D28. Awaiting Edison's review; confirm I7-I11. Phase 3 not started.
 - Run tests: `pip install pytest && python -m pytest -q` from the repo root.
 
 ## Open issues

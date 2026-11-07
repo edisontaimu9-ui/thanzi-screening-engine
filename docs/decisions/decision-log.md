@@ -20,6 +20,23 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D14. With oedema present, WFA and WFL/H are not computed (WHO rule); LHFA still is. Phase 2 uses the oedema grade directly.
 - D15. Converted WHO CSV tables live inside the package (`src/thanzi_screen/anthro/reference_tables/`) with a SHA-256 manifest, so installs and Docker images work. `data/reference_tables/` is no longer used.
 
+## Approved (Phase 2 spec answers, Edison 2026-11-07)
+- D16 (Q1). Implausible-flagged z-scores are ignored. Valid MUAC and oedema are used. If no valid wasting assessment remains, output UNABLE_TO_CLASSIFY (recheck measurements). Never low risk.
+- D17 (Q2). With oedema, WFL/H is excluded (D14); MUAC <11.5 is the wasting criterion for "oedema with severe wasting". Bilateral pitting oedema independently qualifies as SAM.
+- D18 (Q3). SAM with essential information missing (appetite, danger signs, complications, clinical status): SAM_ASSESS, "Urgent assessment: determine OTP vs inpatient". Never defaults to OTP.
+- D19 (Q4). Failed appetite test in SAM: inpatient. Confirmed by R3: anorexia (no appetite) is a danger sign, Table 5 p.16.
+- D20 (Q5). Exactly 6 months uses the 6-59 month child pathway.
+- D21 (Q6). MUAC under 6 months is ignored with a warning.
+- D22 (Q7). Referral text is clearly marked placeholder until official wording is extracted. Destinations (NRU, OTP, SFP) come from R3.
+
+## Implementation interpretations in Phase 2 (need Edison's confirmation)
+- D23. Stricter reading of D16: if WFL/H is flagged implausible and MUAC is normal, return UNABLE_TO_CLASSIFY rather than low risk (a suspect weight or height could hide wasting). A valid abnormal MUAC or oedema still classifies.
+- D24. Added input `clinically_well_and_alert` (R3 OTP criterion). Lethargy or unconsciousness as danger signs force "not well and alert".
+- D25. Danger signs or complications are `None` when not assessed, empty set when assessed and absent.
+- D26. HIV-positive MAM meeting OTP conditions: classification MAM, tier MAM, programme OTP. The spec draft said urgent tier; R3 does not make this child SAM, so I did not.
+- D27. Infants: exactly 45 cm applies the WFL criterion (conservative); visible severe wasting is accepted at any length when entered true.
+- D28. User-facing tier "recheck" added as a fourth tier for UNABLE_TO_CLASSIFY.
+
 ## Open issues
 - I1. Licences for WHO tables and the CMAM PDF unconfirmed; raw files kept out of git.
 - I2. Inputs needed for the OTP vs inpatient split: appetite test, danger signs, medical complications.
@@ -27,3 +44,10 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - I5. Cross-check against WHO Anthro software output on sample records (still open). Chapter 7 now verified from the WHO book (R6): adjusted method and worked examples confirmed. Oedema rule and plausibility limits are not in the book chapter and rest on WHO anthro documentation (R6b).
 - I6. Phase 2 must define how implausible-flagged values affect classification.
 - I4. Confirm with MoH Nutrition Unit that no edition newer than 2016 applies.
+- I2. (closed in Phase 2) Danger signs, complications and appetite role extracted from R3 pp.11, 16.
+- I6. (closed) Resolved by D16, D23.
+- I7. R3 Table 5 infant column says "if infant is > 6 months and weighs < 3.0 kg". Likely a typo for <6 months. Not implemented. Confirm with MoH Nutrition Unit.
+- I8. Confirm D26 (tier for HIV-positive MAM admitted to OTP).
+- I9. Confirm A2: infant WFA < -3 mapped to MAM tier.
+- I10. Official referral wording not in R3 Table 5; placeholders remain.
+- I11. Confirm A1 (z = -2.00 boundary) and D23.

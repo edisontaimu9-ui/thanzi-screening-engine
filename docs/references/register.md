@@ -6,7 +6,7 @@ Tags: DOCUMENTED (stated in a source), ASSUMPTION, RECOMMENDATION.
 |---|---|---|---|---|---|---|
 | R1 | WHO Child Growth Standards: weight-for-length (0-2 y) and weight-for-height (2-5 y), z-score tables, boys and girls (4 xlsx; columns Length/Height, L, M, S, SD3neg..SD3) | WHO 2006 standards | https://www.who.int/tools/child-growth-standards/standards/weight-for-length-height | To confirm. WHO states its expanded tables carry no warranty | LMS z-score computation | Held; converted CSVs committed (licence still to confirm, issue I1) |
 | R2 | WHO expanded-tables instructions (PDF) | n.d. | WHO Child Growth Standards site | To confirm | Technical notes: 1 month = 30.4375 days; age tables to 1856 days; length/height discontinuity between 730 and 731 days | Held, not in git |
-| R3 | Malawi Guidelines for Community-Based Management of Acute Malnutrition, 2nd Edition (MoH) | 2016 | https://www.policyvault.africa/wp-content/uploads/policy/MWI40.pdf | No licence statement in document; confirm with MoH Nutrition Unit | Classification and referral rules | Held, not in git. Approved edition per Edison; no newer edition per Edison |
+| R3 | Malawi Guidelines for Community-Based Management of Acute Malnutrition, 2nd Edition (MoH) | 2016 | https://www.policyvault.africa/wp-content/uploads/policy/MWI40.pdf | No licence statement in document; confirm with MoH Nutrition Unit | Classification and referral rules | Held (uploaded by Edison 2026-11-07), not in git. Approved edition per Edison; no newer edition per Edison. Printed page numbers used below (PDF page = printed + 11) |
 | R4 | WHO length/height-for-age tables | 2006 | https://www.who.int/toolkits/child-growth-standards/standards/length-height-for-age | To confirm | Phase 1 (if approved) | Held; converted CSVs in `src/thanzi_screen/anthro/reference_tables/` |
 | R5 | WHO weight-for-age tables | 2006 | https://www.who.int/childgrowth/standards/chts_wfa_boys_p/en/ | To confirm | Phase 1; infant growth-faltering check | Held; converted CSVs in package |
 | R6 | WHO Child Growth Standards: Length/height-for-age, weight-for-age, weight-for-length, weight-for-height and BMI-for-age: Methods and development (ISBN 92 4 154693 X), ch. 7 'Computation of centiles and z-scores', printed pp. 302-304 (PDF p. 324) | 2006 | Uploaded by Edison (WHO publication) | WHO copyright; reuse terms to confirm | Adjusted z-score for weight-based indicators, SD23 definitions, worked examples (used in tests). Also supports the 0.7 cm length/height convention (sections 3 and 7). | Held, primary source, not in git |
@@ -26,7 +26,21 @@ Tags: DOCUMENTED (stated in a source), ASSUMPTION, RECOMMENDATION.
 | HIV-positive child with MAM | Admit to OTP | Table 5, p.17 |
 | Infants <6 months | WFL <-3 (if >45 cm); any oedema; visible severe wasting (if <45 cm); too weak to suckle; failure to gain weight | Table 5, p.16 |
 
+## Additional rules extracted from R3 in Phase 2, all DOCUMENTED (printed pages)
+| Rule | Value | Location |
+|---|---|---|
+| Danger signs (7) | Anorexia (no appetite); intractable vomiting; convulsions; lethargy, not alert; unconsciousness; inability to drink or breastfeed; high fever (>39 C rectal or >38.5 C axillary) | Table 5, p.16 |
+| Medical complications (11) | Hypoglycaemia; hypothermia (<35 C axillary or <35.5 C rectal); infections; severe dehydration; shock; very severe anaemia; cardiac failure; severe dermatosis; signs of vitamin A deficiency; diarrhoea; malaria | Table 5, p.16 |
+| Appetite test | Done on admission and every visit; never skipped; determines OTP vs NRU. Pass/fail procedure not encoded (user enters result) | s.1.8, p.11 |
+| Inpatient (>6 months) | Oedema +++; or any oedema with severe wasting (MUAC <11.5 or WFH/L <-3); or oedema +/++ or severe wasting WITH danger signs or complications | Table 5, p.16 |
+| Infant failure to gain weight / WFA | Infants <6 months faltering or WFA z <-3: refer to clinician for further assessment; those not gaining weight after counselling/treatment: refer to NRU | Table 5 footnote, p.16 |
+| OTP, HIV-positive MAM | MUAC <12.5 or WFH/L -3 to -2, AND appetite passed, no complications, well and alert | Table 5, p.17 |
+| Out of scope | OTP-to-NRU referral criteria (deterioration, oedema increase, weight loss, no response at 3 months); ages 5-15 years; pregnant and lactating women | Table 5, pp.16-17 |
+| Source ambiguity | Infant column lists "If infant is > 6 months and weighs < 3.0 kg" under infants <6 months. Not implemented (issue I7) | Table 5, p.16 |
+
 ## Assumptions and recommendations
+- ASSUMPTION A1 (Phase 2): WFL/H z exactly -2.00 is not moderate (WHO convention z < -2). Table 5 says "-3 to -2".
+- ASSUMPTION A2 (Phase 2): infant WFA < -3 referral to clinician is mapped to the MAM tier (further assessment). Not stated as a tier in R3 (issue I9).
 - ASSUMPTION: MUAC exactly 12.5 cm is "no wasting" (Table 4 lists 12.5 in both bands). Confirmed by Edison: <12.5 is moderate.
 - RECOMMENDATION: Low-risk tier (counselling and routine monitoring). Not traced to a CMAM page.
 - RECOMMENDATION: four engine outputs (low risk, MAM, SAM-OTP eligible, SAM-inpatient) mapped to three user-facing tiers.

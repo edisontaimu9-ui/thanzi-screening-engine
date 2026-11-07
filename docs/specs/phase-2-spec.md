@@ -1,6 +1,6 @@
 # Phase 2 specification: CMAM classification and referral
 
-Status: DRAFT, awaiting approval. No code until approved.
+Status: Q1-Q7 approved by Edison 2026-11-07; implemented. Interpretations and open items: decision-log D23-D28, I7-I11.
 
 ## Objective
 Turn Phase 1 outputs (z-scores, flags) plus clinical inputs into a classification, user-facing tier, referral text and fired rule IDs. Rule set pinned to Malawi CMAM 2016 (2nd Ed.) as `rules_v2016` (D6). Rules only; no ML (D9).
@@ -14,7 +14,7 @@ From Phase 1: WFL/H z-score (absent when oedema, D14), plausibility flags (D12),
 New: MUAC cm (6-59 months only, D2); oedema grade none/+/++/+++ (D3); appetite test passed/failed/not done; danger signs (list or boolean, pending R3); medical complications (list or boolean, pending R3); optional HIV status (D7); for infants <6 months: visible severe wasting, too weak to suckle, failure to gain weight.
 
 ## Outputs
-Classification: `low_risk | MAM | SAM_OTP | SAM_INPATIENT | REFER_RECHECK` (last one proposed, see Q1). User-facing tier (D4): low risk / MAM / urgent. List of rule IDs fired, each with source ID, page and tag. Warnings. Referral text. Fixed "decision support, not diagnosis" statement. Rule set version.
+Classification: `low_risk | MAM | SAM_OTP | SAM_INPATIENT | SAM_ASSESS | UNABLE_TO_CLASSIFY`. User-facing tier (D4): low risk / MAM / urgent. List of rule IDs fired, each with source ID, page and tag. Warnings. Referral text. Fixed "decision support, not diagnosis" statement. Rule set version.
 
 ## Rule logic (all DOCUMENTED in R3 unless marked)
 Any one criterion qualifies (p.14).
@@ -23,7 +23,7 @@ Any one criterion qualifies (p.14).
 3. Inpatient (>6 months): oedema +++; or oedema (any) with severe wasting; or severe wasting/oedema +/++ with danger signs or medical complications.
 4. OTP (6-59 months): severe criterion with oedema at most ++, AND appetite passed, no complications, clinically well and alert.
 5. MAM: moderate criterion only, referral for further assessment.
-6. HIV-positive child with MAM: admit to OTP (urgent tier).
+6. HIV-positive child with MAM: admit to OTP (implemented as MAM tier, programme OTP; D26).
 7. Infants <6 months: WFL <-3 (if >45 cm); any oedema; visible severe wasting (if <45 cm); too weak to suckle; failure to gain weight. All map to inpatient/urgent.
 8. Low risk: none of the above (RECOMMENDATION, D8).
 
