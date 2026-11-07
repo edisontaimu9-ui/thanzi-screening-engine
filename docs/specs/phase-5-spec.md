@@ -1,6 +1,6 @@
 # Phase 5 specification: explainability
 
-Status: DRAFT. Waiting for Edison's answers to Q1-Q7. Nothing implemented.
+Status: Q1-Q7 approved by Edison 2026-11-07 (D58-D64); implemented. Interpretations: D65-D70.
 
 ## Objective
 For every screening result, explain in plain language why the engine said what it said, and why an advisory flag was raised. Two audiences: the health worker at the point of care (short, no model terms) and the reviewer or auditor (full trace).

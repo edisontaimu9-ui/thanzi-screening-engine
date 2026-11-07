@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 - Phase 5
+- `thanzi_screen.explain`: `explain(...) -> Explanation` with a worker summary (2-3 lines) and audit traces: classification (rules with source and page, criteria against cut-offs, margins), ML flag (exact signed contributions, tree path) and review reasons with evidence.
+- Message catalogue with stable codes (`explain/messages.py`). English draft; HIV wording in the audit trace only.
+- `scripts/explain_demo.py`. Explanations never change a classification or a flag.
+
 ## 0.4.0 - Phase 4
 - Rules-based review flag (`thanzi_screen.rules.review`) for ML target B, with reason codes and plain-language messages (D45).
 - `thanzi_screen.ml`: leak-free features, plain-Python logistic regression and shallow decision tree (JSON models), recording-error flag with suggested field to recheck (target A), `flag_record` returning a separate `MlFlags`. `ClassificationResult` unchanged.

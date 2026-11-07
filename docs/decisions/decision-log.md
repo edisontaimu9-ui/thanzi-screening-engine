@@ -58,6 +58,23 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D49. Output is a separate `MlFlags` object. `ClassificationResult` is unchanged.
 - D50. Trained `models/*.json` are committed to git with their metrics.
 
+## Approved (Phase 5 spec answers, Edison 2026-11-07)
+- D58. Scope: one `Explanation` covers the rules classification, the ML recording-error flag and the rules review flag.
+- D59. Method: exact linear contributions for the logistic model and the tree path. No SHAP or LIME.
+- D60. No counterfactuals ("what to change"). Margins to cut-offs only.
+- D61. Two views from one object: worker summary (max 3 lines) and full audit trace.
+- D62. Output is a separate `Explanation` object. `ClassificationResult` and `MlFlags` are unchanged.
+- D63. English message catalogue with stable codes now; translation by the team later (D34).
+- D64. HIV wording appears in the audit trace only, never in the worker summary (D7).
+
+## Implementation interpretations in Phase 5 (need Edison's confirmation)
+- D65. Worker summary lines: (1) class phrase plus up to 3 deciding reasons, or what is missing; (2) the action, taken from `referral_text` with the placeholder prefix removed (D30); (3) the ML recording check and the review reason, combined. Line 3 is omitted when neither applies.
+- D66. For rule MAM.HIV_OTP the worker action line says "Refer for admission to OTP" with no HIV wording (D64). `ClassificationResult.referral_text` itself still contains HIV wording (Phase 2 is unchanged), so the Phase 6 API must not show raw `referral_text` in the worker view for that case (I17).
+- D67. Infant rule INF.WFA_CLINICIAN yields class MAM (I9). The worker line says weight-for-age is very low and a clinician should assess, not "moderate acute malnutrition".
+- D68. Worker view shows the 2 largest signals that raise the error probability. The audit trace lists all 36 signed contributions. The Phase 4 `top_signals` method (magnitude, no sign) is left unchanged.
+- D69. Margin = value minus cut-off. A value exactly on a cut-off is reported as such and counts as the less severe side, matching the rules (MUAC at 11.5 is not severe, z of -2.00 is not moderate, A1).
+- D70. Wording is a draft. Phase 5 messages need review by clinicians and health workers before any use.
+
 ## Implementation interpretations in Phase 4 (confirmed by Edison 2026-11-07)
 - D51. Features use only recorded values, Phase 1 z-scores and flags, and Phase 2 outputs (36 features, listed in `ml/features.py`). They include "would a digit swap or a 10x weight shift make this plausible" checks and the distance of the age to an exact 6-month multiple.
 - D52. "Errors Phase 1 misses" means injected-error records with no Phase 1 implausible flag.
@@ -66,7 +83,7 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D55. Results on synthetic data are high (AUC about 0.997). That reflects clean synthetic errors, not real-world performance.
 - D56. Threshold chosen on validation by maximising recall on Phase-1-missed errors under the 10% alert cap.
 
-- D57. Phase 4 closed by Edison 2026-11-07 (D45-D56 confirmed). Phase 5 spec drafted, awaiting his answers to Q1-Q7.
+- D57. Phase 4 closed by Edison 2026-11-07 (D45-D56 confirmed). Phase 5 spec approved the same day (D58-D64).
 
 ## Implementation interpretations in Phase 3 (confirmed by Edison 2026-11-07)
 - D40. Target B labels (`review_reasons`) are built deterministically from engine outputs: unable to classify, missing assessment, implausible value, weight under 3 kg verify, MUAC vs WFL/H discordance, near MUAC threshold (within 0.2 cm), near WFL/H threshold (within 0.1 z). Margins are assumptions. A model can only learn this function, not clinical truth.
@@ -102,3 +119,6 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - I14. Real recording errors are messier than the four injected types. Revalidate on real data before any use.
 - I15. Fairness across districts, age bands and sex cannot be tested on synthetic data (districts carry no signal). Needs real data (work plan Week 6).
 - I16. Age flag treats exact 6-month-multiple ages as suspicious. Decide how to handle ages that come from a recorded date of birth.
+- I17. `ClassificationResult.referral_text` for MAM.HIV_OTP contains HIV wording. The API (Phase 6) must use the `Explanation` summary for the worker view, not raw `referral_text`, or Phase 2 wording must change (needs Edison's decision).
+- I18. Phase 5 wording (`explain/messages.py`) needs clinical review (Maria Talimire, team) and health-worker testing.
+- I19. Chichewa translation of the message catalogue pending; owner per D34.
