@@ -29,7 +29,8 @@ Reply in English, terse. For each update: build on the existing repo, zip only c
 - Point-of-care nutrition guidance: owned by Edison (D34), not yet in a phase; needs approved Malawi sources and a spec first.
 - Phase 3 (data engineering): COMPLETE, closed by Edison 2026-11-07. 229 tests passing. See docs/modules/data.md, decision-log D35-D44. Pending inputs: R8 (WHO MUAC tables), R9 (Malawi prevalence), district list check (D43).
 - Phase 4 (advisory flags): COMPLETE, closed by Edison 2026-11-07. See docs/modules/ml.md, models/MODEL_CARD.md, decision-log D45-D57.
-- Phase 5 (explainability): IMPLEMENTED, 273 tests passing. See docs/modules/explain.md, docs/specs/phase-5-spec.md, decision-log D58-D70. Awaiting Edison's review (D65-D70 need confirmation). Phase 6 (FastAPI packaging) not started.
+- Phase 5 (explainability): COMPLETE, closed by Edison 2026-11-07. 273 tests passing. See docs/modules/explain.md, decision-log D58-D73. Wording review pending (I18).
+- Phase 6 (FastAPI packaging): SPEC DRAFT written (docs/specs/phase-6-spec.md). Awaiting Edison's answers to Q1-Q8. Do not implement before approval. Worker-facing API uses the Explanation worker summary, never raw referral_text (D71).
 - Run tests: `pip install pytest && python -m pytest -q` from the repo root.
 
 ## Open issues
