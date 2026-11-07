@@ -39,6 +39,7 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 
 - D32. WhatsApp channel dropped from the prototype because of the privacy policy (Edison 2026-11-07).
 - D33. Synthetic data (Phase 3) carries a coarse district field, needed for the team's hotspot dashboard. Edison is not responsible for the dashboard.
+- D34. Ownership (Edison 2026-11-07): local languages belong to the NLP/AI technical team with Edison's clinical input; point-of-care nutrition guidance belongs to Edison as Clinical Nutrition Lead (develop, validate, align with Malawi guidelines). Guidance content must come from approved Malawi sources, never invented. Not yet scheduled in a phase.
 
 ## Implementation interpretations in Phase 2 (D23-D28 and A1, A2 confirmed by Edison 2026-11-07)
 - D23. Stricter reading of D16: if WFL/H is flagged implausible and MUAC is normal, return UNABLE_TO_CLASSIFY rather than low risk (a suspect weight or height could hide wasting). A valid abnormal MUAC or oedema still classifies.

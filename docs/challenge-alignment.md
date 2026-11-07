@@ -31,7 +31,8 @@ The work plan proposed extending the Chakudya Nutrition Registry (API and MCP se
 | Validation and testing report (Wk 6) | Maria | She tests the prototype (Edison, 2026-11-07). Test suites and rule traceability support this; agreement with clinical classification needs Ministry data |
 | Plain-language explanations of contributing factors | Edison | Phase 5 |
 | Data-sharing arrangement (Wk 1) | Edison (A, R) | Until agreed, synthetic data only |
-| Local languages, nutrition guidance at point of care | Team members, owner not named. Not Edison's | Stable reason and warning codes to translate. Guidance needs approved Malawi sources |
+| Local languages | NLP/AI technical team (not named), with Edison's clinical input | Chichewa dataset, language support, translation and testing are theirs. This repo supplies stable reason and warning codes to translate |
+| Point-of-care nutrition guidance | Edison (Clinical Nutrition Lead) | Develop the guidance, validate recommendations, ensure clinical accuracy and alignment with Malawi guidelines. Not yet in a phase (D34). Approved Malawi sources only |
 
 ## Interface contract
 `ClassificationResult` and its reason, warning and rule codes are the interface for Hope and Maria. Changes are logged in the decision log.
@@ -40,7 +41,8 @@ The work plan proposed extending the Chakudya Nutrition Registry (API and MCP se
 - WhatsApp channel dropped because of the privacy policy (D32).
 - Synthetic data carries a coarse district field (D33).
 - Maria Talimire tests the prototype.
-- Edison is not responsible for the dashboard or the other team-owned items.
+- Edison is not responsible for the dashboard or the other team-owned items, except point-of-care nutrition guidance (D34).
+- Local languages: NLP/AI technical team, with Edison's clinical input (D34).
 
 ## Open
-- Owner of local-language support and point-of-care nutrition guidance is not named. Not Edison's; no action in this repo.
+- Point-of-care nutrition guidance is Edison's but has no phase yet. Needs the approved Malawi guidance documents (see D34) and a spec before any build.
