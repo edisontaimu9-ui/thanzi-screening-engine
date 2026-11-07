@@ -20,11 +20,10 @@ Senior ML Engineer, Clinical AI Systems Architect and Technical Mentor.
 Reply in English, terse. For each update: build on the existing repo, zip only changed files with a change-descriptive name, give the unzip command (zips are in the Download folder) and exact git add/commit/push commands. Work is done on Android/Termux.
 
 ## Phase status
-- Phase 0: COMPLETE. See docs/specs/phase-0-spec.md and docs/decisions/decision-log.md.
-- Phase 1 (anthropometric engine): spec proposed, NOT approved, no code yet.
-  - Pending decisions: (1) interpolate L, M, S between 0.5 cm table rows or use nearest row; (2) extreme z-scores: plain z-score plus flag, verify WHO adjusted method before including; (3) include weight-for-age and height/length-for-age in Phase 1.
-  - Files still needed if (3) is yes: WHO Expanded tables (xlsx, z-scores, boys and girls) for length/height-for-age and weight-for-age.
-  - Already held by Edison (not in git): WHO WFL/WFH z-score xlsx x4, WHO expanded-tables instructions PDF, Malawi CMAM 2016 PDF.
+- Phase 0: COMPLETE. docs/specs/phase-0-spec.md, docs/decisions/decision-log.md.
+- Phase 1 (anthropometric engine): IMPLEMENTED, 122 tests passing. See docs/modules/anthro.md. Awaiting Edison's review and approval to close.
+- Phase 2 (CMAM classification and referral): not started. Needs Edison's go-ahead and a Phase 2 spec first. Inputs to design: oedema grade, MUAC (6-59 months only), appetite test, danger signs, medical complications, optional HIV flag; z-scores and flags from Phase 1.
+- Run tests: `pip install pytest && python -m pytest -q` from the repo root.
 
 ## Open issues
 See bottom of docs/decisions/decision-log.md.

@@ -2,7 +2,7 @@
 
 Independent, modular under-five (0-59 months) malnutrition screening engine for Thanzi AI, Malawi.
 
-**Status:** Phase 0 complete (specification only, no engine code yet). See `docs/HANDOFF.md` for the current state and how to continue.
+**Status:** Phase 0 complete. Phase 1 (anthropometric engine) implemented, awaiting review. See `docs/HANDOFF.md` for the current state and how to continue.
 
 ## Principles
 - Independent codebase: no dependency on, or reuse of, any other project's code or data.
@@ -16,12 +16,19 @@ Independent, modular under-five (0-59 months) malnutrition screening engine for 
 ```
 docs/        HANDOFF.md, specs/, references/, decisions/
 src/thanzi_screen/  anthro/ rules/ ml/ explain/ api/ schemas/
-data/        reference_tables/, synthetic/
+data/        synthetic/
 tests/       anthro/ rules/ ml/ api/ safety/
-scripts/     table conversion and data generation
+scripts/     build_reference_tables.py, data generation
 ```
 
 ## Phases
-0 Discovery and spec (done) | 1 Anthropometrics | 2 Clinical classification | 3 Data engineering | 4 ML | 5 Explainability | 6 FastAPI packaging | 7 Testing and deployment readiness
+0 Discovery and spec (done) | 1 Anthropometrics (implemented) | 2 Clinical classification | 3 Data engineering | 4 ML | 5 Explainability | 6 FastAPI packaging | 7 Testing and deployment readiness
 
 Licence: not yet chosen.
+
+## Quick start
+```
+pip install pytest
+python -m pytest -q
+```
+See `docs/modules/anthro.md`.

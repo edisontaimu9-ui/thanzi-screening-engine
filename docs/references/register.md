@@ -4,11 +4,12 @@ Tags: DOCUMENTED (stated in a source), ASSUMPTION, RECOMMENDATION.
 
 | ID | Document | Version / date | Source | Licence | Intended use | Status |
 |---|---|---|---|---|---|---|
-| R1 | WHO Child Growth Standards: weight-for-length (0-2 y) and weight-for-height (2-5 y), z-score tables, boys and girls (4 xlsx; columns Length/Height, L, M, S, SD3neg..SD3) | WHO 2006 standards | https://www.who.int/tools/child-growth-standards/standards/weight-for-length-height | To confirm. WHO states its expanded tables carry no warranty | LMS z-score computation | Held, not in git |
+| R1 | WHO Child Growth Standards: weight-for-length (0-2 y) and weight-for-height (2-5 y), z-score tables, boys and girls (4 xlsx; columns Length/Height, L, M, S, SD3neg..SD3) | WHO 2006 standards | https://www.who.int/tools/child-growth-standards/standards/weight-for-length-height | To confirm. WHO states its expanded tables carry no warranty | LMS z-score computation | Held; converted CSVs committed (licence still to confirm, issue I1) |
 | R2 | WHO expanded-tables instructions (PDF) | n.d. | WHO Child Growth Standards site | To confirm | Technical notes: 1 month = 30.4375 days; age tables to 1856 days; length/height discontinuity between 730 and 731 days | Held, not in git |
 | R3 | Malawi Guidelines for Community-Based Management of Acute Malnutrition, 2nd Edition (MoH) | 2016 | https://www.policyvault.africa/wp-content/uploads/policy/MWI40.pdf | No licence statement in document; confirm with MoH Nutrition Unit | Classification and referral rules | Held, not in git. Approved edition per Edison; no newer edition per Edison |
-| R4 | WHO length/height-for-age tables | 2006 | https://www.who.int/toolkits/child-growth-standards/standards/length-height-for-age | To confirm | Phase 1 (if approved) | Not yet obtained |
-| R5 | WHO weight-for-age tables | 2006 | https://www.who.int/childgrowth/standards/chts_wfa_boys_p/en/ | To confirm | Phase 1 (if approved); infant growth-faltering check | Not yet obtained |
+| R4 | WHO length/height-for-age tables | 2006 | https://www.who.int/toolkits/child-growth-standards/standards/length-height-for-age | To confirm | Phase 1 (if approved) | Held; converted CSVs in `src/thanzi_screen/anthro/reference_tables/` |
+| R5 | WHO weight-for-age tables | 2006 | https://www.who.int/childgrowth/standards/chts_wfa_boys_p/en/ | To confirm | Phase 1; infant growth-faltering check | Held; converted CSVs in package |
+| R6 | WHO computation methods: Child Growth Standards Methods and Development ch. 7 (http://www.who.int/childgrowth/standards/Chap_7.pdf) as implemented in WHO igrowup/anthro (https://worldhealthorganization.r-universe.dev/anthro/doc/manual.html) | 2006; anthro 1.1.0 | Cited via implementation docs; Chap_7.pdf itself not retrieved | Package terms to confirm | Adjusted z-score, 0.7 cm conversion, oedema rule, plausibility limits | Secondary source consulted; upload Chap_7.pdf to verify |
 
 ## Extracted rules (R3), all DOCUMENTED
 | Rule | Value | Location |
@@ -27,4 +28,4 @@ Tags: DOCUMENTED (stated in a source), ASSUMPTION, RECOMMENDATION.
 - ASSUMPTION: MUAC exactly 12.5 cm is "no wasting" (Table 4 lists 12.5 in both bands). Confirmed by Edison: <12.5 is moderate.
 - RECOMMENDATION: Low-risk tier (counselling and routine monitoring). Not traced to a CMAM page.
 - RECOMMENDATION: four engine outputs (low risk, MAM, SAM-OTP eligible, SAM-inpatient) mapped to three user-facing tiers.
-- ASSUMPTION (Phase 1, pending): linear interpolation of L, M, S between 0.5 cm rows.
+- DECISION (Phase 1): linear interpolation of L, M, S between 0.5 cm rows.

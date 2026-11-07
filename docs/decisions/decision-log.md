@@ -11,8 +11,18 @@
 - D8. Low-risk tier retained (recommendation, not traced to a page).
 - D9. Safety invariant: ML may add flags or escalate for review, never downgrade or override a rule. Enforced by tests in `tests/safety/`.
 
+## Approved (Phase 1)
+- D10. Linear interpolation of L, M, S between 0.5 cm WFL/H rows; tested against WHO published cut-offs.
+- D11. Beyond +/-3 SD, WHO adjusted method for weight-based indicators (WFA, WFL/H) with flag `adjusted_beyond_3sd`. Length/height-for-age is never adjusted (confirmed by WHO's own +/-4 SD columns).
+- D12. Flag `implausible_recheck_measurements` uses WHO limits (WFA <-6/>+5, LHFA +/-6, WFL/H +/-5). Flags never change the z-score. Phase 2 decides their effect.
+- D13. Position handling follows WHO: standing height <=730 days gets +0.7 cm, recumbent >=731 days gets -0.7 cm, with a warning. This replaces my earlier "warn only" proposal because WHO documents the conversion. Easy to revert.
+- D14. With oedema present, WFA and WFL/H are not computed (WHO rule); LHFA still is. Phase 2 uses the oedema grade directly.
+- D15. Converted WHO CSV tables live inside the package (`src/thanzi_screen/anthro/reference_tables/`) with a SHA-256 manifest, so installs and Docker images work. `data/reference_tables/` is no longer used.
+
 ## Open issues
 - I1. Licences for WHO tables and the CMAM PDF unconfirmed; raw files kept out of git.
 - I2. Inputs needed for the OTP vs inpatient split: appetite test, danger signs, medical complications.
-- I3. Phase 1 decisions pending (see HANDOFF.md).
+- I3. (closed) Phase 1 decisions resolved: D10-D11.
+- I5. Cross-check against WHO Anthro software output on sample records; WHO Chap_7.pdf not yet retrieved (R6 is secondary).
+- I6. Phase 2 must define how implausible-flagged values affect classification.
 - I4. Confirm with MoH Nutrition Unit that no edition newer than 2016 applies.

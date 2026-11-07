@@ -1,0 +1,74 @@
+{
+  "lhfa_boys.csv": {
+    "csv_sha256": "f348ebf08f3fcdff7da2f0d07d61823fd0a0fb5bb28e7da6acb62976f07eafd3",
+    "data_rows": 1857,
+    "indicator": "lhfa",
+    "register_id": "R4",
+    "sex": "male",
+    "source_file": "lhfa-boys-zscore-expanded-tables.xlsx",
+    "source_sha256": "c4b1c9029ab9751a5f0888e32f35c7c0287a16d361885cf911ecf23b3f7f6b4f"
+  },
+  "lhfa_girls.csv": {
+    "csv_sha256": "9addc1097aa8a1d46d770851336cbf9b3665bf801765f53aa5af3d12ea8d3e48",
+    "data_rows": 1857,
+    "indicator": "lhfa",
+    "register_id": "R4",
+    "sex": "female",
+    "source_file": "lhfa-girls-zscore-expanded-tables.xlsx",
+    "source_sha256": "6aa2876319449a6b1f4d825848128902114ff53c67b92b86a0c5140846013059"
+  },
+  "wfa_boys.csv": {
+    "csv_sha256": "4383a1e01c8e25ceff22840de558e7fdafec364172112fa38362f3d6b4187db5",
+    "data_rows": 1857,
+    "indicator": "wfa",
+    "register_id": "R5",
+    "sex": "male",
+    "source_file": "wfa-boys-zscore-expanded-tables.xlsx",
+    "source_sha256": "b5b4748c6bfa5230e2eddafa1767629c349178b08d457f400b59422b8bfef86c"
+  },
+  "wfa_girls.csv": {
+    "csv_sha256": "7a04895ed10f7673a26b1d758970cefbc15604d9a21b743f3e8d41253e814f81",
+    "data_rows": 1857,
+    "indicator": "wfa",
+    "register_id": "R5",
+    "sex": "female",
+    "source_file": "wfa-girls-zscore-expanded-tables.xlsx",
+    "source_sha256": "ee3ae12cb96c6c5541cdf43665c03ce6c984f877859a183a5f6104eb06a49a6e"
+  },
+  "wfh_boys.csv": {
+    "csv_sha256": "7347c057f9342785d7f2f555f1395468d8eeaf69c8017a8dcc7fc949a8fea863",
+    "data_rows": 111,
+    "indicator": "wfh",
+    "register_id": "R1",
+    "sex": "male",
+    "source_file": "wfh_boys_2-to-5-years_zscores.xlsx",
+    "source_sha256": "e838f4678547ba76399e6f57f0cfcceebb3894eb2b213003b43c014692cc76e8"
+  },
+  "wfh_girls.csv": {
+    "csv_sha256": "f98dee6ef8f43d106b5387cd66375bf009cbba2e678f49be9702feb054a9d156",
+    "data_rows": 111,
+    "indicator": "wfh",
+    "register_id": "R1",
+    "sex": "female",
+    "source_file": "wfh_girls_2-to-5-years_zscores.xlsx",
+    "source_sha256": "5d1263d799e6a4fb1292d8ff83fed9e6d686e85353db441c18d9f4c36856a3f7"
+  },
+  "wfl_boys.csv": {
+    "csv_sha256": "06cf290980cd9db07c00f6ed8c1c805c7ec8da815e259918c235851663303409",
+    "data_rows": 131,
+    "indicator": "wfl",
+    "register_id": "R1",
+    "sex": "male",
+    "source_file": "wfl_boys_0-to-2-years_zscores.xlsx",
+    "source_sha256": "10158fa492315ae26d8ac993dbdb12e7b79cedf56e872ec6ba424644e5e29ad0"
+  },
+  "wfl_girls.csv": {
+    "csv_sha256": "d6fbcf36d83cf5d922adc393f278d27d048f6f5dfb1d9b4e8fc593dc56f04314",
+    "data_rows": 131,
+    "indicator": "wfl",
+    "register_id": "R1",
+    "sex": "female",
+    "source_file": "wfl_girls_0-to-2-years_zscores__1_.xlsx",
+    "source_sha256": "689ec4e19b9112de14f1715aa85e583f0a466fea3adc9ad966e32d87254f8084"
+  }
+}
