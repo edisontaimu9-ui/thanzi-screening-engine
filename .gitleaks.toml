@@ -1,0 +1,15 @@
+# Secret scan configuration (Phase 7, D99). Extends the default gitleaks rules.
+# The only allowlisted values are the two throwaway keys that the Phase 6 CI smoke step printed in plain text
+# (commit 7b59256, .github/workflows/ci.yml). They were test values for a container that exists only for the
+# length of a CI run. CI now generates fresh keys on every run, so nothing new should ever match these.
+title = "Thanzi screening engine"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Historical throwaway CI test keys (D99)"
+regexes = [
+  '''ci-gateway-key-0123456789''',
+  '''ci-audit-key-0123456789ab''',
+]

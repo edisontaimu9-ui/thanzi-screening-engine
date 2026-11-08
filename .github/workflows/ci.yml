@@ -9,9 +9,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -20,59 +25,131 @@ jobs:
       # API tests must run in CI. If FastAPI is missing they fail instead of skipping (D84).
       THANZI_REQUIRE_API_TESTS: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install
-        run: pip install -e ".[dev,api]"
-      - name: Tests (Phases 1-6)
-        run: python -m pytest -q
+          cache: pip
+          cache-dependency-path: constraints.txt
+      - name: Install (pinned by constraints.txt)
+        run: pip install -c constraints.txt -e ".[dev,api]"
+      - name: Tests (Phases 1-7) with coverage and rule trace
+        env:
+          THANZI_TRACE_OUT: trace.json
+        run: python -m coverage run -m pytest -q -p tests._trace_plugin
+      - name: Coverage (measured, not gated)
+        run: |
+          python -m coverage report
+          python -m coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+          python -m coverage xml
+      - name: Every CMAM rule has a test
+        run: python scripts/build_traceability.py --check --trace-file trace.json
       - name: OpenAPI contract is up to date
         run: python scripts/export_openapi.py --check
+      - name: Case pack matches the engine
+        run: python scripts/build_case_pack.py --check
+      - name: Keep coverage and trace
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: coverage-and-trace
+          path: |
+            coverage.xml
+            trace.json
+
+  dependencies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Audit pinned dependencies
+        run: |
+          python -m pip install pip-audit==2.10.1
+          pip-audit -r constraints.txt --no-deps --disable-pip
+      - name: Runtime SBOM (CycloneDX)
+        run: |
+          python -m venv sbom-env
+          sbom-env/bin/pip install -c constraints.txt ".[api]"
+          python -m pip install cyclonedx-bom==8.0.1
+          cyclonedx-py environment sbom-env/bin/python --pyproject pyproject.toml --of JSON --sv 1.6 -o sbom-runtime.cdx.json
+      - name: Keep the SBOM
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sbom-runtime
+          path: sbom-runtime.cdx.json
+
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+      - name: Scan history for secrets (gitleaks 8.30.1)
+        run: |
+          curl -sSfL -o gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tgz" | sha256sum -c -
+          tar -xzf gitleaks.tgz gitleaks
+          ./gitleaks detect --source . --config .gitleaks.toml --no-banner --redact --verbose
 
   docker:
     runs-on: ubuntu-latest
     needs: test
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Build image
-        run: docker build -t thanzi-screen:ci .
-      - name: Start with test keys
+        run: docker build --build-arg VERSION=ci -t thanzi-screen:ci .
+      - name: Scan image for vulnerabilities (Trivy, fixed HIGH and CRITICAL fail)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: thanzi-screen:ci
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Make throwaway keys for this run
         run: |
-          docker run -d --name thanzi \
-            -e THANZI_GATEWAY_KEY=ci-gateway-key-0123456789 \
-            -e THANZI_AUDIT_KEY=ci-audit-key-0123456789ab \
-            -p 127.0.0.1:8080:8080 thanzi-screen:ci
-      - name: Health check
+          echo "THANZI_GATEWAY_KEY=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+          echo "THANZI_AUDIT_KEY=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+      - name: Start the container
         run: |
-          for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8080/health; then echo; exit 0; fi
-            sleep 1
+          docker run -d --name thanzi -e THANZI_GATEWAY_KEY -e THANZI_AUDIT_KEY -p 127.0.0.1:8080:8080 thanzi-screen:ci
+      - name: Wait until the container healthcheck passes
+        run: |
+          for _ in $(seq 1 60); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' thanzi)
+            echo "health: $status"
+            if [ "$status" = "healthy" ]; then exit 0; fi
+            sleep 3
           done
           docker logs thanzi
           exit 1
-      - name: One screening request
+      - name: Black-box smoke test
+        run: python3 scripts/smoke_api.py --base-url http://127.0.0.1:8080
+      - name: Container log holds no keys and no request values
         run: |
-          curl -fsS -X POST http://127.0.0.1:8080/v1/screen \
-            -H 'X-Gateway-Key: ci-gateway-key-0123456789' \
-            -H 'Content-Type: application/json' \
-            -d '{"sex":"male","age_days":500,"weight_kg":9.5,"length_height_cm":75.0,"measure_position":"length","oedema":"none","muac_cm":14.0,"appetite":"passed","danger_signs":[],"complications":[],"clinically_well_and_alert":true}' \
-            | tee response.json
-          grep -q '"classification"' response.json
-      - name: No gateway key is refused
-        run: |
-          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8080/v1/screen -H 'Content-Type: application/json' -d '{}')
-          echo "status: $code"
-          test "$code" = "401"
+          docker logs thanzi > container.log 2>&1
+          for needle in "$THANZI_GATEWAY_KEY" "$THANZI_AUDIT_KEY" weight_kg age_days hiv_positive muac_cm; do
+            if grep -q -- "$needle" container.log; then echo "a forbidden string is in the container log"; exit 1; fi
+          done
+          echo "container log is clean"
       - name: Runs as a non-root user
         run: |
           uid=$(docker exec thanzi id -u)
           echo "uid: $uid"
           test "$uid" != "0"
+      - name: Resource use (recorded, not gated)
+        run: docker stats --no-stream --format 'memory {{.MemUsage}}, cpu {{.CPUPerc}}' thanzi
       - name: Refuses to start without a gateway key
         run: |
           if docker run --rm thanzi-screen:ci; then echo "started without a key"; exit 1; fi
+      - name: Refuses to start with a weak gateway key
+        run: |
+          if docker run --rm -e THANZI_GATEWAY_KEY=short thanzi-screen:ci; then echo "started with a weak key"; exit 1; fi
       - name: Container logs
         if: always()
         run: docker logs thanzi

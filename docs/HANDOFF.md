@@ -31,8 +31,8 @@ Reply in English, terse. For each update: build on the existing repo, zip only c
 - Phase 4 (advisory flags): COMPLETE, closed by Edison 2026-11-07. See docs/modules/ml.md, models/MODEL_CARD.md, decision-log D45-D57.
 - Phase 5 (explainability): COMPLETE, closed by Edison 2026-11-07. 273 tests passing. See docs/modules/explain.md, decision-log D58-D73. Wording review pending (I18).
 - Phase 6 (FastAPI packaging): COMPLETE, closed 2026-11-07 (D92) with CI #2 green on `b817e9c`. 374 tests passing in the build environment (Python 3.12). See docs/specs/phase-6-spec.md, docs/modules/api.md, decision-log D74-D92. I20 decided (D86): no programme and no HIV information in any worker response; real values in the audit view only. Open: I21 (Hope: network isolation), I23 (Maria: neutral MAM wording), I24 (Hope: audit key holder), I25 (D82-D84 confirmation).
-- Phase 7 (testing and deployment readiness): SPEC DRAFT 2026-11-07, awaiting Edison's answers to Q1-Q8. No implementation until he says go. See docs/specs/phase-7-spec.md.
-- Run tests: `pip install pytest && python -m pytest -q` from the repo root.
+- Phase 7 (testing and deployment readiness): IMPLEMENTED 2026-11-07 as `0.7.0`, release candidate, not validated (D93-D103). 590 tests passing plus 2 expected failures (I28), Python 3.11 and 3.12. Evidence in docs/testing/ (test report, traceability, case pack); deployment in docs/deployment/runbook.md and deploy/. Closes when CI is green on `main` (I30) and Edison says so. Do not start Phase 8 without his word.
+- Run tests: `pip install -c constraints.txt -e ".[dev,api]" && python -m pytest -q` from the repo root. Release: push tag `v0.7.0` (see docs/release/v0.7.0.md).
 
 ## Open issues
 See bottom of docs/decisions/decision-log.md.

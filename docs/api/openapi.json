@@ -608,7 +608,7 @@
   "info": {
     "description": "Decision support for under-five malnutrition screening (CMAM 2016). Not a diagnosis. Demonstration only: synthetic data, not validated on real children. Stateless. Sits behind the gateway: every route except /health needs X-Gateway-Key.",
     "title": "Thanzi screening engine API",
-    "version": "0.6.0"
+    "version": "0.7.0"
   },
   "openapi": "3.1.0",
   "paths": {

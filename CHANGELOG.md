@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0 - Phase 7 (release candidate, not validated)
+- Test evidence: rule traceability matrix generated from a full run (`docs/testing/traceability.md`); property and invariant tests; hostile-input robustness tests; coverage reported in CI (not gated).
+- Case pack for clinical review (`docs/testing/case-pack.xlsx`), generated from the engine; CI fails if it drifts.
+- Tools: `scripts/smoke_api.py` (black-box smoke test), `scripts/load_probe.py` (latency and throughput), `scripts/build_traceability.py`, `scripts/build_case_pack.py`, `scripts/refresh_constraints.py`.
+- CI hardening: Actions pinned to commit SHAs, job timeouts, concurrency, pip cache, stronger container smoke test (key handling, HIV scrub, audit split, healthcheck, log check), `pip-audit`, Trivy image scan, gitleaks history scan, CycloneDX SBOM, Dependabot.
+- Reproducible builds: `constraints.txt` pins every dependency; the Dockerfile and CI install with it.
+- Release workflow (tag `v*`): builds and tests the image, publishes a pre-release with image tarball, SBOMs, checksums and test evidence.
+- Deployment: runbook and an example compose file.
+- No change to classification rules, thresholds, wording or API behaviour. Version 0.7.0.
+- Known finding, not fixed (I28): extremely small `length_height_cm` values cause a generic 500 instead of a 422.
+
 ## 0.6.0 - Phase 6
 - `thanzi_screen.api`: framework-free `service.screen(payload, view, models)`, `security` (gateway and audit keys, fail-closed start, HIV scrub of worker responses), thin FastAPI `app` (`create_app`, `create_app_from_env`). Endpoints `GET /health`, `GET /version`, `POST /v1/screen?view=worker|audit`. Stateless, no request logging, unknown and identifying fields rejected.
 - Worker view: no HIV information, no programme for any MAM child (D86), no raw `referral_text`. Audit view (separate key) keeps real programme, rule codes, warnings, referral text and the full `Explanation`.

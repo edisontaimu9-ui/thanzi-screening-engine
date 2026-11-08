@@ -2,7 +2,7 @@
 
 Independent, modular under-five (0-59 months) malnutrition screening engine for Thanzi AI, Malawi.
 
-**Status:** Phases 0 and 1 complete (Phase 1 approved 2026-11-07). Phase 2 (CMAM classification) closed 2026-11-07. Phase 3 (synthetic data) closed 2026-11-07. Phase 4 (advisory ML flags) closed 2026-11-07. Phase 5 (explainability) closed 2026-11-07. Phase 6 (FastAPI packaging) implemented 2026-11-07; closes when CI is green on `main`. See `docs/HANDOFF.md` for the current state and how to continue.
+**Status:** Phases 0 and 1 complete (Phase 1 approved 2026-11-07). Phase 2 (CMAM classification) closed 2026-11-07. Phase 3 (synthetic data) closed 2026-11-07. Phase 4 (advisory ML flags) closed 2026-11-07. Phase 5 (explainability) closed 2026-11-07. Phase 6 (FastAPI packaging) closed 2026-11-07. Phase 7 (testing and deployment readiness) implemented 2026-11-07 as release candidate 0.7.0, **not validated**; closes when CI is green on `main`. See `docs/HANDOFF.md` for the current state and how to continue.
 
 ## Principles
 - Independent codebase: no dependency on, or reuse of, any other project's code or data.
@@ -40,3 +40,6 @@ THANZI_GATEWAY_KEY=<16+ characters> uvicorn --factory thanzi_screen.api.app:crea
 python -m pytest -q
 ```
 No gateway key, no start. Run it behind Hope's gateway on a private network. Details and the deployment checklist: `docs/modules/api.md`. Contract: `docs/api/openapi.json`.
+
+## Testing, security checks and release (Phase 7)
+Release candidate `0.7.0`, **not validated**. Evidence: `docs/testing/test-report.md` (what was run, what was not), `docs/testing/traceability.md` (every CMAM rule and its tests), `docs/testing/case-pack.xlsx` (synthetic scenarios for clinical review). Deployment: `docs/deployment/runbook.md`, `deploy/docker-compose.example.yml`. Tools: `scripts/smoke_api.py`, `scripts/load_probe.py`. Install with `pip install -c constraints.txt -e ".[dev,api]"`.

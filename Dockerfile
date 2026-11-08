@@ -1,4 +1,6 @@
-# Thanzi screening engine API (Phase 6). Stateless. Runtime dependencies only, no dev extras.
+# Thanzi screening engine API (Phases 6-7). Stateless. Runtime dependencies only, no dev extras.
+# Dependency versions are pinned by constraints.txt. The base image is a floating tag: Dependabot watches it, and the
+# deployer may pin it by digest (see docs/deployment/runbook.md).
 # Run behind Hope's gateway on a private network. No port is published by this image.
 FROM python:3.12-slim
 
@@ -9,10 +11,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     THANZI_MODELS_DIR=/app/models \
     PORT=8080
 
+ARG VERSION=unknown
+LABEL org.opencontainers.image.title="thanzi-screen" \
+      org.opencontainers.image.description="Thanzi under-five malnutrition screening API. Release candidate, not validated. Decision support only." \
+      org.opencontainers.image.version="${VERSION}"
+
 WORKDIR /app
-COPY pyproject.toml ./
+COPY pyproject.toml constraints.txt ./
 COPY src ./src
-RUN pip install ".[api]"
+RUN pip install -c constraints.txt ".[api]"
 COPY models ./models
 
 # Non-root. Secrets (THANZI_GATEWAY_KEY, THANZI_AUDIT_KEY) are supplied at run time, never baked in.

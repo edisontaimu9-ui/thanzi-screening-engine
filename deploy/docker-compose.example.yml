@@ -1,0 +1,33 @@
+# EXAMPLE ONLY (Phase 7, D102). Hope's environment governs. Shows the intended shape: a private network,
+# no published port, keys supplied from the operator's environment, a read-only container with no extra privileges.
+#
+# 1. Make two different keys (32+ random characters each) and export them in the shell that runs compose,
+#    or keep them in a file named .env next to this file with permissions 600 (never commit it):
+#      export THANZI_GATEWAY_KEY=$(openssl rand -hex 24)
+#      export THANZI_AUDIT_KEY=$(openssl rand -hex 24)
+# 2. Load the release image:  gunzip -c thanzi-screen-v0.7.0-image.tar.gz | docker load
+# 3. docker compose -f deploy/docker-compose.example.yml up -d
+# The gateway container (Hope's) joins the same network and calls http://thanzi:8080.
+# Limit: the image reads keys from environment variables only (no *_FILE support), so anyone who can run
+# `docker inspect` on the host can read them. Restrict host access, or ask for file-based keys (issue I29).
+name: thanzi
+services:
+  thanzi:
+    image: thanzi-screen:v0.7.0
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    pids_limit: 128
+    restart: unless-stopped
+    environment:
+      THANZI_GATEWAY_KEY: ${THANZI_GATEWAY_KEY:?set THANZI_GATEWAY_KEY}
+      THANZI_AUDIT_KEY: ${THANZI_AUDIT_KEY:-}
+    networks:
+      - thanzi_private
+networks:
+  thanzi_private:
+    internal: true

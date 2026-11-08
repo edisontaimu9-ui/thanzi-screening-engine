@@ -13,8 +13,8 @@ def test_ci_runs_on_push_and_pr_to_main():
 
 def test_ci_matrix_and_full_suite():
     assert '"3.11"' in CI and '"3.12"' in CI
-    assert 'pip install -e ".[dev,api]"' in CI
-    assert re.search(r"python -m pytest -q\s*$", CI, re.M)
+    assert 'pip install -c constraints.txt -e ".[dev,api]"' in CI
+    assert "python -m coverage run -m pytest -q -p tests._trace_plugin" in CI
     assert 'THANZI_REQUIRE_API_TESTS: "1"' in CI
 
 
@@ -24,13 +24,13 @@ def test_ci_checks_the_openapi_file():
 
 def test_ci_docker_job_builds_starts_and_checks():
     assert re.search(r"^  docker:", CI, re.M)
-    for needle in ("docker build", "docker run", "/health", "/v1/screen", "id -u", "X-Gateway-Key"):
+    for needle in ("docker build", "docker run", "State.Health.Status", "scripts/smoke_api.py", "id -u", "THANZI_GATEWAY_KEY"):
         assert needle in CI, needle
 
 
-def test_ci_actions_are_pinned_to_major_versions():
+def test_ci_actions_are_pinned_to_commit_shas():
     uses = re.findall(r"uses:\s*(\S+)", CI)
-    assert uses and all(re.search(r"@v\d+$", u) for u in uses), uses
+    assert uses and all(re.fullmatch(r"[\w.-]+/[\w.-]+@[0-9a-f]{40}", u) for u in uses), uses
 
 
 def test_ci_has_read_only_permissions():
@@ -81,7 +81,7 @@ def test_ci_file_is_valid_yaml_with_the_expected_jobs():
     import pytest
     yaml = pytest.importorskip("yaml")
     doc = yaml.safe_load(CI)
-    assert set(doc["jobs"]) == {"test", "docker"}
+    assert set(doc["jobs"]) == {"test", "dependencies", "secrets", "docker"}
     assert doc["jobs"]["test"]["strategy"]["matrix"]["python-version"] == ["3.11", "3.12"]
     assert doc["jobs"]["test"]["env"]["THANZI_REQUIRE_API_TESTS"] == "1"
     steps = doc["jobs"]["docker"]["steps"]
