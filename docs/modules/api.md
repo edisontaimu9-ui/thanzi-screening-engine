@@ -71,3 +71,7 @@ The service enforces a gateway key. Everything below is deployment work it canno
 
 ## Tests
 `tests/api/`: `test_service.py` (core, framework-free), `test_security.py`, `test_http.py` (needs FastAPI and httpx), `test_packaging.py` (CI and Docker files, checked as text). With `THANZI_REQUIRE_API_TESTS=1` (CI) missing FastAPI fails the run instead of skipping.
+
+## Optional local LLM routes (D133)
+`GET /v1/llm/health` and `POST /v1/llm/generate` exist only when `THANZI_LLM_ENABLED=1` (or when `create_app(llm=...)` is given a client). They sit behind the gateway key, are not part of screening, and do not change `/health` or any screening response. Details, settings and error codes: `docs/modules/llm.md`.
+

@@ -3,6 +3,7 @@
 Run: `uvicorn --factory thanzi_screen.api.app:create_app_from_env`
 Needs THANZI_GATEWAY_KEY (the service refuses to start without it). See docs/modules/api.md.
 """
+import contextlib
 import logging
 import os
 from typing import Literal, Union
@@ -18,7 +19,8 @@ from ..schemas import (
     AuditResponse, ErrorBody, HealthResponse, PretermAuditResponse, PretermResponse, ScreenRequest, VersionResponse,
     WorkerResponse,
 )
-from . import security, service
+from ..llm import LLMClient
+from . import llm_routes, security, service
 
 log = logging.getLogger("thanzi.api")
 MAX_BODY_BYTES = 16_384
@@ -40,11 +42,24 @@ def _load_models(models: Models | None, models_dir) -> Models | None:
         return None
 
 
+@contextlib.asynccontextmanager
+async def _lifespan(app: FastAPI):
+    yield
+    client = getattr(app.state, "llm", None)
+    if client is not None:                       # optional local LLM client (D128): release its connections
+        await client.aclose()
+
+
 def create_app(models: Models | None = None, gateway_key: str | None = None, audit_key: str | None = None,
-               dev_mode: bool = False, models_dir=None) -> FastAPI:
-    """Build the app. Raises security.ConfigError if no gateway key is configured (unless dev mode)."""
+               dev_mode: bool = False, models_dir=None, llm: LLMClient | None = None) -> FastAPI:
+    """Build the app. Raises security.ConfigError if no gateway key is configured (unless dev mode).
+
+    The local LLM routes exist only when `llm` is given or THANZI_LLM_ENABLED=1 (an invalid LLM configuration
+    raises LLMConfigError). They are separate from screening: see api/llm_routes.py.
+    """
     cfg = security.build_config(gateway_key, audit_key, dev_mode)
     loaded = _load_models(models, models_dir)
+    llm_client = llm if llm is not None else llm_routes.client_from_env()
     docs = cfg.dev_mode
     app = FastAPI(
         title="Thanzi screening engine API", version=__version__,
@@ -54,7 +69,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
                     "Demonstration only: synthetic data, not validated on real children. Stateless. "
                     "Sits behind the gateway: every route except /health needs X-Gateway-Key.",
         docs_url="/docs" if docs else None, redoc_url="/redoc" if docs else None,
-        openapi_url="/openapi.json" if docs else None)
+        openapi_url="/openapi.json" if docs else None, lifespan=_lifespan)
     app.state.models, app.state.config = loaded, cfg
 
     # ---- access control: before routing and before body validation, so nothing leaks to unauthenticated callers ----
@@ -119,6 +134,9 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         if view == "audit" and not security.audit_ok(cfg, x_audit_key):
             return _error(403, "audit_forbidden", "The audit view is not available.")
         return JSONResponse(service.screen(body.model_dump(), view, app.state.models))
+
+    if llm_client is not None:
+        llm_routes.install(app, llm_client)
 
     def openapi():
         if app.openapi_schema is None:

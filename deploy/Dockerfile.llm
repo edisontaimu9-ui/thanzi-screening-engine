@@ -1,0 +1,9 @@
+# Release image plus the HTTP transport for the optional local LLM feature (D130). EXAMPLE, not built by CI.
+# The release image already contains the LLM code, switched off. This layer only adds httpx, pinned by constraints.txt.
+#   docker build -f deploy/Dockerfile.llm --build-arg BASE=thanzi-screen:v0.7.0 -t thanzi-screen-llm:v0.7.0 .
+ARG BASE=thanzi-screen:v0.7.0
+FROM ${BASE}
+USER root
+COPY constraints.txt /tmp/constraints.txt
+RUN pip install -c /tmp/constraints.txt "httpx~=0.28.1" && rm /tmp/constraints.txt
+USER thanzi

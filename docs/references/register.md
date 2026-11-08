@@ -19,6 +19,10 @@ Tags: DOCUMENTED (stated in a source), ASSUMPTION, RECOMMENDATION.
 | R8 | WHO arm-circumference-for-age tables, 3-59 months | n/a | Pending upload by Edison | WHO | Future MUAC model. Not used yet (D38) | Not held |
 | R9 | Published Malawi prevalence figures (reports only) | n/a | Pending from Edison | To check | Replace placeholder parameters (D37) | Not held |
 
+| R16 | Local LLM serving software: Ollama, llama.cpp `llama-server` (optional, run outside this repository) | Not pinned yet | https://github.com/ollama/ollama and https://github.com/ggml-org/llama.cpp | To confirm (believed MIT for both; not checked from this environment) | Local model serving for `thanzi_screen.llm` | ASSUMPTION. Not installed or run by this project's tests (I44, I45) |
+| R17 | Candidate small models: Qwen2.5 0.5B/1.5B instruct, Qwen3 0.6B/1.7B (Alibaba Qwen team) | Not pinned yet | Ollama library or Hugging Face model cards | To confirm per model and size. Licences differ between sizes; read the model card | Optional text generation, never screening | ASSUMPTION. No weights in git. Record source, version, date and licence before use (I44) |
+| R18 | httpx 0.28.1 (BSD-3-Clause), already in R12/R13 as dev only; now also the optional `llm` extra | 2026-11-08 | https://pypi.org/project/httpx/ | BSD-3-Clause | HTTP transport for the local LLM client | In use as optional runtime dependency; not in the release image (D130) |
+
 ## Extracted rules (R3), all DOCUMENTED
 | Rule | Value | Location |
 |---|---|---|
