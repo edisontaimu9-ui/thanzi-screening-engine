@@ -1,6 +1,6 @@
 # Phase 7 specification: testing and deployment readiness
 
-Status: APPROVED and IMPLEMENTED 2026-11-07 (D93-D103). Answers to Q1-Q8 are recorded in the decision log (D93). Closes when CI is green on `main`.
+Status: APPROVED and IMPLEMENTED 2026-11-07 (D93-D103). Answers to Q1-Q8 are recorded in the decision log (D93). CLOSED 2026-11-08 (D105).
 
 ## Objective
 Give the team an evidence pack and a deployment package for v0.7.0: what was tested and how, what was not, and what Hope needs to deploy safely behind her gateway. No change to Phases 1-6 behaviour, interfaces or codes. The engine is a demonstration, not validated; Phase 7 does not change that status.

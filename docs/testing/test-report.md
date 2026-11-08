@@ -40,7 +40,7 @@ Startup to first healthy response: 0.43 s. Memory: 48 MB at start, 54 MB after 6
 - **Trivy on GitHub (D104):** two HIGH findings in the Debian base image's `zlib1g`, both with fixes available. Dockerfile now applies OS security updates at build time.
 
 ## Not tested (read this)
-- **Container smoke steps and the release workflow have not run yet.** GitHub has run the other jobs (D104): tests, coverage, traceability, OpenAPI, case pack, `pip-audit` and gitleaks passed; the image built; Trivy then failed the build on two fixable HIGH findings in the base image's zlib1g, fixed by an OS update step in the Dockerfile that the next run must confirm. The smoke script itself passed 19 checks against a local server (I30).
+- **The release workflow has not run yet** (first run is the `v0.7.0` tag). The container smoke steps passed on `main` per Edison (not seen by the assistant). GitHub has run the other jobs (D104): tests, coverage, traceability, OpenAPI, case pack, `pip-audit` and gitleaks passed; the image built; Trivy then failed the build on two fixable HIGH findings in the base image's zlib1g, fixed by an OS update step in the Dockerfile that the next run must confirm. The smoke script itself passed 19 checks against a local server (I30).
 - **Not run on UniPod servers or any target hardware.** Load numbers do not transfer.
 - **No clinical validation.** The engine matches the encoded CMAM 2016 rules. Whether the rules and wording are right for practice is Maria's review of `case-pack.xlsx` (I18, I23, I10).
 - **No real or Ministry data.** Machine-learning flags are trained on synthetic data; accuracy, fairness across districts, age and sex, and real recording errors are untested (I14, I15).
@@ -52,7 +52,7 @@ Startup to first healthy response: 0.43 s. Memory: 48 MB at start, 54 MB after 6
 ## Sign-off checklist (owner, status)
 | Item | Owner | Status |
 |---|---|---|
-| CI run on `main` green, including the Docker job (Trivy and container smoke) | Edison | Tests, dependencies, secrets green; Docker job pending after the zlib fix (D104, I30) |
+| CI run on `main` green, including the Docker job (Trivy and container smoke) | Edison | Green on `main` 2026-11-08 per Edison (D104, D105) |
 | Case pack reviewed; agreement and comments returned | Maria | Pending |
 | Worker wording confirmed, including neutral MAM text and exact-boundary z display (I18, I23, I31) | Maria | Pending |
 | Referral slip wording replaces placeholders (I10) | Maria / MoH | Pending |
