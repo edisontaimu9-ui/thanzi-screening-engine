@@ -128,15 +128,16 @@
   },
   "urgent_triggers": {
     "note": "Danger-sign based; growth alone is never urgent. [COIN] = in manual; [proposed] = needs sign-off vs national neonatal guidelines / under-5 emergency signs.",
-    "any_of": [
-      "bilious_vomiting [COIN]",
-      "convulsions [proposed]",
-      "apnoea_now [proposed]",
-      "cyanosis [proposed]",
-      "hypoglycaemia_uncorrected [proposed]",
-      "abdominal_distension AND (blood_in_stool OR feed_intolerance) [proposed]",
-      "cannot_feed AND (dehydrated OR lethargic) [proposed]"
+    "rules": [
+      {"id": "bilious_vomiting", "all_of": ["bilious_vomiting"], "label": "bilious vomiting", "tag": "COIN"},
+      {"id": "convulsions", "all_of": ["convulsions"], "label": "convulsions", "tag": "proposed"},
+      {"id": "apnoea_now", "all_of": ["apnoea_now"], "label": "apnoea now", "tag": "proposed"},
+      {"id": "cyanosis", "all_of": ["cyanosis"], "label": "cyanosis", "tag": "proposed"},
+      {"id": "hypoglycaemia_uncorrected", "all_of": ["hypoglycaemia_uncorrected"], "label": "hypoglycaemia not correcting", "tag": "proposed"},
+      {"id": "abdominal_distension_with_blood_or_intolerance", "all_of": ["abdominal_distension"], "any_of": ["blood_in_stool", "feed_intolerance"], "label": "abdominal distension with blood in stool/feed intolerance", "tag": "proposed"},
+      {"id": "cannot_feed_with_dehydration_or_lethargy", "all_of": ["cannot_feed"], "any_of": ["dehydrated", "lethargic"], "label": "cannot feed and dehydrated/lethargic", "tag": "proposed"}
     ],
+    "rules_note": "Single source of truth for the urgent triggers. Each rule fires when every field in all_of is true and, if any_of is given, at least one field in any_of is true. Field names are PretermInput attributes. Change triggers here, not in engine.py.",
     "stabilise_before_transfer": [
       "Keep warm (KMC or warm wrap)",
       "Check/correct airway, breathing, circulation and blood glucose",

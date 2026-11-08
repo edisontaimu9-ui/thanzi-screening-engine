@@ -3,9 +3,30 @@
     "schemas": {
       "AuditResponse": {
         "properties": {
+          "birth_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BirthContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "classification": {
             "title": "Classification",
             "type": "string"
+          },
+          "clinical_assessment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalAssessment"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when a baby under 2500 g has no gestational age: flagged for clinical assessment."
           },
           "disclaimer": {
             "title": "Disclaimer",
@@ -46,6 +67,18 @@
             "description": "Raw Phase 2 referral text. May contain HIV information.",
             "title": "Referral Text",
             "type": "string"
+          },
+          "route": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when birth context was given: under5 or under5_corrected_age.",
+            "title": "Route"
           },
           "rule_set_version": {
             "title": "Rule Set Version",
@@ -158,6 +191,12 @@
             ],
             "title": "Corrected Age Days"
           },
+          "corrected_age_end_provisional": {
+            "default": false,
+            "description": "True while the corrected-age end point in use is provisional (GA 32 to under 37 weeks).",
+            "title": "Corrected Age End Provisional",
+            "type": "boolean"
+          },
           "corrected_age_until_chronological_months": {
             "anyOf": [
               {
@@ -222,6 +261,27 @@
           "birth_weight_class"
         ],
         "title": "BirthContext",
+        "type": "object"
+      },
+      "ClinicalAssessment": {
+        "properties": {
+          "needed": {
+            "title": "Needed",
+            "type": "boolean"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/CodeMessage"
+            },
+            "title": "Reasons",
+            "type": "array"
+          }
+        },
+        "required": [
+          "needed",
+          "reasons"
+        ],
+        "title": "ClinicalAssessment",
         "type": "object"
       },
       "CodeMessage": {
@@ -461,9 +521,27 @@
             "type": "array"
           },
           "tier": {
-            "description": "The under-5 tier this preterm level maps to (docs/modules/preterm.md).",
-            "title": "Tier",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The under-5 tier this preterm level maps to (docs/modules/preterm.md). Null for follow_up: it has no under-5 tier, use preterm_level.",
+            "title": "Tier"
+          },
+          "tier_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier Note"
           },
           "view": {
             "default": "audit",
@@ -625,9 +703,27 @@
             "type": "array"
           },
           "tier": {
-            "description": "The under-5 tier this preterm level maps to (docs/modules/preterm.md).",
-            "title": "Tier",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The under-5 tier this preterm level maps to (docs/modules/preterm.md). Null for follow_up: it has no under-5 tier, use preterm_level.",
+            "title": "Tier"
+          },
+          "tier_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier Note"
           },
           "view": {
             "default": "worker",
@@ -942,17 +1038,45 @@
             "description": "Optional and sensitive. Never echoed in worker responses.",
             "title": "Hiv Positive"
           },
+          "hypoglycaemia_not_correcting": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Preterm route: hypoglycaemia is not correcting with treatment (the urgent trigger). The complications value hypoglycaemia alone counts as a complication (refer), pending the approved clinical protocol.",
+            "title": "Hypoglycaemia Not Correcting"
+          },
           "length_height_cm": {
-            "title": "Length Height Cm",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required for the under-5 flow. Optional only when the baby is screened by the preterm engine (born under 37 weeks or under 2500 g, under 50 weeks post-menstrual age); the length z-score is skipped without it.",
+            "title": "Length Height Cm"
           },
           "measure_position": {
-            "enum": [
-              "length",
-              "height"
+            "anyOf": [
+              {
+                "enum": [
+                  "length",
+                  "height"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Measure Position",
-            "type": "string"
+            "description": "Required whenever length_height_cm is given. Must be length on the preterm route.",
+            "title": "Measure Position"
           },
           "muac_cm": {
             "anyOf": [
@@ -1064,8 +1188,6 @@
           "sex",
           "age_days",
           "weight_kg",
-          "length_height_cm",
-          "measure_position",
           "oedema"
         ],
         "title": "ScreenRequest",
@@ -1111,9 +1233,30 @@
       },
       "WorkerResponse": {
         "properties": {
+          "birth_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BirthContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "classification": {
             "title": "Classification",
             "type": "string"
+          },
+          "clinical_assessment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalAssessment"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when a baby under 2500 g has no gestational age: flagged for clinical assessment."
           },
           "disclaimer": {
             "title": "Disclaimer",
@@ -1144,6 +1287,18 @@
             },
             "title": "Reasons",
             "type": "array"
+          },
+          "route": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when birth context was given: under5 or under5_corrected_age.",
+            "title": "Route"
           },
           "rule_set_version": {
             "title": "Rule Set Version",

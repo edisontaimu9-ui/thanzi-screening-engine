@@ -23,8 +23,11 @@ class ScreenRequest(BaseModel):
     sex: Literal["male", "female"]
     age_days: int = Field(description="Age in whole days. No date of birth is accepted.")
     weight_kg: Number
-    length_height_cm: Number
-    measure_position: Literal["length", "height"]
+    length_height_cm: Number | None = Field(
+        default=None, description="Required for the under-5 flow. Optional only when the baby is screened by the preterm "
+        "engine (born under 37 weeks or under 2500 g, under 50 weeks post-menstrual age); the length z-score is skipped without it.")
+    measure_position: Literal["length", "height"] | None = Field(
+        default=None, description="Required whenever length_height_cm is given. Must be length on the preterm route.")
     oedema: Literal["none", "+", "++", "+++"] = Field(description="Required: it is never assumed to be absent.")
     muac_cm: Number | None = Field(default=None, description="6-59 months only. null: not measured.")
     appetite: Literal["passed", "failed", "not_done"] = "not_done"
@@ -57,3 +60,6 @@ class ScreenRequest(BaseModel):
         default=None, max_length=30, description="Preterm route: signs the CMAM danger-sign list does not have. "
         "null: not assessed. []: assessed, none present. Convulsions, lethargy, hypoglycaemia, severe dehydration and "
         "unable to feed are read from danger_signs, complications and too_weak_to_suckle, not asked twice.")
+    hypoglycaemia_not_correcting: bool | None = Field(
+        default=None, description="Preterm route: hypoglycaemia is not correcting with treatment (the urgent trigger). "
+        "The complications value hypoglycaemia alone counts as a complication (refer), pending the approved clinical protocol.")

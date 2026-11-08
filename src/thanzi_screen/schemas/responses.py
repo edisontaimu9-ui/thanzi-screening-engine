@@ -42,6 +42,10 @@ class WorkerResponse(BaseModel):
     model_version: str
     status: str
     disclaimer: str
+    route: str | None = Field(default=None, description="Only when birth context was given: under5 or under5_corrected_age.")
+    birth_context: "BirthContext | None" = None
+    clinical_assessment: "ClinicalAssessment | None" = Field(
+        default=None, description="Only when a baby under 2500 g has no gestational age: flagged for clinical assessment.")
 
 
 class AuditResponse(WorkerResponse):
@@ -84,6 +88,12 @@ class BirthContext(BaseModel):
     corrected_age_until_chronological_months: int | None
     age_days_used: int = Field(description="The age the engine that ran was given.")
     birth_weight_class: str | None = Field(description="ELBW, VLBW, LBW or NORMAL.")
+    corrected_age_end_provisional: bool = Field(default=False, description="True while the corrected-age end point in use is provisional (GA 32 to under 37 weeks).")
+
+
+class ClinicalAssessment(BaseModel):
+    needed: bool
+    reasons: list[CodeMessage]
 
 
 class PretermResponse(BaseModel):
@@ -91,7 +101,8 @@ class PretermResponse(BaseModel):
     view: str = "worker"
     route: str = "preterm"
     worker_summary: list[str]
-    tier: str = Field(description="The under-5 tier this preterm level maps to (docs/modules/preterm.md).")
+    tier: str | None = Field(description="The under-5 tier this preterm level maps to (docs/modules/preterm.md). Null for follow_up: it has no under-5 tier, use preterm_level.")
+    tier_note: str | None = None
     preterm_level: str = Field(description="routine, follow_up, refer or urgent_refer.")
     reasons: list[str]
     actions: list[str]
@@ -117,3 +128,7 @@ class PretermAuditResponse(PretermResponse):
     view: str = "audit"
     engine_output: dict[str, Any] = Field(description="The preterm engine's own output, before the oedema rule.")
     ml_features: dict[str, float | None] = Field(description="features() row. Context only. rule_level is never a label.")
+
+
+for _m in (WorkerResponse, AuditResponse):
+    _m.model_rebuild()

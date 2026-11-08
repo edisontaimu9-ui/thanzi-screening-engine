@@ -129,14 +129,16 @@ def test_corrected_age_period_is_configurable(monkeypatch):
 # ---- level mapping: one table, existing levels only ----
 def test_level_map_covers_every_preterm_level_with_an_existing_under5_tier():
     assert set(RT.LEVEL_MAP) == set(LEVELS)
-    assert set(RT.LEVEL_MAP.values()) <= {t.value for t in Tier}
+    assert set(RT.LEVEL_MAP.values()) - {None} <= {t.value for t in Tier}
     assert RT.tier_for("urgent_refer") == "urgent" and RT.tier_for("routine") == "low_risk"
+    assert RT.tier_for("follow_up") is None           # kept as its own disposition, not forced into mam or low_risk
 
 
 @pytest.mark.parametrize("extra,level", [
     ({"gestational_age_weeks": 36, "birth_weight_g": 2600, "weight_kg": 2.7, "age_days": 5}, "routine"),
     ({"gestational_age_weeks": 34, "birth_weight_g": 2100, "weight_kg": 2.0, "age_days": 3}, "follow_up"),
     ({"complications": ["infections"]}, "refer"),
+    ({"complications": ["hypoglycaemia"]}, "refer"),    # severity not assumed: a complication, not "not correcting"
     ({"neonatal_danger_signs": ["bilious_vomiting"]}, "urgent_refer"),
 ])
 def test_each_preterm_level_reaches_the_response_with_its_mapped_tier(extra, level):
@@ -165,7 +167,7 @@ def test_sexes_use_different_fenton_tables():
     {"danger_signs": ["unable_to_drink_or_breastfeed", "lethargy_not_alert"]},
     {"danger_signs": ["unable_to_drink_or_breastfeed"], "complications": ["severe_dehydration"]},
     {"too_weak_to_suckle": True, "danger_signs": ["lethargy_not_alert"]},
-    {"complications": ["hypoglycaemia"]},
+    {"hypoglycaemia_not_correcting": True},
     {"neonatal_danger_signs": ["apnoea"]},
     {"neonatal_danger_signs": ["cyanosis"]},
     {"neonatal_danger_signs": ["abdominal_distension", "blood_in_stool"]},
@@ -199,9 +201,29 @@ def test_growth_alone_never_gives_an_urgent_referral_through_the_api():
     assert r["preterm_level"] == "refer" and r["tier"] != "urgent"
 
 
-def test_oedema_can_raise_to_refer_but_never_to_urgent():
-    r = service.screen(payload(oedema="++", gestational_age_weeks=36, birth_weight_g=2600, weight_kg=2.7, age_days=5))
-    assert r["preterm_level"] == "refer" and r["tier"] == "mam"
+def test_oedema_escalation_is_configured_per_grade_and_provisional(monkeypatch):
+    calm = dict(gestational_age_weeks=36, birth_weight_g=2600, weight_kg=2.7, age_days=5)
+    for grade in ("+", "++", "+++"):
+        r = service.screen(payload(oedema=grade, **calm))
+        assert r["preterm_level"] == "refer" and r["tier"] == "mam" and any("provisional" in w.lower() for w in r["warnings"])
+    cfg = RT.CONFIG["oedema_on_preterm_route"]["min_preterm_level_by_grade"]
+    monkeypatch.setitem(cfg, "+++", "urgent_refer")          # an approved protocol could do this; it is not assumed
+    assert service.screen(payload(oedema="+++", **calm))["preterm_level"] == "urgent_refer"
+    assert service.screen(payload(oedema="+", **calm))["preterm_level"] == "refer"
+
+
+def test_hypoglycaemia_complication_is_refer_until_the_protocol_says_otherwise(monkeypatch):
+    calm = dict(gestational_age_weeks=36, birth_weight_g=2600, weight_kg=2.7, age_days=5, complications=["hypoglycaemia"])
+    r = service.screen(payload(**calm))
+    assert r["preterm_level"] == "refer" and any("hypoglycaemia" in w.lower() for w in r["warnings"])
+    monkeypatch.setitem(RT.CONFIG["hypoglycaemia"], "complication_means_not_correcting", True)
+    assert service.screen(payload(**calm))["preterm_level"] == "urgent_refer"
+
+
+def test_any_danger_sign_or_complication_requires_referral():
+    calm = dict(gestational_age_weeks=36, birth_weight_g=2600, weight_kg=2.7, age_days=5)
+    for extra in ({"danger_signs": ["convulsions"]}, {"danger_signs": ["high_fever"]}, {"complications": ["infections"]}):
+        assert service.screen(payload(**calm, **extra))["preterm_level"] in ("refer", "urgent_refer")
 
 
 def test_faltering_growth_needs_more_than_14_days_and_two_birth_measures_trend():
@@ -252,7 +274,9 @@ def test_unchanged_for_term_babies_and_requests_without_birth_context():
 
 def test_lbw_with_unknown_gestational_age_warns_and_uses_the_under5_flow():
     r = service.screen({**payload(), "gestational_age_weeks": None})
-    assert "route" not in r and any("gestational age was not given" in w for w in r["warnings"])
+    assert r["route"] == "under5" and r["birth_context"]["gestational_age_weeks"] is None   # GA is never invented
+    assert r["clinical_assessment"]["needed"] is True
+    assert any("not given" in w and "clinical assessment" in w for w in r["warnings"])
 
 
 # ---- data licence ----
@@ -298,3 +322,90 @@ def test_dockerfile_checks_that_the_preterm_data_reaches_the_image():
     for name in ("fenton2025_lms.json", "preterm_rules.json", "routing_config.json", "CC BY-NC-ND 4.0"):
         assert name in docker
     assert "*.json" not in (root / ".dockerignore").read_text().split()           # data files are not ignored
+
+
+# ---- decisions of 2026-11-08 ----
+def test_corrected_age_end_for_32_to_36_weeks_is_marked_provisional():
+    r = service.screen(payload(age_days=300, gestational_age_weeks=34, birth_weight_g=1800, weight_kg=6.0,
+                               length_height_cm=62.0, muac_cm=None))
+    assert r["route"] == "under5_corrected_age" and r["birth_context"]["corrected_age_end_provisional"] is True
+    assert any("PROVISIONAL" in w for w in r["warnings"])
+    vp = service.screen(payload(age_days=300, gestational_age_weeks=30, birth_weight_g=1300, weight_kg=6.0,
+                                length_height_cm=62.0, muac_cm=None))
+    assert vp["birth_context"]["corrected_age_end_provisional"] is False and not any("PROVISIONAL" in w for w in vp["warnings"])
+
+
+def test_term_low_birth_weight_baby_is_never_age_corrected():
+    r = RT.route(100, 38, 2300)
+    assert r.path == RT.PATH_UNDER5 and r.age_days_used == 100 and r.corrected_age_days is None
+
+
+def test_length_is_optional_only_on_the_preterm_route():
+    no_len = {k: v for k, v in payload().items() if k not in ("length_height_cm", "measure_position")}
+    r = service.screen(no_len)
+    assert r["route"] == "preterm" and r["measurements"]["weight"]["z"] is not None
+    assert "z" not in (r["measurements"].get("length") or {})            # no length given: no length z-score
+    for p in (dict(no_len, gestational_age_weeks=39, birth_weight_g=3200),            # term: under-5 flow needs it
+              {k: v for k, v in dict(no_len, age_days=250, gestational_age_weeks=30, birth_weight_g=1300).items()}):  # corrected
+        with pytest.raises(service.ApiError) as e:
+            service.screen(p)
+        assert e.value.code == "missing_field"
+    with pytest.raises(service.ApiError):                                              # a length needs its position
+        service.screen(dict(no_len, length_height_cm=38.0))
+    with pytest.raises(service.ApiError):                                              # oedema stays explicit
+        service.screen({k: v for k, v in payload().items() if k != "oedema"})
+
+
+def test_worker_wording_is_faltering_and_audit_keeps_the_cmam_terms():
+    base = {"sex": "male", "age_days": 250, "weight_kg": 6.0, "length_height_cm": 62.0, "measure_position": "length",
+            "oedema": "none", "muac_cm": None, "danger_signs": [], "complications": [],
+            "gestational_age_weeks": 30, "birth_weight_g": 1300}
+    worker, audit = service.screen(base), service.screen(base, "audit")
+    def texts(x, skip=("code", "rules_fired")):
+        if isinstance(x, str):
+            yield x
+        elif isinstance(x, list):
+            for v in x:
+                yield from texts(v)
+        elif isinstance(x, dict):
+            for k, v in x.items():
+                if k not in skip:
+                    yield from texts(v)
+    assert not any("failure" in t.lower() for t in texts(worker))
+    assert any("faltering" in t for t in texts(worker))
+    assert any(r["code"] == "failure_to_gain_weight_not_assessed" for r in worker["reasons"])     # code unchanged
+    assert "Failure to gain weight" in json.dumps(audit)                                         # audit trace unchanged
+
+
+# ---- urgent triggers: one source of truth ----
+URGENT_FIELDS = ("bilious_vomiting", "convulsions", "apnoea_now", "cyanosis", "hypoglycaemia_uncorrected",
+                 "abdominal_distension", "blood_in_stool", "feed_intolerance", "cannot_feed", "dehydrated", "lethargic")
+
+
+def test_urgent_trigger_rules_and_config_agree():
+    rules = engine.R["urgent_triggers"]["rules"]
+    fields = {f for r in rules for f in r["all_of"] + r.get("any_of", [])}
+    assert fields == set(URGENT_FIELDS) and all(hasattr(PretermInput(sex="f", ga_weeks=30, birth_weight_g=1000, age_days=1), f) for f in fields)
+    assert len({r["id"] for r in rules}) == len(rules) and all(r["tag"] in ("COIN", "proposed") for r in rules)
+    assert "any_of" not in engine.R["urgent_triggers"]            # the old hardcoded-list copy is gone
+    for r in rules:                                               # each rule alone fires, and reports its own label
+        kw = {f: True for f in r["all_of"]}
+        if r.get("any_of"):
+            kw[r["any_of"][0]] = True
+        out = engine.screen(PretermInput(sex="f", ga_weeks=30, birth_weight_g=1000, age_days=3, weight_g=1000, **kw))
+        assert out["referral"]["level"] == "urgent_refer" and r["label"] in out["referral"]["reasons"]
+
+
+def test_changing_the_config_changes_the_triggers(monkeypatch):
+    base = PretermInput(sex="f", ga_weeks=30, birth_weight_g=1000, age_days=3, weight_g=1000, cyanosis=True)
+    assert engine.screen(base)["referral"]["level"] == "urgent_refer"
+    monkeypatch.setitem(engine.R["urgent_triggers"], "rules",
+                        [r for r in engine.R["urgent_triggers"]["rules"] if r["id"] != "cyanosis"])
+    assert engine.screen(base)["referral"]["level"] != "urgent_refer"
+
+
+def test_not_gaining_weight_uses_the_configured_age(monkeypatch):
+    i = PretermInput(sex="f", ga_weeks=30, birth_weight_g=1000, age_days=20, weight_g=1100, gaining_days=1)
+    assert "not gaining weight" in engine.screen(i)["referral"]["reasons"]
+    monkeypatch.setitem(engine.R["growth_assessment"], "min_age_days", 30)
+    assert "not gaining weight" not in engine.screen(i)["referral"]["reasons"]

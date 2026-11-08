@@ -32,10 +32,10 @@ OPTIONAL = ("muac_cm", "appetite", "danger_signs", "complications", "clinically_
             "visible_severe_wasting", "too_weak_to_suckle", "failure_to_gain_weight")
 BIRTH_OPTIONAL = ("gestational_age_weeks", "birth_weight_g", "hc_cm", "birth_length_cm", "birth_hc_cm", "sick",
                   "apnoea_last_7_days", "temperature_unstable", "consecutive_days_gaining_weight",
-                  "gastric_aspirate_pct", "neonatal_danger_signs")
+                  "gastric_aspirate_pct", "neonatal_danger_signs", "hypoglycaemia_not_correcting")
 _BIRTH_NUMBERS = ("gestational_age_weeks", "birth_weight_g", "hc_cm", "birth_length_cm", "birth_hc_cm",
                   "gastric_aspirate_pct")
-_BIRTH_BOOLS = ("sick", "apnoea_last_7_days", "temperature_unstable")
+_BIRTH_BOOLS = ("sick", "apnoea_last_7_days", "temperature_unstable", "hypoglycaemia_not_correcting")
 _NEONATAL = frozenset(preterm_integration.NEONATAL_SIGNS)
 ALLOWED = REQUIRED + OPTIONAL + BIRTH_OPTIONAL
 _BOOLS = ("clinically_well_and_alert", "hiv_positive", "visible_severe_wasting", "too_weak_to_suckle",
@@ -106,18 +106,24 @@ def _optional_set(payload: dict, field: str, enum):
         raise _bad(field, "contains a value that is not accepted") from None
 
 
-def parse_payload(payload: dict) -> tuple:
-    """Validate structure and convert to engine inputs. Ranges and plausibility stay with the engine."""
+def parse_payload(payload: dict, require_length: bool = True) -> tuple:
+    """Validate structure and convert to engine inputs. Ranges and plausibility stay with the engine.
+
+    `require_length=False` (preterm route only) makes length_height_cm and measure_position optional; if a length is
+    given its position is still required. Oedema is always required."""
     if not isinstance(payload, dict):
         raise ApiError(422, "invalid_request", "Request body must be a JSON object.")
     if any(k not in ALLOWED for k in payload):
         raise ApiError(422, "unknown_field", "The request contains a field that is not accepted. "
                                              "Names, identifiers and dates of birth are never accepted.")
+    lenient = not require_length and payload.get("length_height_cm") is None
     for f in REQUIRED:
+        if lenient and f in ("length_height_cm", "measure_position"):
+            continue
         if f not in payload:
             raise ApiError(422, "missing_field", f"Missing required field: {f}.")
     sex = _enum(payload, "sex", _Sex).value
-    position = _enum(payload, "measure_position", _Position).value
+    position = None if lenient and payload.get("measure_position") is None else _enum(payload, "measure_position", _Position).value
     age = payload["age_days"]
     if isinstance(age, bool) or not isinstance(age, int):
         raise _bad("age_days", "must be a whole number")
@@ -132,7 +138,8 @@ def parse_payload(payload: dict) -> tuple:
         complications=_optional_set(payload, "complications", Complication),
         **{f: _optional_bool(payload, f) for f in _BOOLS},
     )
-    return (sex, age, _number(payload, "weight_kg"), _number(payload, "length_height_cm"), position, clinical)
+    length = None if lenient else _number(payload, "length_height_cm")
+    return (sex, age, _number(payload, "weight_kg"), length, position, clinical)
 
 
 def parse_birth(payload: dict) -> tuple[float | None, float | None, dict]:
@@ -243,7 +250,8 @@ def build_audit_view(result: ClassificationResult, expl: Explanation, flags) -> 
             "explanation": expl.to_dict()}
 
 
-def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[str] = (), context: dict | None = None) -> dict:
+def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[str] = (), context: dict | None = None,
+            assessment: dict | None = None) -> dict:
     """The existing under-5 flow. `context` (birth context) is added only when a route other than plain under5 ran."""
     clinical = args[-1]
     features, anthro, result = features_from_inputs(*args)
@@ -255,9 +263,41 @@ def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[
     out = build_audit_view(result, expl, flags) if view == "audit" else build_worker_view(result, expl, flags)
     if context is not None:
         out = {**out, "route": context["route"], "birth_context": context}
+    if assessment is not None:
+        out = {**out, "clinical_assessment": assessment}
     if extra_warnings:
         out["warnings"] = [*out["warnings"], *extra_warnings]
-    return out if view == "audit" else scrub_worker(out)
+    return out if view == "audit" else scrub_worker(display_wording(out))
+
+
+_DISPLAY_WORDING = (("Failure to gain weight", "Faltering growth (not gaining weight)"),
+                    ("failure to gain weight", "faltering growth (not gaining weight)"))
+
+
+def display_wording(value):
+    """Display-only wording for the worker view: 'failure to gain weight' reads as 'faltering growth'. Codes, rule ids and
+    the audit view keep the original CMAM terminology, so the audit trace still matches the clinical rule."""
+    if isinstance(value, str):
+        for old, new in _DISPLAY_WORDING:
+            value = value.replace(old, new)
+        return value
+    if isinstance(value, list):
+        return [display_wording(v) for v in value]
+    if isinstance(value, dict):
+        return {k: (v if k == "code" else display_wording(v)) for k, v in value.items()}
+    return value
+
+
+def _preterm_hint(payload) -> bool:
+    """True when the request will be routed to the preterm engine, so length may be optional."""
+    try:
+        age = payload.get("age_days")
+        if isinstance(age, bool) or not isinstance(age, int):
+            return False
+        ga, bw, _ = parse_birth(payload)
+        return route_birth(age, ga, bw).path == PATH_PRETERM
+    except (ApiError, InputError, AttributeError):
+        return False
 
 
 def screen(payload: dict, view: str = "worker", models: Models | None = None) -> dict:
@@ -269,7 +309,7 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None) ->
     """
     if view not in VIEWS:
         raise ApiError(422, "invalid_request", "Field 'view' must be one of: worker, audit.")
-    args = parse_payload(payload)
+    args = parse_payload(payload, require_length=not _preterm_hint(payload))
     ga, bw, extra = parse_birth(payload)
     try:
         rt = route_birth(args[1], ga, bw)
@@ -281,17 +321,25 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None) ->
             out = preterm_integration.build_preterm_response(
                 rt, preterm_integration.run(pi, clinical.oedema.value), warns, view, pi)
             out["status"] = wording.STATUS
-            return out if view == "audit" else scrub_worker(out)
+            return out if view == "audit" else scrub_worker(display_wording(out))
         if rt.path == PATH_CORRECTED:
             msg = (f"Age corrected for prematurity: born at {rt.ga_weeks:g} weeks, {rt.age_days} days old, screened as "
                    f"{rt.corrected_age_days} days. CMAM thresholds are applied to the corrected age. The ML recording-error "
                    "flag is not run for corrected ages.")
+            if rt.corrected_age_provisional:
+                msg += (f" PROVISIONAL: the corrected-age end point of {rt.corrected_age_until_months} months for this "
+                        "gestational age is not confirmed. Verify against the clinical reference.")
             return _under5((args[0], rt.age_days_used, *args[2:]), view, None, [msg], preterm_integration.birth_context(rt))
-        warns = [w for w in ("Birth weight is under 2500 g but gestational age was not given: preterm screening and "
-                             "corrected age were not applied.",) if rt.notes and "gestational_age_missing_for_low_birth_weight" in rt.notes]
+        warns, assessment, ctx = [], None, None
+        if "gestational_age_missing_for_low_birth_weight" in rt.notes:
+            warns.append("Birth weight is under 2500 g but gestational age was not given: preterm screening and corrected "
+                         "age were not applied. Gestational age is not assumed. Refer for clinical assessment.")
+            assessment = {"needed": True, "reasons": [{"code": "gestational_age_unknown_low_birth_weight", "message":
+                          "Born under 2500 g with unknown gestational age: a clinician should assess whether the baby is preterm."}]}
+            ctx = preterm_integration.birth_context(rt)
         if extra:
             warns.append("Preterm-only fields were given but this baby is not screened by the preterm engine: they were ignored.")
-        return _under5(args, view, models, warns)
+        return _under5(args, view, models, warns, ctx, assessment)
     except InputError as exc:
         raise ApiError(422, "invalid_input", _engine_message(exc)) from None
 

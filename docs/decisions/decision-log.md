@@ -190,17 +190,25 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D112. Existing danger-sign, complication, too_weak_to_suckle and failure_to_gain_weight inputs feed the preterm triggers. Signs the CMAM list lacks go in a new `neonatal_danger_signs` list, not in the CMAM `DangerSign` enum (which would change CMAM rules).
 - D113. `ml/features.FEATURES` is frozen (`load_models` rejects a different list). Preterm columns are a separate `PRETERM_FEATURES`; `rule_level` is excluded and refused as a label.
 - D114. Unit guards: `birth_weight_g` 200 to 8000, `weight_kg` 0.2 to 10 on the preterm route. A kg/g swap is rejected, not converted.
+- D116 (Edison, 2026-11-08). follow_up keeps its own disposition: no under-5 tier (null), not forced into mam or low_risk. Supersedes D111 for follow_up.
+- D117. Corrected-age end for GA 32 to under 37 weeks is PROVISIONAL (24 months placeholder) and flagged in responses until verified against the clinical reference.
+- D118. Term babies under 2500 g use chronological age; correction only for babies born preterm.
+- D119. Danger signs and complications require referral. Hypoglycaemia (complication alone = refer; urgent only if stated not correcting) and oedema (per grade, all refer for now) follow the approved protocol via `routing_config.json`.
+- D120. Length and position are optional only on the preterm route; oedema stays explicit.
+- D121. Unknown gestational age with birth weight under 2500 g: under-5 flow, warning, `clinical_assessment.needed`; GA is never assumed.
+- D122. Display-only wording: worker view says "faltering growth (not gaining weight)"; codes, rule ids and the audit trace keep CMAM terms.
+- D123. Urgent triggers are driven from `preterm_rules.json` (`urgent_triggers.rules`); `engine.py` reads them; tests check agreement. The "not gaining" age now uses `min_age_days`.
 - D115. The ML recording-error flag is not run on the corrected-age route (models trained on chronological ages).
 
 ## Open issues from the preterm integration
-- I32. follow_up has no under-5 tier. Default follow_up -> mam over-refers late-preterm LBW babies who only need weekly review; follow_up -> low_risk would hide facility-KMC and unsupervised-home-care babies. Clinician to choose; one line in `routing_config.json`.
-- I33. The brief gives the corrected-age end (age 3) only for GA under 32 weeks. 24 months for 32 to under 37 weeks is a placeholder.
-- I34. Term babies under 2500 g (GA 37 or more) are routed to preterm under 50 weeks PMA but get chronological age afterwards, not the brief's literal formula (at most 3 weeks of correction). Confirm.
-- I35. Mapping under-5 inputs to preterm triggers: hypoglycaemia (any) -> "not correcting"; severe_dehydration -> dehydrated; any danger sign or complication -> sick (refer); failure_to_gain_weight true -> 0 gaining days; unconsciousness counts as lethargic.
-- I36. Preterm and corrected-age routes require the under-5 fields `length_height_cm`, `measure_position` and `oedema`, though the preterm engine treats length as optional. Make them conditional?
-- I37. Born under 2500 g with gestational age unknown: under-5 flow with a warning, no preterm screen. GA is often unknown in clinics; confirm, or define a fallback.
-- I38. Oedema on the preterm route raises the level to refer (never urgent). The preterm engine does not read oedema.
-- I39. The under-5 engine uses "failure to gain weight" (CMAM Table 5 text and the `failure_to_gain_weight` field), which conflicts with the "faltering, never failure" rule on the corrected-age route. Not changed. Display-only rename?
-- I40. In `engine.py`, the urgent-trigger set and the "not gaining" age (`> 14`) are hardcoded; the file's `min_age_days` is used only by the growth block. Tags in `preterm_rules.json` document but do not drive them. Logic left as supplied.
+- I32 (decided, D116; gateways must accept a null tier). follow_up has no under-5 tier. Default follow_up -> mam over-refers late-preterm LBW babies who only need weekly review; follow_up -> low_risk would hide facility-KMC and unsupervised-home-care babies. Clinician to choose; one line in `routing_config.json`.
+- I33 (provisional, D117; still to verify). The brief gives the corrected-age end (age 3) only for GA under 32 weeks. 24 months for 32 to under 37 weeks is a placeholder.
+- I34 (decided, D118). Term babies under 2500 g (GA 37 or more) are routed to preterm under 50 weeks PMA but get chronological age afterwards, not the brief's literal formula (at most 3 weeks of correction). Confirm.
+- I35 (hypoglycaemia changed per D119; rest still to confirm). Mapping under-5 inputs to preterm triggers: hypoglycaemia (any) -> "not correcting"; severe_dehydration -> dehydrated; any danger sign or complication -> sick (refer); failure_to_gain_weight true -> 0 gaining days; unconsciousness counts as lethargic.
+- I36 (decided, D120). Preterm and corrected-age routes require the under-5 fields `length_height_cm`, `measure_position` and `oedema`, though the preterm engine treats length as optional. Make them conditional?
+- I37 (decided, D121). Born under 2500 g with gestational age unknown: under-5 flow with a warning, no preterm screen. GA is often unknown in clinics; confirm, or define a fallback.
+- I38 (per-grade config, pending protocol, D119). Oedema on the preterm route raises the level to refer (never urgent). The preterm engine does not read oedema.
+- I39 (decided, D122). The under-5 engine uses "failure to gain weight" (CMAM Table 5 text and the `failure_to_gain_weight` field), which conflicts with the "faltering, never failure" rule on the corrected-age route. Not changed. Display-only rename?
+- I40 (decided, D123). In `engine.py`, the urgent-trigger set and the "not gaining" age (`> 14`) are hardcoded; the file's `min_age_days` is used only by the growth block. Tags in `preterm_rules.json` document but do not drive them. Logic left as supplied.
 - I41. Corrected age applies CMAM thresholds (MUAC from 6 months, the infant criteria) to corrected age. Confirm.
 - I42. No Docker build was run in this environment (CI does it). Data shipping was checked with a clean non-editable install.

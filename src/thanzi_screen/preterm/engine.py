@@ -139,7 +139,7 @@ def screen(i: PretermInput) -> dict:
         up("follow_up", act=f"Weekly review until {R['followup']['weekly_until_kg']} kg")
     if i.sick: up("refer", "sick LBW/preterm neonate: hospitalise")
     if i.cannot_feed: up("refer", "cannot feed from breast or cup")
-    if i.gaining_days is not None and i.gaining_days < 3 and i.age_days > 14: up("refer", "not gaining weight")
+    if i.gaining_days is not None and i.gaining_days < 3 and i.age_days > R["growth_assessment"]["min_age_days"]: up("refer", "not gaining weight")
     if i.apnoea_7d: up("refer", "apnoea in last 7 days")
     if i.temp_unstable: up("refer", "unstable temperature")
     if i.aspirate_pct is not None and i.aspirate_pct > R["tube_feed_aspirate_review_pct"]:
@@ -176,12 +176,8 @@ def screen(i: PretermInput) -> dict:
         if len(faltering) >= 2 or (faltering and feeding_trouble):
             up("refer", "faltering growth with another concern: refer for nutrition review")
     # urgent: danger signs only - growth alone is never urgent
-    urgent = [lbl for ok, lbl in [
-        (i.bilious_vomiting, "bilious vomiting"), (i.convulsions, "convulsions"),
-        (i.apnoea_now, "apnoea now"), (i.cyanosis, "cyanosis"),
-        (i.hypoglycaemia_uncorrected, "hypoglycaemia not correcting"),
-        (i.abdominal_distension and (i.blood_in_stool or i.feed_intolerance), "abdominal distension with blood in stool/feed intolerance"),
-        (i.cannot_feed and (i.dehydrated or i.lethargic), "cannot feed and dehydrated/lethargic")] if ok]
+    urgent = [r["label"] for r in R["urgent_triggers"]["rules"]
+              if all(getattr(i, f) for f in r["all_of"]) and (not r.get("any_of") or any(getattr(i, f) for f in r["any_of"]))]
     if urgent:
         for why in urgent: up("urgent_refer", why)
         actions.extend(R["urgent_triggers"]["stabilise_before_transfer"])

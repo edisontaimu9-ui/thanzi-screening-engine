@@ -26,12 +26,13 @@ PATH_PRETERM = "preterm"
 PATH_CORRECTED = "under5_corrected_age"
 
 LEVEL_MAP: dict[str, str] = {k: v for k, v in CONFIG["level_map"].items() if not k.startswith("_")}
-if set(LEVEL_MAP) != set(_engine.LEVELS) or not set(LEVEL_MAP.values()) <= {t.value for t in Tier}:
-    raise RuntimeError("routing_config.json level_map must cover exactly the preterm levels and use existing under-5 tiers")
+if set(LEVEL_MAP) != set(_engine.LEVELS) or not set(LEVEL_MAP.values()) - {None} <= {t.value for t in Tier}:
+    raise RuntimeError("routing_config.json level_map must cover exactly the preterm levels, with an existing under-5 tier or null")
+NO_TIER_NOTE = "No under-5 tier matches this preterm level. Use preterm_level."
 
 
-def tier_for(level: str) -> str:
-    """The one place a preterm referral level becomes an under-5 tier."""
+def tier_for(level: str) -> str | None:
+    """The one place a preterm referral level becomes an under-5 tier. None: the level has no under-5 tier."""
     return LEVEL_MAP[level]
 
 
@@ -53,6 +54,7 @@ class Route:
     low_birth_weight: bool              # under 2500 g
     corrected_age_days: int | None
     corrected_age_until_months: int | None
+    corrected_age_provisional: bool = False
     notes: tuple[str, ...] = ()
 
     @property
@@ -72,14 +74,19 @@ def corrected_age_days(age_days: int, ga_weeks: float) -> int:
     return age_days - math.floor(behind + 0.5)
 
 
-def corrected_age_until_months(ga_weeks: float) -> int | None:
+def corrected_age_period(ga_weeks: float) -> tuple[int | None, bool]:
+    """(months of chronological age until which corrected age is used, whether that end point is provisional)."""
     c = CONFIG["corrected_age"]
     if ga_weeks >= c["applies_when_ga_weeks_below"]:
-        return None
+        return None, False
     for tier in c["use_until_chronological_months"]:
         if ga_weeks < tier["ga_weeks_below"]:
-            return tier["months"]
-    return None
+            return tier["months"], bool(tier.get("provisional"))
+    return None, False
+
+
+def corrected_age_until_months(ga_weeks: float) -> int | None:
+    return corrected_age_period(ga_weeks)[0]
 
 
 def route(age_days: int, ga_weeks: float | None = None, birth_weight_g: float | None = None) -> Route:
@@ -102,8 +109,8 @@ def route(age_days: int, ga_weeks: float | None = None, birth_weight_g: float | 
     lbw = birth_weight_g is not None and birth_weight_g < cfg["birth_weight_g_below"]
     pma = None if ga_weeks is None else round(ga_weeks + age_days / 7, 2)
 
-    def make(path, reason, used, corrected=None, until=None, notes=()):
-        return Route(path, reason, age_days, used, ga_weeks, birth_weight_g, pma, preterm, lbw, corrected, until, tuple(notes))
+    def make(path, reason, used, corrected=None, until=None, notes=(), provisional=False):
+        return Route(path, reason, age_days, used, ga_weeks, birth_weight_g, pma, preterm, lbw, corrected, until, provisional, tuple(notes))
 
     if not (preterm or lbw):
         return make(PATH_UNDER5, "not_preterm_or_low_birth_weight", age_days)
@@ -117,9 +124,9 @@ def route(age_days: int, ga_weeks: float | None = None, birth_weight_g: float | 
             raise InputError("birth_weight_g is required for a baby born under 37 weeks")
         return make(PATH_PRETERM, "preterm_or_low_birth_weight_below_handover_pma", age_days)
 
-    until = corrected_age_until_months(ga_weeks)
+    until, provisional = corrected_age_period(ga_weeks)
     if until is not None and age_days / DAYS_PER_MONTH < until:
         corrected = corrected_age_days(age_days, ga_weeks)
-        return make(PATH_CORRECTED, "pma_at_or_after_handover_corrected_age", corrected, corrected, until)
+        return make(PATH_CORRECTED, "pma_at_or_after_handover_corrected_age", corrected, corrected, until, provisional=provisional)
     return make(PATH_UNDER5, "pma_at_or_after_handover_chronological_age", age_days,
                 notes=("corrected_age_period_over" if preterm else "term_low_birth_weight_chronological_age",))

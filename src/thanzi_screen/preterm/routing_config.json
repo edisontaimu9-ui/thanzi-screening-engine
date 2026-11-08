@@ -11,27 +11,50 @@
     "tag": "proposed: Fenton starts at 22 weeks; the upper bound is an input sanity limit"
   },
   "plausible_weights": {
-    "birth_weight_g": {"min": 200, "max": 8000},
-    "weight_kg_on_preterm_route": {"min": 0.2, "max": 10},
+    "birth_weight_g": {
+      "min": 200,
+      "max": 8000
+    },
+    "weight_kg_on_preterm_route": {
+      "min": 0.2,
+      "max": 10
+    },
     "tag": "proposed: unit guards only. weight_kg is kilograms and birth_weight_g is grams; a swap (1.1 g, 1250 kg) is rejected, not converted. Needs clinician sign-off."
   },
   "corrected_age": {
     "full_term_weeks": 40,
     "applies_when_ga_weeks_below": 37,
     "use_until_chronological_months": [
-      {"ga_weeks_below": 32, "months": 36, "tag": "brief: very/extremely preterm, until age 3"},
-      {"ga_weeks_below": 37, "months": 24, "tag": "proposed: the brief gives no end point for 32 to under 37 weeks; needs clinician sign-off"}
+      {
+        "ga_weeks_below": 32,
+        "months": 36,
+        "tag": "brief: very/extremely preterm, until age 3"
+      },
+      {
+        "ga_weeks_below": 37,
+        "months": 24,
+        "provisional": true,
+        "tag": "PROVISIONAL: 24 months is a placeholder, not a confirmed rule. Verify against the clinical reference before use; responses carry a provisional warning while it applies."
+      }
     ]
   },
   "level_map": {
-    "_note": "Preterm referral level -> under-5 tier (the engine's existing levels: low_risk, mam, urgent, recheck). No new levels. follow_up -> mam is proposed: the under-5 engine has no follow-up tier. Needs clinician sign-off.",
+    "_note": "Preterm referral level -> under-5 tier. The under-5 engine has no follow-up tier, so follow_up has NO under-5 tier (null): the response keeps preterm_level 'follow_up' as its own disposition. No level was invented and follow_up is not forced into mam or low_risk (decision 2026-11-08).",
     "routine": "low_risk",
-    "follow_up": "mam",
+    "follow_up": null,
     "refer": "mam",
     "urgent_refer": "urgent"
   },
   "oedema_on_preterm_route": {
-    "min_preterm_level": "refer",
-    "tag": "proposed: bilateral pitting oedema is a CMAM severe criterion (INF.OEDEMA) the preterm engine does not read. Raises to at most refer; only danger signs can give urgent_refer. Needs clinician sign-off."
+    "min_preterm_level_by_grade": {
+      "+": "refer",
+      "++": "refer",
+      "+++": "refer"
+    },
+    "tag": "PROVISIONAL, pending approved clinical protocol: severity is not assumed equal across grades. Edit per grade here. Oedema is not growth, so a grade may be set to urgent_refer once the protocol says so; until then none is."
+  },
+  "hypoglycaemia": {
+    "complication_means_not_correcting": false,
+    "tag": "pending approved clinical protocol: the under-5 'hypoglycaemia' complication carries no severity, so by default it counts as a complication (refer). It becomes the urgent trigger 'hypoglycaemia not correcting' only if the request says hypoglycaemia_not_correcting is true, or if this is set to true once the protocol is approved."
   }
 }

@@ -11,7 +11,7 @@ import math
 
 from ..anthro import InputError
 from . import engine as E
-from .routing import CONFIG, Route, at_least, tier_for
+from .routing import CONFIG, NO_TIER_NOTE, Route, at_least, tier_for
 
 RULE_SET_VERSION = "preterm_coin2017_fenton2025"
 NEONATAL_SIGNS = ("bilious_vomiting", "apnoea", "cyanosis", "abdominal_distension", "blood_in_stool", "feed_intolerance")
@@ -39,11 +39,16 @@ def _opt(name: str, v):
     return None if v is None else _positive(name, v)
 
 
-def to_preterm_input(route: Route, sex: str, weight_kg: float, length_height_cm: float, position: str,
+def pi_hypo(extra: dict) -> bool:
+    return bool(extra.get("hypoglycaemia_not_correcting")) or CONFIG["hypoglycaemia"]["complication_means_not_correcting"]
+
+
+def to_preterm_input(route: Route, sex: str, weight_kg: float, length_height_cm: float | None, position: str | None,
                      extra: dict, danger_signs, complications, oedema: str, too_weak_to_suckle,
                      failure_to_gain_weight) -> tuple[E.PretermInput, list[str]]:
     """Return the engine input and any warnings. Raises InputError for input the preterm path cannot use."""
-    if position != "length":
+    # Length is optional on this route (the engine skips the length z-score without it). If given it must be a length.
+    if length_height_cm is not None and position != "length":
         raise InputError("measure_position must be length for a baby screened as preterm")
     wk = CONFIG["plausible_weights"]["weight_kg_on_preterm_route"]
     if not wk["min"] <= _positive("weight_kg", weight_kg) <= wk["max"]:
@@ -67,12 +72,16 @@ def to_preterm_input(route: Route, sex: str, weight_kg: float, length_height_cm:
     sick = bool(extra.get("sick")) or bool(ds) or bool(cx)
     if cx - mapped_complications:
         warnings.append("Medical complications were reported. The baby is treated as sick: refer.")
+    if "hypoglycaemia" in cx and not pi_hypo(extra):
+        warnings.append("Hypoglycaemia reported without saying whether it is correcting: treated as a complication (refer). "
+                        "Say hypoglycaemia_not_correcting if it is not responding to treatment. Pending the approved clinical protocol.")
     if oedema != "none":
-        warnings.append("Oedema reported: weight z-scores are unreliable. See the referral reasons.")
+        warnings.append("Oedema reported: weight z-scores are unreliable. Escalation follows the provisional setting in "
+                        "routing_config.json, pending the approved clinical protocol.")
     pi = E.PretermInput(
         sex=sex, ga_weeks=route.ga_weeks, birth_weight_g=route.birth_weight_g, age_days=route.age_days,
         weight_g=round(_positive("weight_kg", weight_kg) * 1000, 3),
-        length_cm=_positive("length_height_cm", length_height_cm),
+        length_cm=None if length_height_cm is None else _positive("length_height_cm", length_height_cm),
         hc_cm=_opt("hc_cm", extra.get("hc_cm")),
         sick=sick,
         cannot_feed="unable_to_drink_or_breastfeed" in ds or bool(too_weak_to_suckle),
@@ -86,7 +95,8 @@ def to_preterm_input(route: Route, sex: str, weight_kg: float, length_height_cm:
         convulsions="convulsions" in ds,
         apnoea_now="apnoea" in neo,
         cyanosis="cyanosis" in neo,
-        hypoglycaemia_uncorrected="hypoglycaemia" in cx,
+        hypoglycaemia_uncorrected=bool(extra.get("hypoglycaemia_not_correcting"))
+        or ("hypoglycaemia" in cx and CONFIG["hypoglycaemia"]["complication_means_not_correcting"]),
         abdominal_distension="abdominal_distension" in neo,
         blood_in_stool="blood_in_stool" in neo,
         feed_intolerance="feed_intolerance" in neo,
@@ -102,10 +112,11 @@ def run(pi: E.PretermInput, oedema: str) -> dict:
     out = copy.deepcopy(raw)
     ref = out["referral"]
     if oedema != "none":
-        minimum = CONFIG["oedema_on_preterm_route"]["min_preterm_level"]
-        if at_least(ref["level"], minimum) != ref["level"]:
-            ref["level"] = minimum
-        ref["reasons"].append("oedema reported: possible severe acute malnutrition sign, refer for assessment")
+        minimum = CONFIG["oedema_on_preterm_route"]["min_preterm_level_by_grade"][oedema]
+        ref["level"] = at_least(ref["level"], minimum)
+        ref["reasons"].append(f"oedema {oedema} reported: possible severe acute malnutrition sign, escalate to at least {minimum}")
+        if minimum == "urgent_refer":
+            ref["actions"].extend(E.R["urgent_triggers"]["stabilise_before_transfer"])
     return {"raw": raw, "result": out}
 
 
@@ -128,6 +139,7 @@ def birth_context(route: Route) -> dict:
         "age_days": route.age_days, "pma_weeks": route.pma_weeks,
         "corrected_age_days": route.corrected_age_days,
         "corrected_age_until_chronological_months": route.corrected_age_until_months,
+        "corrected_age_end_provisional": route.corrected_age_provisional,
         "age_days_used": route.age_days_used,
         "birth_weight_class": E.birth_class(route.birth_weight_g) if route.birth_weight_g is not None else None,
     }
@@ -144,6 +156,7 @@ def build_preterm_response(route: Route, ran: dict, warnings: list[str], view: s
         "view": view, "route": route.path,
         "worker_summary": summary,
         "tier": tier_for(level),
+        "tier_note": NO_TIER_NOTE if tier_for(level) is None else None,
         "preterm_level": level,
         "reasons": reasons,
         "actions": list(dict.fromkeys(r["referral"]["actions"])),
