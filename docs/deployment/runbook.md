@@ -54,5 +54,22 @@ The Dockerfile uses the `python:3.12-slim` tag. For a fully fixed build, resolve
 ## Measured performance (from the test report, not UniPod)
 One worker on one 2.1 GHz vCPU, 2000 requests: about 550 to 790 requests per second, median latency 1.7 ms (1 client) to 20 ms (16 clients), 48 MB at start, 54 MB after load. Run `scripts/load_probe.py` on UniPod hardware and send the numbers; targets need your expected load.
 
+## Tools and dependencies (for the programme technical lead)
+The programme asks teams to send their tools and dependencies in advance so the environment can be prepared. For this engine:
+
+| Need | Detail |
+|---|---|
+| Python | 3.11 or 3.12 |
+| Runtime packages (API only) | `fastapi~=0.162.2`, `pydantic~=2.14.3`, `uvicorn~=0.54.0`. The engine, rules and ML flags use the standard library only |
+| Dev and test packages | `pytest`, `openpyxl`, `httpx~=0.28.1`, `pyyaml`, `coverage` |
+| Exact versions | Pinned in `constraints.txt`: `pip install -c constraints.txt -e ".[dev,api]"` |
+| Container | Docker, to load and run the released image (about 47 MB compressed) |
+| Source | Git, to clone `https://github.com/edisontaimu9-ui/thanzi-screening-engine` |
+| Network | GitHub and PyPI access for the first install, or an offline copy of the pinned packages |
+| GPU | Not used. The service is CPU only. The workstation GPU (RTX A4000, 16 GB) is not needed to run or test it |
+
+## Target hardware (as stated by the programme)
+Development workstations with Intel Core 9 processors and an NVIDIA RTX A4000 GPU (16 GB), or the GPU configuration the UniPod confirms. This describes the programme's development environment, not a production server specification. The measured performance above was taken on one vCPU, so it is a floor, not a forecast for that hardware. Run `scripts/load_probe.py` there and send the numbers.
+
 ## Contacts and owners
 Network isolation, TLS, audit key holder: Hope. Clinical wording and review: Maria Talimire. Engine and releases: Edison.
