@@ -8,8 +8,9 @@ title = "Thanzi screening engine"
 useDefault = true
 
 [allowlist]
-description = "Historical throwaway CI test keys (D99)"
+description = "Historical throwaway CI test keys (D99) and dummy test fixtures"
 regexes = [
   '''ci-gateway-key-0123456789''',
   '''ci-audit-key-0123456789ab''',
+  '''wrong-key-0123456789''',     # dummy wrong key in tests/api/test_llm_routes.py (86e6ad4); a 401 test fixture, not a credential
 ]
