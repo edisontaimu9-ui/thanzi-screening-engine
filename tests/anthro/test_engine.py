@@ -145,3 +145,27 @@ def test_bad_inputs_raise(kw):
 
 def test_deterministic():
     assert run() == run()
+
+
+# I28 (D106): a length that is not positive after the 0.7 cm conversion and rounding is bad input, not a crash.
+@pytest.mark.parametrize("value", [1e-308, 1e-10, 4e-7, 0.5, 0.7])
+@pytest.mark.parametrize("age_days", [0, 730, 731, 1856])
+@pytest.mark.parametrize("position", ["length", "height"])
+def test_i28_tiny_length_never_raises_a_bare_value_error(value, age_days, position):
+    try:
+        run(length_height_cm=value, age_days=age_days, measure_position=position)
+    except InputError:
+        pass  # a clean rejection is correct; any other exception type fails the test
+
+
+@pytest.mark.parametrize("value", [1e-10, 0.7, 0.5])
+def test_i28_length_made_non_positive_by_conversion_is_rejected(value):
+    with pytest.raises(InputError, match="too small"):
+        run(length_height_cm=value, age_days=1000, measure_position="length")
+
+
+def test_i28_normal_conversions_are_unchanged():
+    r = run(length_height_cm=70.0, age_days=300, measure_position="height")
+    assert r.length_height_used_cm == pytest.approx(70.7)
+    r = run(length_height_cm=90.0, age_days=1000, measure_position="length")
+    assert r.length_height_used_cm == pytest.approx(89.3)

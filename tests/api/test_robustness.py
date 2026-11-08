@@ -14,9 +14,6 @@ from thanzi_screen.ml import load_models  # noqa: E402
 
 GW, AU = "gateway-key-0123456789", "audit-key-0123456789ab"
 HG = {"X-Gateway-Key": GW}
-KNOWN_I28 = ("I28: a length/height extremely close to zero reaches the z-score step and raises ValueError, which the API "
-             "reports as a generic 500. Not fixed in Phase 7 (decide in the log first). Strict: this test fails when it is fixed, "
-             "so remove the marker then.")
 SAFE = {200, 400, 401, 403, 404, 405, 413, 415, 422}
 
 
@@ -51,9 +48,7 @@ def test_wrong_content_types_never_crash(client, ctype):
     "\u0000", "9" * 10000, "ï»¿", "<script>alert(1)</script>", "'; DROP TABLE x; --", "\u202e",
 ])
 @pytest.mark.parametrize("field", ["weight_kg", "length_height_cm", "muac_cm", "age_days", "sex", "oedema", "appetite"])
-def test_every_field_survives_odd_values(client, field, value, request):
-    if field == "length_height_cm" and value == 1e-308:
-        request.applymarker(pytest.mark.xfail(strict=True, reason=KNOWN_I28))
+def test_every_field_survives_odd_values(client, field, value):
     body = {**LOW_BASE, field: value}
     try:
         raw = json.dumps(body, allow_nan=True)
@@ -97,7 +92,19 @@ def test_many_sequential_requests_stay_consistent(client):
         assert client.post("/v1/screen", json=LOW_BASE, headers=HG).json() == first
 
 
-@pytest.mark.xfail(strict=True, reason=KNOWN_I28)
-def test_known_finding_i28_tiny_length_is_a_500_not_a_422(client):
+@pytest.mark.parametrize("value", [1e-308, 1e-10, 1e-6, 4e-7, 0.5, 0.7])
+@pytest.mark.parametrize("age_days", [0, 100, 730, 731, 1000, 1856])
+@pytest.mark.parametrize("position", ["length", "height"])
+def test_i28_tiny_length_is_never_a_500(client, value, age_days, position):
+    body = {**LOW_BASE, "length_height_cm": value, "age_days": age_days, "measure_position": position}
+    r = client.post("/v1/screen", json=body, headers=HG)
+    assert r.status_code in (200, 422), (r.status_code, r.text[:200])
+    assert "Traceback" not in r.text
+    if r.status_code == 422:
+        assert str(value) not in r.text
+
+
+def test_i28_tiny_length_is_a_422_with_a_stable_code(client):
     r = client.post("/v1/screen", json={**LOW_BASE, "length_height_cm": 1e-10}, headers=HG)
     assert r.status_code == 422
+    assert "1e-10" not in r.text

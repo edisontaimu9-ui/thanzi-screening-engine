@@ -9,7 +9,7 @@
 - Release workflow (tag `v*`): builds and tests the image, publishes a pre-release with image tarball, SBOMs, checksums and test evidence.
 - Deployment: runbook and an example compose file.
 - No change to classification rules, thresholds, wording or API behaviour. Version 0.7.0.
-- Known finding, not fixed (I28): extremely small `length_height_cm` values cause a generic 500 instead of a 422.
+- Fixed before the tag (I28, D106): a `length_height_cm` that is not positive after the 0.7 cm age-convention conversion is rejected as `InputError` (422 over HTTP) instead of causing a generic 500. Regression tests replace the expected-failure markers. No other behaviour changes.
 
 ## 0.6.0 - Phase 6
 - `thanzi_screen.api`: framework-free `service.screen(payload, view, models)`, `security` (gateway and audit keys, fail-closed start, HIV scrub of worker responses), thin FastAPI `app` (`create_app`, `create_app_from_env`). Endpoints `GET /health`, `GET /version`, `POST /v1/screen?view=worker|audit`. Stateless, no request logging, unknown and identifying fields rejected.

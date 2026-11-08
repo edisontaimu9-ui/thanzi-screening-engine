@@ -10,7 +10,7 @@ Decision support only. This report says what was run, where, and what was **not*
 ## Results run in the build environment
 | Area | What was run | Result |
 |---|---|---|
-| Full suite | `pytest` with API tests required, Python 3.11 and 3.12 | 591 passed, 2 expected failures (I28 markers), 0 failed (590 on the first GitHub run, before the Dockerfile test was added) |
+| Full suite | `pytest` with API tests required, Python 3.11 and 3.12 | 591 passed, 2 expected failures (I28 markers), 0 failed (590 on the first GitHub run, before the Dockerfile test was added). After the I28 fix (D106), Python 3.12 in the build environment: 709 passed, 0 expected failures, 0 failed (the new tests cover tiny lengths across ages and positions); Python 3.11 and the coverage figure are for GitHub CI to confirm |
 | Coverage | `coverage` with branch coverage, reported only (Q3) | 98% overall (1962 statements, 514 branches). Lowest: `data/validate.py` 80%; all others 95% or more |
 | Rule traceability | A plugin records which test makes each rule fire | All 23 rules exercised by at least one test (`traceability.md`) |
 | Property tests | 8 invariants on the full pipeline: lower MUAC, lower weight, higher oedema grade never less urgent; danger sign or complication never lowers urgency or leads to outpatient care; missing information never lowers urgency; output invariants over 5,000+ inputs | All pass. No defect found |
@@ -33,7 +33,7 @@ Single uvicorn worker, models loaded, no access log, client on the same single v
 Startup to first healthy response: 0.43 s. Memory: 48 MB at start, 54 MB after 6,000 requests. These are measurements, not targets: no pass or fail threshold exists until Hope and UniPod provide expected load and server specifications (Q5, D97). Image size was not measured (no Docker here).
 
 ## Findings
-- **I28 (defect, not fixed):** a `length_height_cm` extremely close to zero (1e-10 and below) makes the engine raise `ValueError`; the API returns a generic 500 instead of 422. No data is exposed. Two strict expected-failure tests mark it; they will fail when it is fixed.
+- **I28 (fixed, D106):** a `length_height_cm` extremely close to zero, or small enough to go to zero or below after the 0.7 cm conversion, made the engine raise `ValueError`; the API returned a generic 500 instead of 422. No data was exposed. The engine now raises `InputError` and the API returns 422. The two expected-failure markers are replaced by regression tests.
 - **I31 (wording, for Maria):** z-scores are shown to two decimals, so a child at -2.004 is classified moderate while the text says "-2.00 is from -3 up to -2".
 - **I29:** keys are environment variables only; readable by `docker inspect`.
 - The first scan of history flagged the Phase 6 CI test keys (D99).
@@ -54,13 +54,13 @@ Startup to first healthy response: 0.43 s. Memory: 48 MB at start, 54 MB after 6
 |---|---|---|
 | CI run on `main` green, including the Docker job (Trivy and container smoke) | Edison | Green on `main` 2026-11-08 per Edison (D104, D105) |
 | Case pack reviewed; agreement and comments returned | Maria | Pending |
-| Worker wording confirmed, including neutral MAM text and exact-boundary z display (I18, I23, I31) | Maria | Pending |
+| Worker wording confirmed, including neutral MAM text and exact-boundary z display (I18, I23, I31) | Edison (dietitian review, D106); Maria if available | Pending |
 | Referral slip wording replaces placeholders (I10) | Maria / MoH | Pending |
-| Decide I28 fix | Edison | Pending |
+| Decide I28 fix | Edison | Done: fix and regression tests (D106) |
 | Network isolation of the API (I21) | Hope | Pending |
 | Who holds the audit key, and how (I24) | Hope / Edison | Pending |
 | Load probe on UniPod hardware; set targets | Hope | Pending |
-| File-based keys (I29) | Edison / Hope | Decide |
+| File-based keys (I29) | Edison / Hope | Decided: no, environment-based secrets (D106) |
 | MUAC tables R8 and prevalence R9 (I12, I13) | Edison | Pending uploads |
 | WHO Anthro cross-check sample (I5) | Edison | Pending |
 | Chichewa translation (I19) | Owner per D34 | Pending |

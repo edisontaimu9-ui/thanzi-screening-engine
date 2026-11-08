@@ -137,6 +137,10 @@ def compute_anthropometry(
         used = lenhei - LENHEI_OFFSET_CM
         warnings.append(WARN_CONVERTED)
     used = round(used, 6)
+    # I28 (D106): after the 0.7 cm conversion and rounding the value must still be positive, or the
+    # z-score step would raise a bare ValueError (a 500 over HTTP). Reject it as bad input instead.
+    if not used > 0:
+        raise InputError("length_height_cm is too small to be a real measurement")
 
     sx = sex.value
     wflh_name = "wfl" if days <= LENGTH_MAX_AGE_DAYS else "wfh"
