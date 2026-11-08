@@ -6,7 +6,7 @@
 - Not run in degraded mode or on the corrected-age route. Still synthetic data only, not validated on real children.
 - New: `scripts/train_deep.py` (`--preset tiny|small|base|auto`), `models/recording_error_mlp.json`, `models/recording_field_mlp.json`, `models/DL_MODEL_CARD.md`. Existing Phase 4 models and card unchanged.
 - Tests: `tests/ml/test_dl.py` (42), `tests/api/test_deep_flag.py` (28). One existing test (`test_worker_view_by_default_matches_the_core`) now passes the app's deep models to the core call. Synthetic results match the logistic model (AUC 0.997 both); no claim about real data.
-- Docs: `docs/modules/dl.md`; decisions D145 to D156; open issues I53 to I58 (I56 decided).
+- Docs: `docs/deployment/integration-guide.md` (technical guide for Hope: architecture, responsibilities, request flow, contract use, failure handling, other components, storage, security, testing), `docs/deployment/deep-flag-integration.md` (gateway integration note with real example, checks and rollback), `docs/modules/dl.md`; decisions D145 to D156; open issues I53 to I58 (I56 decided).
 
 ## Unreleased - NLP for free-text notes (add-on, not validated)
 - New package `thanzi_screen.ml.nlp`: finds clinical findings in a free-text note (present, absent, uncertain), cross-checks them against the structured entry (advisory reasons, never changes a result), and masks obvious identifiers (best-effort). Standard library only; lexicon in `lexicon.json` (draft, English, shipped as package data).
