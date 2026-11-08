@@ -216,3 +216,20 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - I40 (decided, D123). In `engine.py`, the urgent-trigger set and the "not gaining" age (`> 14`) are hardcoded; the file's `min_age_days` is used only by the growth block. Tags in `preterm_rules.json` document but do not drive them. Logic left as supplied.
 - I41 (decided, D127). Corrected age applies CMAM thresholds (MUAC from 6 months, the infant criteria) to corrected age. Confirm.
 - I42 (open: CI first build). No Docker build was run in this environment (CI does it). Data shipping was checked with a clean non-editable install.
+
+## Local LLM client (branch feat/llm-client, 2026-11-08). Proposed, for Edison's review. Not a numbered phase
+- D128. New package `thanzi_screen.llm`, independent of screening in both directions: it imports nothing from the engine, and no engine module imports it (only `api/app.py` and `api/llm_routes.py` mount it). Enforced by AST tests that were checked to fail when either rule is broken. Model text is never an input to a rule, flag, explanation or referral.
+- D129. Provider-agnostic: `LLMProvider` contract with Ollama, llama.cpp, OpenAI-compatible and mock providers and a registry. Changing model, server or provider is a setting; a new server is one class and one `register_provider` call. Callers depend on the small `TextGenerator` protocol.
+- D130. HTTP transport is httpx, in a new optional extra `llm` (`httpx~=0.28.1`, already pinned in `constraints.txt`, so no new packages). `dependencies` stays empty and the release image and its install line are unchanged (a test asserts it). `deploy/Dockerfile.llm` adds httpx on top of the release image. The package imports without httpx.
+- D131. Privacy and security defaults: feature off; endpoint must be local or private unless `THANZI_LLM_ALLOW_REMOTE=1` (then https only); no credentials in URLs, no redirects, proxy variables ignored; reply size cap; prompts, replies, URLs and server error text never logged or placed in exceptions; tests use synthetic text and loopback fake servers only.
+- D132. Low-resource defaults: one inference at a time with a 5 s bounded wait, 60 s deadline, one retry for connection errors and 429/502/503/504 only (never timeouts or 500, which is usually out of memory), context 2048, 256 output tokens, keep-alive 5 minutes, default model `qwen2.5:1.5b`.
+- D133. API integration: optional `GET /v1/llm/health` and `POST /v1/llm/generate` behind the gateway key. Absent unless `THANZI_LLM_ENABLED=1`, so `openapi.json` is unchanged. An enabled but invalid configuration stops start-up. `/health` does not look at the model. `create_app` gains an optional `llm` argument and a lifespan that closes the client.
+- D134. Qwen3-style visible reasoning: Ollama `think` setting plus provider-independent removal of `<think>` text (closed, unopened and unclosed forms).
+
+## Open issues from the local LLM client
+- I43. Does Edison want `POST /v1/llm/generate` at all? The Python client may be enough for now. The route takes free text; the client cannot tell identifiable from synthetic text, so keeping patient records out is a rule for callers. Default off either way.
+- I44. Model choice and licences are not verified. Qwen2.5 sizes do not all share one licence (as far as I know, the 3B differs). Read the model card, then fill in the register (R16, R17) before any deployment. No weights in the repository.
+- I45. Not tested against a real Ollama or llama.cpp server, a real Qwen model, Docker or UniPod hardware. Only fake loopback servers and `MockTransport` were used. The compose example is untested. Needs one real run and a memory and latency measurement on the target machine. Python 3.11 not run locally (CI runs it).
+- I46. Delivery: the release image carries the code, switched off, without httpx. Hope decides whether to use the derived image, and where the model server runs (a private network with no route out; models must be put on a volume beforehand).
+- I47. Not done: streaming, circuit breaker, output safety filtering. Model text is unreviewed and must not reach health workers without clinician review (same rule as the Phase 5 wording, I18).
+

@@ -1,0 +1,88 @@
+# EXAMPLE ONLY, NOT TESTED ON A DOCKER HOST (issue I45). Hope's environment governs.
+# The screening API plus a local Ollama server on a private network that has no route to the internet.
+#
+# 1. Build the derived image (see deploy/Dockerfile.llm) and load the release image as in docker-compose.example.yml.
+# 2. Pin the Ollama image: export OLLAMA_VERSION=<a release tag you have checked>. Do not use "latest".
+# 3. Put the model on the volume ONCE, using the setup profile (it is the only service with internet access):
+#      export THANZI_LLM_MODEL=qwen2.5:1.5b
+#      docker compose -f deploy/docker-compose.llm.example.yml --profile setup run --rm ollama-pull
+#    Check the model's licence first. On a server with no internet, pull on another machine and copy the volume.
+# 4. docker compose -f deploy/docker-compose.llm.example.yml up -d
+# 5. Check:  curl -H "X-Gateway-Key: $THANZI_GATEWAY_KEY" http://<gateway side>:8080/v1/llm/health
+#
+# Settings: see deploy/llm.env.example. Keep memory limits above the model size: about 1.5 to 2 GB for a 1.5B model.
+name: thanzi-llm
+services:
+  thanzi:
+    image: thanzi-screen-llm:v0.7.0
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    pids_limit: 128
+    restart: unless-stopped
+    environment:
+      THANZI_GATEWAY_KEY: ${THANZI_GATEWAY_KEY:?set THANZI_GATEWAY_KEY}
+      THANZI_AUDIT_KEY: ${THANZI_AUDIT_KEY:-}
+      THANZI_LLM_ENABLED: "1"
+      THANZI_LLM_PROVIDER: ollama
+      THANZI_LLM_ENDPOINT: http://ollama:11434
+      THANZI_LLM_MODEL: ${THANZI_LLM_MODEL:-qwen2.5:1.5b}
+      THANZI_LLM_MAX_CONCURRENCY: "1"
+    networks:
+      - thanzi_private        # Hope's gateway joins this one
+      - llm_private
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:${OLLAMA_VERSION:?pin OLLAMA_VERSION to a release tag}
+    restart: unless-stopped
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 3g
+    cpus: 2
+    pids_limit: 256
+    environment:
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    volumes:
+      - ollama_models:/root/.ollama
+    networks:
+      - llm_private           # internal only: no published port, no internet
+
+  ollama-pull:
+    profiles: ["setup"]
+    image: ollama/ollama:${OLLAMA_VERSION:?pin OLLAMA_VERSION to a release tag}
+    entrypoint: ["sh", "-c", "ollama serve >/dev/null 2>&1 & sleep 5 && ollama pull \"$$MODEL\""]
+    environment:
+      MODEL: ${THANZI_LLM_MODEL:-qwen2.5:1.5b}
+    volumes:
+      - ollama_models:/root/.ollama
+    networks:
+      - llm_egress            # has internet; used once, then removed
+
+networks:
+  thanzi_private:
+    internal: true
+  llm_private:
+    internal: true
+  llm_egress: {}
+
+volumes:
+  ollama_models: {}
+
+# Alternative: llama.cpp instead of Ollama. Replace the ollama service with the lines below, set
+# THANZI_LLM_PROVIDER=llamacpp and THANZI_LLM_ENDPOINT=http://llamacpp:8080, and check the flags against the
+# llama.cpp server documentation for the version you pin. The GGUF file goes in ./models (read-only mount).
+#
+#  llamacpp:
+#    image: ghcr.io/ggml-org/llama.cpp:${LLAMACPP_VERSION:?pin LLAMACPP_VERSION to a release tag}
+#    command: ["-m", "/models/model.gguf", "-c", "2048", "--parallel", "1", "--host", "0.0.0.0", "--port", "8080"]
+#    volumes:
+#      - ./models:/models:ro
+#    networks: [llm_private]

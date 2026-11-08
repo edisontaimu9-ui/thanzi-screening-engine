@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - local LLM client (add-on, not validated)
+- New package `thanzi_screen.llm`: async client for local model servers (Ollama, llama.cpp, OpenAI-compatible) with a provider registry and a mock provider. Configurable model, endpoint, timeouts and generation settings; concurrency limit, bounded queue, limited retries, health checks that never raise; `<think>` removal for Qwen3-style models. Independent of the screening code in both directions (tests enforce it).
+- Optional routes `GET /v1/llm/health` and `POST /v1/llm/generate`, mounted only when `THANZI_LLM_ENABLED=1`. `create_app(llm=...)` and a lifespan that closes the client. `docs/api/openapi.json` unchanged. Screening behaviour and `/health` unchanged (tested with a dead model server).
+- `pyproject.toml`: new optional extra `llm` (httpx, already pinned). Release `Dockerfile` unchanged. New `deploy/llm.env.example`, `deploy/docker-compose.llm.example.yml` (untested), `deploy/Dockerfile.llm`.
+- Docs: `docs/modules/llm.md`; decisions D128 to D134; open issues I43 to I47; register R16 to R18.
+- Open: real-server run (I45), model licences (I44), whether to keep the generate route (I43).
+
 ## Unreleased - preterm integration (not validated)
 - New `thanzi_screen.preterm`: the supplied preterm engine (Fenton 2025 + COIN 2017) added without logic changes, with `routing.py`, `routing_config.json` and `integration.py`. Fenton data kept unmodified (CC BY-NC-ND 4.0).
 - `POST /v1/screen` routes babies born under 37 weeks or under 2500 g: preterm engine under 50 weeks PMA, under-5 engine on corrected age after. New optional request fields (`gestational_age_weeks`, `birth_weight_g`, `neonatal_danger_signs` and others). Requests without them behave exactly as before. New response models `PretermResponse`, `PretermAuditResponse`, `BirthContext`; `docs/api/openapi.json` regenerated.
