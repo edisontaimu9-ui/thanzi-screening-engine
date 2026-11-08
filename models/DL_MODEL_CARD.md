@@ -2,7 +2,7 @@
 
 **Demonstration deep models trained on synthetic data only. Not validated on real children. Not for clinical deployment. Advisory flags only: they never change a clinical classification.**
 
-Version 0.1.0. Trained on synthetic dataset SHA-256 `2104b2c2a3734861...` (50016 rows), seed 0. Plain-Python networks saved as JSON. Not wired into the API: `production` is false in both files until Edison decides.
+Version 0.1.0. Trained on synthetic dataset SHA-256 `2104b2c2a3734861...` (50016 rows), seed 0. Plain-Python networks saved as JSON. Runs in the API as a second advisory flag beside the logistic flag (`production` is true; switch off with THANZI_DEEP_ENABLED=0). Same status as the logistic model: synthetic data only.
 
 ## Models
 - `recording_error_mlp.json`: dense network 36-32-16-1 (1729 parameters), ReLU, sigmoid output, flags a possible recording error (target A).

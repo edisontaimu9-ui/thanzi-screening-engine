@@ -41,6 +41,7 @@ c.agree, c.logistic.probability, c.deep.probability
 ## Train
 ```
 python scripts/generate_synthetic.py                     # makes data/synthetic/ (git-ignored)
+# Termux without the API extra: pip install pytest, then python -m pytest tests/ml -q (needs no other package)
 python scripts/train_deep.py                             # preset small, writes models/*_mlp.json and DL_MODEL_CARD.md
 python scripts/train_deep.py --preset auto --budget 600  # picks a preset for this device
 python scripts/train_deep.py --preset tiny --epochs 20   # fastest
@@ -55,10 +56,19 @@ See `models/DL_MODEL_CARD.md`. Deep flag: recall 98.6%, alert rate 4.8%, AUC 0.9
 records out of 281 on one seed. Treat the two as equal. The synthetic task is close to linearly separable, so extra
 depth has little to gain here, and this says nothing about real data.
 
+## In the API
+`ml_flags.deep_recording_error` has the same shape as `recording_error` (`flagged`, `suggested_field`, `messages`;
+`probability` in the audit view only). It is absent when the deep models are not loaded, in degraded mode and on the
+corrected-age route. `GET /version` adds `deep_model_version`. The classification, tier, reasons, review and wording are
+identical with and without it (tested on both views). The Phase 5 explanation still describes the logistic flag only (I54).
+If the two flags disagree, both are shown and a person decides (I58).
+
 ## Rules it keeps
 - **Advisory only (D9).** A test checks that flags never change a classification.
-- **Not wired in (D148).** Nothing in `api`, `service` or the screening path imports it. An AST test checks that, and it
-  was checked to fail when broken. Both model files carry `production: false`. No route, schema or `openapi.json` change.
+- **Switched on, beside the logistic flag (D153).** `POST /v1/screen` returns `ml_flags.deep_recording_error` next to
+  `recording_error`. Both model files carry `production: true`. Only `api/app.py` and `api/service.py` import the
+  package; the rules, anthropometry, explanation and preterm code do not (AST test). Switch off with
+  `THANZI_DEEP_ENABLED=0`. A failure in it never touches the screening result (D154, tested).
 - **No new packages (D145).** `dependencies` stays empty and no extra is added (a test asserts it). scikit-learn, numpy
   and PyTorch are not needed and not used. No pickle.
 - **Leak-free (D149).** Uses the Phase 4 `FEATURES` and the same leakage guard. Never `true_*`, `injected_error`,
@@ -76,7 +86,13 @@ depth has little to gain here, and this says nothing about real data.
 - The age-heaping result depends on the synthetic injection (D54, I16), as in Phase 4.
 - Text: there is no deep text model. The NLP add-on stays rule-based because no authorised note data exists (D144, I48).
 
-## Tests (`tests/ml/test_dl.py`, 42)
+## Tests (`tests/ml/test_dl.py`, 42, and `tests/api/test_deep_flag.py`, 28)
+API tests: flag beside the logistic flag, probability audit-only, rest of the response identical with and without it (both
+views, five records), absent without models and in degraded mode, a failing model does not touch screening and logs the
+type only, no HIV information, corrected-age route, version field, loaded by default over HTTP, switch-off values, missing
+and mismatched files leave `/health` ok, OpenAPI documents the fields.
+
+Tests in `test_dl.py`:
 Learns a rule a linear model cannot (XOR); multiclass; loss falls and early stopping keeps the best epoch; class
 weights; dropout deterministic and off at inference; determinism and seed effect; JSON round trip; parameter budget;
 ten malformed-file cases; input and mode guards; extreme inputs stay finite; `top_signals`; batch; hardware detection and

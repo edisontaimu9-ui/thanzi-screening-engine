@@ -6,6 +6,7 @@ Stateless: nothing is stored or logged from a request. Errors never echo submitt
 """
 from __future__ import annotations
 
+import logging
 import math
 import re
 from enum import Enum
@@ -15,6 +16,8 @@ from ..anthro import InputError
 from ..explain import Explanation, explain_parts, explain_rules_only
 from ..explain import messages as M
 from ..explain.compose import IGNORED_IN_WHY
+from ..ml.dl import DeepModels
+from ..ml.dl.predict import flag_from_features
 from ..ml.features import features_from_inputs
 from ..ml.flags import Models, flag_record
 from ..preterm import integration as preterm_integration
@@ -26,6 +29,7 @@ from ..rules.models import ClassificationResult
 from . import wording
 from .security import contains_hiv, scrub_worker
 
+log = logging.getLogger("thanzi.api")
 VIEWS = ("worker", "audit")
 REQUIRED = ("sex", "age_days", "weight_kg", "length_height_cm", "measure_position", "oedema")
 OPTIONAL = ("muac_cm", "appetite", "danger_signs", "complications", "clinically_well_and_alert", "hiv_positive",
@@ -177,15 +181,33 @@ def _review(expl: Explanation) -> dict:
     return {"needed": rt.needed, "reasons": [{"code": r.code, "message": r.message} for r in rt.reasons]}
 
 
-def _ml_flags(flags, expl: Explanation, audit: bool) -> dict:
-    review = _review(expl)
-    if flags is None:
-        return {"available": False, "recording_error": None, "review": review}
-    err = flags.recording_error
+def _recording_error(err, audit: bool) -> dict:
     rec = {"flagged": err.flagged, "suggested_field": err.suggested_field, "messages": list(err.messages)}
     if audit:
         rec["probability"] = round(err.probability, 6)
-    return {"available": True, "recording_error": rec, "review": review, "advisory": flags.advisory}
+    return rec
+
+
+def _ml_flags(flags, expl: Explanation, audit: bool, deep_flag=None) -> dict:
+    review = _review(expl)
+    if flags is None:
+        return {"available": False, "recording_error": None, "review": review}
+    out = {"available": True, "recording_error": _recording_error(flags.recording_error, audit), "review": review,
+           "advisory": flags.advisory}
+    if deep_flag is not None:        # second advisory flag (D153): present only when the deep models ran
+        out["deep_recording_error"] = _recording_error(deep_flag, audit)
+    return out
+
+
+def _deep_flag(features: dict, deep: DeepModels | None):
+    """Deep flag, or None. Never raises: a failure here must not touch the screening result (D9, D154)."""
+    if deep is None:
+        return None
+    try:
+        return flag_from_features(features, deep)
+    except Exception as exc:         # type only: never the message or the input
+        log.warning("Deep flag failed (%s). Screening continues without it.", type(exc).__name__)
+        return None
 
 
 def _worker_summary(result: ClassificationResult, expl: Explanation) -> list[str]:
@@ -213,14 +235,14 @@ def _worker_warnings(result: ClassificationResult) -> list[str]:
     return kept
 
 
-def _common(result: ClassificationResult, expl: Explanation, flags, audit: bool) -> dict:
+def _common(result: ClassificationResult, expl: Explanation, flags, audit: bool, deep_flag=None) -> dict:
     mam = result.classification.value == "MAM"
     return {
         "worker_summary": _worker_summary(result, expl),
         "classification": result.classification.value,
         "tier": result.tier.value,
         "reasons": _reasons(expl),
-        "ml_flags": _ml_flags(flags, expl, audit),
+        "ml_flags": _ml_flags(flags, expl, audit, deep_flag),
         "rule_set_version": result.rule_set_version,
         "model_version": expl.model_version,
         "status": wording.STATUS,
@@ -229,8 +251,8 @@ def _common(result: ClassificationResult, expl: Explanation, flags, audit: bool)
     }
 
 
-def build_worker_view(result: ClassificationResult, expl: Explanation, flags) -> dict:
-    out = _common(result, expl, flags, audit=False)
+def build_worker_view(result: ClassificationResult, expl: Explanation, flags, deep_flag=None) -> dict:
+    out = _common(result, expl, flags, audit=False, deep_flag=deep_flag)
     mam = out.pop("_mam")
     out = {"view": "worker", **out,
            "programme": None if mam else result.programme,
@@ -239,8 +261,8 @@ def build_worker_view(result: ClassificationResult, expl: Explanation, flags) ->
     return out
 
 
-def build_audit_view(result: ClassificationResult, expl: Explanation, flags) -> dict:
-    out = _common(result, expl, flags, audit=True)
+def build_audit_view(result: ClassificationResult, expl: Explanation, flags, deep_flag=None) -> dict:
+    out = _common(result, expl, flags, audit=True, deep_flag=deep_flag)
     out.pop("_mam")
     return {"view": "audit", **out,
             "programme": result.programme,
@@ -251,16 +273,19 @@ def build_audit_view(result: ClassificationResult, expl: Explanation, flags) -> 
 
 
 def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[str] = (), context: dict | None = None,
-            assessment: dict | None = None) -> dict:
+            assessment: dict | None = None, deep: DeepModels | None = None) -> dict:
     """The existing under-5 flow. `context` (birth context) is added only when a route other than plain under5 ran."""
     clinical = args[-1]
     features, anthro, result = features_from_inputs(*args)
+    deep_flag = None
     if models is None:
         flags, expl = None, explain_rules_only(*args)
     else:
         flags = flag_record(*args, models)
         expl = explain_parts(anthro, result, clinical, flags, features, models)
-    out = build_audit_view(result, expl, flags) if view == "audit" else build_worker_view(result, expl, flags)
+        deep_flag = _deep_flag(features, deep)
+    out = (build_audit_view(result, expl, flags, deep_flag) if view == "audit"
+           else build_worker_view(result, expl, flags, deep_flag))
     if context is not None:
         out = {**out, "route": context["route"], "birth_context": context}
     if assessment is not None:
@@ -300,8 +325,9 @@ def _preterm_hint(payload) -> bool:
         return False
 
 
-def screen(payload: dict, view: str = "worker", models: Models | None = None) -> dict:
+def screen(payload: dict, view: str = "worker", models: Models | None = None, deep: DeepModels | None = None) -> dict:
     """Screen one child. `models=None` is degraded mode: rules result, summary and review check, no ML flag.
+    `deep` adds the second advisory flag (D153); without it the response is exactly as before.
 
     Routing (docs/modules/preterm.md): with gestational_age_weeks and/or birth_weight_g, a baby born under 37 weeks
     or under 2500 g goes to the preterm engine until 50 weeks post-menstrual age, then to the under-5 engine on
@@ -339,12 +365,15 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None) ->
             ctx = preterm_integration.birth_context(rt)
         if extra:
             warns.append("Preterm-only fields were given but this baby is not screened by the preterm engine: they were ignored.")
-        return _under5(args, view, models, warns, ctx, assessment)
+        return _under5(args, view, models, warns, ctx, assessment, deep)
     except InputError as exc:
         raise ApiError(422, "invalid_input", _engine_message(exc)) from None
 
 
-def version_info(models: Models | None) -> dict:
-    return {"api_version": wording.API_VERSION, "engine_version": __version__, "rule_set_version": RULE_SET_VERSION,
-            "model_version": "none" if models is None else models.version, "status": wording.STATUS,
-            "disclaimer": "Decision support only. Not a diagnosis. A trained clinician makes the final decision."}
+def version_info(models: Models | None, deep: DeepModels | None = None) -> dict:
+    out = {"api_version": wording.API_VERSION, "engine_version": __version__, "rule_set_version": RULE_SET_VERSION,
+           "model_version": "none" if models is None else models.version, "status": wording.STATUS,
+           "disclaimer": "Decision support only. Not a diagnosis. A trained clinician makes the final decision."}
+    if deep is not None:
+        out["deep_model_version"] = deep.version
+    return out

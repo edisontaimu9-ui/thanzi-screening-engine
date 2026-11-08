@@ -134,7 +134,7 @@ def test_oversized_body_is_refused_after_auth(client):
 def test_worker_view_by_default_matches_the_core(client, models):
     r = post(client)
     assert r.status_code == 200 and r.headers["content-type"].startswith("application/json")
-    assert r.json() == service.screen(MAM_BASE, "worker", models)
+    assert r.json() == service.screen(MAM_BASE, "worker", models, client.app.state.deep)
     assert post(client, view="worker").json() == r.json()
 
 

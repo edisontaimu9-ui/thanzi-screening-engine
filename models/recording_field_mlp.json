@@ -906,7 +906,7 @@
   ],
   "type": "mlp"
  },
- "production": false,
+ "production": true,
  "role": "suggested_field_to_recheck_deep",
  "training": {
   "best_epoch": 38,

@@ -84,10 +84,10 @@ def train_deep(csv_path, out_dir, seed: int = 0, epochs: int = 40, preset: str =
             "dataset_rows": manifest["rows"], "rows_skipped_invalid_input": skipped,
             "validated_on_real_data": False, "statement": STATEMENT}
     out.mkdir(parents=True, exist_ok=True)
-    _dump(out / ERROR_FILE, {"model": net.to_dict(), "production": False, "role": "recording_error_flag_deep",
+    _dump(out / ERROR_FILE, {"model": net.to_dict(), "production": True, "role": "recording_error_flag_deep",
                              "threshold": op["threshold"], "operating_point": op, "metrics": report,
                              "boundary_stress_test": boundary, "training": _history(net), "metadata": meta})
-    _dump(out / FIELD_FILE, {"model": fnet.to_dict(), "production": False, "role": "suggested_field_to_recheck_deep",
+    _dump(out / FIELD_FILE, {"model": fnet.to_dict(), "production": True, "role": "suggested_field_to_recheck_deep",
                              "metrics": field_metrics, "training": _history(fnet), "metadata": meta})
     summary = {"operating_point": op, "test": report["test"], "field": field_metrics, "boundary": boundary,
                "parameters": {"error": net.params, "field": fnet.params},
@@ -103,7 +103,8 @@ def _card(s: dict, meta: dict) -> str:
         "# Model card: deep learning advisory flags", "", f"**{STATEMENT}**", "",
         f"Version {meta['version']}. Trained on synthetic dataset SHA-256 `{meta['trained_on_manifest_sha256'][:16]}...` "
         f"({meta['dataset_rows']} rows), seed {meta['seed']}. Plain-Python networks saved as JSON. "
-        "Not wired into the API: `production` is false in both files until Edison decides.", "",
+        "Runs in the API as a second advisory flag beside the logistic flag (`production` is true; switch off with THANZI_DEEP_ENABLED=0). "
+        "Same status as the logistic model: synthetic data only.", "",
         "## Models",
         f"- `{ERROR_FILE}`: dense network {len(FEATURES)}-{'-'.join(map(str, meta['hidden']))}-1 ({s['parameters']['error']} parameters), "
         "ReLU, sigmoid output, flags a possible recording error (target A).",

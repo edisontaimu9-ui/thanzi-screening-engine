@@ -21,6 +21,7 @@ A Docker image, `thanzi-screen`. It listens on port 8080 inside the container an
 | `THANZI_AUDIT_KEY` | no | Second secret for `?view=audit`, sent as `X-Audit-Key` together with the gateway key. Must differ from the gateway key. If unset the audit view is off. The audit view carries HIV information and the real programme: give the key only to people entitled to it (I24). |
 | `PORT` | no | Listening port, default 8080. |
 | `THANZI_MODELS_DIR` | no | Already set in the image. If the models are missing or mismatched the service starts in degraded mode: rules result unchanged, ML flag unavailable (`/health` says `degraded`). |
+| `THANZI_DEEP_ENABLED` | no | Default on. Set `0` (or `false`, `no`, `off`) to switch off the deep recording-error flag without a rebuild. Screening and the logistic flag are unchanged either way. If the deep model files are missing or mismatched the flag is absent and `/health` stays `ok`. |
 
 Never set `THANZI_DEV_MODE`. It exposes docs routes and can run without a key. Keys are read from environment variables only (I29): anyone who can run `docker inspect` on the host can read them.
 

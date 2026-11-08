@@ -366,6 +366,17 @@
             "title": "Available",
             "type": "boolean"
           },
+          "deep_recording_error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecordingError"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Second advisory flag from a small neural network, beside recording_error. Present only when the deep models are loaded. Same meaning, same limits."
+          },
           "recording_error": {
             "anyOf": [
               {
@@ -1198,6 +1209,18 @@
           "api_version": {
             "title": "Api Version",
             "type": "string"
+          },
+          "deep_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null when the deep models are not loaded.",
+            "title": "Deep Model Version"
           },
           "disclaimer": {
             "title": "Disclaimer",

@@ -14,6 +14,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
 from .. import __version__
+from ..ml.dl import DeepModels, load_deep_models
 from ..ml.flags import Models, load_models
 from ..schemas import (
     AuditResponse, ErrorBody, HealthResponse, PretermAuditResponse, PretermResponse, ScreenRequest, VersionResponse,
@@ -42,6 +43,24 @@ def _load_models(models: Models | None, models_dir) -> Models | None:
         return None
 
 
+def _deep_enabled() -> bool:
+    return os.environ.get("THANZI_DEEP_ENABLED", "1").strip().lower() not in ("0", "false", "no", "off")
+
+
+def _load_deep(deep: DeepModels | None, models_dir) -> DeepModels | None:
+    """Second advisory flag (D153). Off with THANZI_DEEP_ENABLED=0. Missing or mismatched files: the flag is simply absent."""
+    if deep is not None:
+        return deep
+    if not _deep_enabled():
+        log.info("Deep flag switched off by THANZI_DEEP_ENABLED.")
+        return None
+    try:
+        return load_deep_models(models_dir or os.environ.get("THANZI_MODELS_DIR") or None)
+    except Exception as exc:
+        log.warning("Deep models unavailable (%s). The deep flag is off.", type(exc).__name__)
+        return None
+
+
 @contextlib.asynccontextmanager
 async def _lifespan(app: FastAPI):
     yield
@@ -51,7 +70,8 @@ async def _lifespan(app: FastAPI):
 
 
 def create_app(models: Models | None = None, gateway_key: str | None = None, audit_key: str | None = None,
-               dev_mode: bool = False, models_dir=None, llm: LLMClient | None = None) -> FastAPI:
+               dev_mode: bool = False, models_dir=None, llm: LLMClient | None = None,
+               deep_models: DeepModels | None = None) -> FastAPI:
     """Build the app. Raises security.ConfigError if no gateway key is configured (unless dev mode).
 
     The local LLM routes exist only when `llm` is given or THANZI_LLM_ENABLED=1 (an invalid LLM configuration
@@ -59,6 +79,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     """
     cfg = security.build_config(gateway_key, audit_key, dev_mode)
     loaded = _load_models(models, models_dir)
+    loaded_deep = _load_deep(deep_models, models_dir)
     llm_client = llm if llm is not None else llm_routes.client_from_env()
     docs = cfg.dev_mode
     app = FastAPI(
@@ -70,7 +91,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
                     "Sits behind the gateway: every route except /health needs X-Gateway-Key.",
         docs_url="/docs" if docs else None, redoc_url="/redoc" if docs else None,
         openapi_url="/openapi.json" if docs else None, lifespan=_lifespan)
-    app.state.models, app.state.config = loaded, cfg
+    app.state.models, app.state.config, app.state.deep = loaded, cfg, loaded_deep
 
     # ---- access control: before routing and before body validation, so nothing leaks to unauthenticated callers ----
     @app.middleware("http")
@@ -121,7 +142,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
 
     @app.get("/version", response_model=VersionResponse, tags=["ops"])
     def version():
-        return service.version_info(app.state.models)
+        return service.version_info(app.state.models, app.state.deep)
 
     @app.post("/v1/screen", tags=["screen"], responses={
         200: {"model": Union[WorkerResponse, AuditResponse, PretermResponse, PretermAuditResponse],
@@ -133,7 +154,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         """Screen one child. Worker view never contains HIV information. Audit view needs X-Audit-Key."""
         if view == "audit" and not security.audit_ok(cfg, x_audit_key):
             return _error(403, "audit_forbidden", "The audit view is not available.")
-        return JSONResponse(service.screen(body.model_dump(), view, app.state.models))
+        return JSONResponse(service.screen(body.model_dump(), view, app.state.models, app.state.deep))
 
     if llm_client is not None:
         llm_routes.install(app, llm_client)

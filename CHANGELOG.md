@@ -2,10 +2,11 @@
 
 ## Unreleased - deep learning (add-on, not validated)
 - New package `thanzi_screen.ml.dl`: dense neural network in plain Python (ReLU, Adam, early stopping, optional dropout, class weights, binary or softmax output, JSON save and load), presets `tiny`, `small`, `base` with a 20,000-parameter budget, hardware detection with a preset recommendation, training from the verified synthetic dataset, and inference (`flag_record_deep`, `compare_record`, `predict_batch`). Standard library only; no new packages and `dependencies` stays empty.
-- Advisory only and not wired into the API: no route, schema or `openapi.json` change. Both model files carry `production: false`. Nothing outside the package imports it (AST test).
+- Switched on (D153, Edison 2026-11-08): `POST /v1/screen` adds `ml_flags.deep_recording_error` beside the logistic flag (which stays); `GET /version` adds `deep_model_version`. Model files carry `production: true`. Advisory only: classification, tier, reasons, review and wording are identical with and without it (tests). A failure in it is logged by type and screening continues. `THANZI_DEEP_ENABLED=0` turns it off. Additive contract change; `docs/api/openapi.json` regenerated. Only `api/app.py` and `api/service.py` import the package (AST test).
+- Not run in degraded mode or on the corrected-age route. Still synthetic data only, not validated on real children.
 - New: `scripts/train_deep.py` (`--preset tiny|small|base|auto`), `models/recording_error_mlp.json`, `models/recording_field_mlp.json`, `models/DL_MODEL_CARD.md`. Existing Phase 4 models and card unchanged.
-- Tests: `tests/ml/test_dl.py` (42). Synthetic results match the logistic model (AUC 0.997 both); no claim about real data.
-- Docs: `docs/modules/dl.md`; decisions D145 to D152; open issues I53 to I56.
+- Tests: `tests/ml/test_dl.py` (42), `tests/api/test_deep_flag.py` (28). One existing test (`test_worker_view_by_default_matches_the_core`) now passes the app's deep models to the core call. Synthetic results match the logistic model (AUC 0.997 both); no claim about real data.
+- Docs: `docs/modules/dl.md`; decisions D145 to D156; open issues I53 to I58 (I56 decided).
 
 ## Unreleased - NLP for free-text notes (add-on, not validated)
 - New package `thanzi_screen.ml.nlp`: finds clinical findings in a free-text note (present, absent, uncertain), cross-checks them against the structured entry (advisory reasons, never changes a result), and masks obvious identifiers (best-effort). Standard library only; lexicon in `lexicon.json` (draft, English, shipped as package data).

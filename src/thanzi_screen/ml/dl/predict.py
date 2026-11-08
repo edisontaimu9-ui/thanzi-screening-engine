@@ -56,6 +56,11 @@ def _error_flag(x, net: Network, threshold: float, field_net: Network) -> ErrorF
     return ErrorFlag(flagged, p, field, fprob, messages, net.top_signals(x) if flagged else ())
 
 
+def flag_from_features(features: dict, models: DeepModels) -> ErrorFlag:
+    """Deep flag from a feature dict that the caller already computed (the API does this to avoid a second pass)."""
+    return _error_flag(vector(features), models.error, models.threshold, models.field)
+
+
 def flag_record_deep(sex: str, age_days: int, weight_kg: float, length_height_cm: float, measure_position: str,
                      clinical: ClinicalInputs, models: DeepModels) -> MlFlags:
     """Same output shape as `flag_record`, from the deep models."""

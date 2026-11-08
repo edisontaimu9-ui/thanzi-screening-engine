@@ -52,6 +52,8 @@ Gateway key goes in header `X-Gateway-Key`, audit key in `X-Audit-Key`. Missing 
 422 with a stable `code` (`invalid_request`, `invalid_input`, `missing_field`, `unknown_field`, `invalid_json`) and a message that never echoes submitted values. 401 `unauthorised`. 403 `audit_forbidden`. 413 `payload_too_large` (declared body over 16 KB). 500 `internal_error`, generic, no trace and no input.
 
 ## Degraded mode (D79)
+`ml_flags.deep_recording_error` (D153) is a second advisory flag from a small neural network, beside `recording_error`. It has the same shape (`probability` in the audit view only), appears only when the deep models are loaded, and is never run in degraded mode or on the corrected-age route. `GET /version` adds `deep_model_version` (null when not loaded). Switch it off with `THANZI_DEEP_ENABLED=0`. A failure inside it is logged by type only and screening continues without it (D154). The classification, tier, reasons and review never depend on it.
+
 If the model files are missing or do not match the feature list, the service starts, `/health` says `degraded`, and screening still returns the rules result with `ml_flags.available: false`. The rules-based review flag still works.
 
 ## Not done, by design

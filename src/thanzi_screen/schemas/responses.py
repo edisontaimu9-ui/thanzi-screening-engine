@@ -26,6 +26,9 @@ class MlFlagsOut(BaseModel):
     recording_error: RecordingError | None
     review: Review
     advisory: str | None = None
+    deep_recording_error: RecordingError | None = Field(
+        default=None, description="Second advisory flag from a small neural network, beside recording_error. "
+                                  "Present only when the deep models are loaded. Same meaning, same limits.")
 
 
 class WorkerResponse(BaseModel):
@@ -71,6 +74,7 @@ class VersionResponse(BaseModel):
     engine_version: str
     rule_set_version: str
     model_version: str
+    deep_model_version: str | None = Field(default=None, description="null when the deep models are not loaded.")
     status: str
     disclaimer: str
 

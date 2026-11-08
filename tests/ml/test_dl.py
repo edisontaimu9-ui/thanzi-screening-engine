@@ -240,7 +240,7 @@ def test_deep_files_labels_and_card(trained):
     a = json.loads((d / "models" / ERROR_FILE).read_text())
     f = json.loads((d / "models" / FIELD_FILE).read_text())
     for obj in (a, f):
-        assert obj["production"] is False                    # not wired in until Edison decides
+        assert obj["production"] is True                     # switched on (D153): runs in the API as an advisory flag
         assert obj["metadata"]["validated_on_real_data"] is False
         assert obj["metadata"]["statement"] == STATEMENT
         assert tuple(obj["metadata"]["feature_names"]) == FEATURES
@@ -366,7 +366,9 @@ def test_dl_package_uses_only_the_standard_library():
                 assert module.split(".")[0] in std | {"thanzi_screen"}, (path.name, module)
 
 
-def test_nothing_outside_the_dl_package_imports_it():
+def test_only_the_api_edge_imports_the_dl_package():
+    """D153: the API may use the deep flag. Nothing else in the screening code may, and the rules never do."""
+    allowed = {"api/app.py", "api/service.py"}
     offenders = []
     for path in SRC.rglob("*.py"):
         if DL in path.parents:
@@ -374,7 +376,10 @@ def test_nothing_outside_the_dl_package_imports_it():
         for level, module in _imports(path):
             if "dl" in module.split("."):
                 offenders.append(str(path.relative_to(SRC)))
-    assert not offenders, offenders
+    assert set(offenders) <= allowed, offenders
+    for name in ("rules", "anthro", "explain", "preterm"):
+        for path in (SRC / name).rglob("*.py"):
+            assert not any("dl" in m.split(".") for _, m in _imports(path)), path
 
 
 def test_dependencies_stay_empty_and_no_new_packages():
