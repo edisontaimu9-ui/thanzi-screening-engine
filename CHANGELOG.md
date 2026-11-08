@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - deep learning (add-on, not validated)
+- New package `thanzi_screen.ml.dl`: dense neural network in plain Python (ReLU, Adam, early stopping, optional dropout, class weights, binary or softmax output, JSON save and load), presets `tiny`, `small`, `base` with a 20,000-parameter budget, hardware detection with a preset recommendation, training from the verified synthetic dataset, and inference (`flag_record_deep`, `compare_record`, `predict_batch`). Standard library only; no new packages and `dependencies` stays empty.
+- Advisory only and not wired into the API: no route, schema or `openapi.json` change. Both model files carry `production: false`. Nothing outside the package imports it (AST test).
+- New: `scripts/train_deep.py` (`--preset tiny|small|base|auto`), `models/recording_error_mlp.json`, `models/recording_field_mlp.json`, `models/DL_MODEL_CARD.md`. Existing Phase 4 models and card unchanged.
+- Tests: `tests/ml/test_dl.py` (42). Synthetic results match the logistic model (AUC 0.997 both); no claim about real data.
+- Docs: `docs/modules/dl.md`; decisions D145 to D152; open issues I53 to I56.
+
 ## Unreleased - NLP for free-text notes (add-on, not validated)
 - New package `thanzi_screen.ml.nlp`: finds clinical findings in a free-text note (present, absent, uncertain), cross-checks them against the structured entry (advisory reasons, never changes a result), and masks obvious identifiers (best-effort). Standard library only; lexicon in `lexicon.json` (draft, English, shipped as package data).
 - Not wired into the API: no route, schema or `openapi.json` change. Independent of the screening code in both directions (AST tests). HIV is excluded from the lexicon.

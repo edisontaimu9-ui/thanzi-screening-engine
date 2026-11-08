@@ -43,3 +43,4 @@ Leakage guard, determinism, refusal of unverified data, operating point and qual
 
 ## See also
 Free-text note processing lives in `thanzi_screen.ml.nlp`: `docs/modules/nlp.md`.
+Small neural networks (training, inference, hardware-aware presets) live in `thanzi_screen.ml.dl`: `docs/modules/dl.md`.

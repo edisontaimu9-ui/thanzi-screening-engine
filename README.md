@@ -31,7 +31,7 @@ Licence: not yet chosen.
 pip install pytest
 python -m pytest -q
 ```
-See `docs/modules/anthro.md`, `docs/modules/rules.md`, `docs/modules/data.md`, `docs/modules/ml.md`, `docs/modules/explain.md`, `docs/modules/llm.md` (optional local LLM client, off by default), `docs/modules/nlp.md` (free-text note checks, advisory, draft).
+See `docs/modules/anthro.md`, `docs/modules/rules.md`, `docs/modules/data.md`, `docs/modules/ml.md`, `docs/modules/explain.md`, `docs/modules/llm.md` (optional local LLM client, off by default), `docs/modules/nlp.md` (free-text note checks, advisory, draft), `docs/modules/dl.md` (lightweight deep learning, advisory, not wired in).
 
 ## Run the API (Phase 6)
 ```
