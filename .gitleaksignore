@@ -1,0 +1,3 @@
+# Dummy "wrong key" used by a 401 test (tests/api/test_llm_routes.py line 79); not a credential.
+# Fingerprint ignore keeps the .gitleaks.toml allowlist at the two historical keys (D99).
+86e6ad436fcc618df7b3573ec3886b0f31a2ea10:tests/api/test_llm_routes.py:generic-api-key:79
