@@ -1,0 +1,60 @@
+{
+  "version": "0.1-draft",
+  "status": "DRAFT. English only. Not clinically validated (I48, I49). Terms were written for this project and are not copied from any external dataset.",
+  "source_note": "Each concept maps to a finding already encoded in thanzi_screen.rules (CMAM 2016 Table 5). Nothing here adds a clinical criterion. HIV is deliberately absent (D7, D86).",
+  "window_before": 5,
+  "window_after": 3,
+  "contrast": ["but", "however", "although", "though", "except"],
+  "negation_before": [
+    "no", "not", "denies", "denied", "without", "never", "negative for", "nil", "free of", "absence of",
+    "no sign of", "no signs of", "no evidence of", "no history of", "no complaint of", "not having", "not has", "does not have", "did not have", "doesn't have", "didn't have"
+  ],
+  "negation_after": [
+    "absent", "negative", "nil", "not present", "not seen", "not noted", "ruled out", "denied", "none"
+  ],
+  "uncertain_before": [
+    "?", "possible", "possibly", "suspected", "suspect", "query", "probable", "probably", "cannot exclude", "r/o", "rule out"
+  ],
+  "concepts": {
+    "oedema": {
+      "target": "oedema", "value": "present",
+      "terms": ["oedema", "edema", "pitting oedema", "pitting edema", "pedal oedema", "pedal edema", "swollen feet", "swollen legs",
+                "swollen both feet", "swelling of feet", "swelling of the feet", "swelling of both feet", "swelling of the legs",
+                "swelling of both legs", "foot swelling", "feet swelling", "leg swelling", "legs swelling"]
+    },
+    "convulsions": {
+      "target": "danger_signs", "value": "convulsions",
+      "terms": ["convulsion", "convulsions", "convulsing", "seizure", "seizures", "fits", "had a fit", "had fits"]
+    },
+    "unconsciousness": {
+      "target": "danger_signs", "value": "unconsciousness",
+      "terms": ["unconscious", "unconsciousness", "unresponsive", "not responding", "loss of consciousness"]
+    },
+    "lethargy": {
+      "target": "danger_signs", "value": "lethargy_not_alert",
+      "terms": ["lethargic", "lethargy", "very sleepy", "not alert", "floppy", "drowsy"]
+    },
+    "unable_to_drink": {
+      "target": "danger_signs", "value": "unable_to_drink_or_breastfeed",
+      "terms": ["unable to drink", "cannot drink", "can't drink", "unable to breastfeed", "cannot breastfeed", "can't breastfeed",
+                "unable to feed", "cannot suckle", "unable to suckle", "too weak to suckle"]
+    },
+    "diarrhoea": {
+      "target": "complications", "value": "diarrhoea",
+      "terms": ["diarrhoea", "diarrhea", "watery stool", "watery stools", "loose stool", "loose stools"]
+    },
+    "malaria": {
+      "target": "complications", "value": "malaria",
+      "terms": ["malaria"]
+    },
+    "poor_appetite": {
+      "target": "appetite", "value": null,
+      "terms": ["poor appetite", "no appetite", "loss of appetite", "refuses food", "refusing food", "refuses to eat", "refusing to eat",
+                "not eating", "not eating well", "anorexia", "failed appetite test"]
+    },
+    "good_appetite": {
+      "target": "appetite", "value": null,
+      "terms": ["good appetite", "appetite good", "appetite is good", "eating well", "passed appetite test"]
+    }
+  }
+}

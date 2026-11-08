@@ -24,6 +24,8 @@ where = ["src"]
 "thanzi_screen.anthro" = ["reference_tables/*.csv", "reference_tables/MANIFEST.json"]
 # Preterm data. fenton2025_lms.json is CC BY-NC-ND 4.0 (Dr Tanis Fenton, 2025): ship it unmodified, with its attribution.
 "thanzi_screen.preterm" = ["fenton2025_lms.json", "preterm_rules.json", "routing_config.json"]
+# NLP lexicon (D136): data, not code. Draft English terms, not clinically validated (I49).
+"thanzi_screen.ml.nlp" = ["lexicon.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

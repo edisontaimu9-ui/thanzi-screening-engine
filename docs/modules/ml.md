@@ -40,3 +40,6 @@ See `models/MODEL_CARD.md`. In short: ML recall 97% at a 4.8% alert rate against
 
 ## Tests (`tests/ml`, 19)
 Leakage guard, determinism, refusal of unverified data, operating point and quality floors, subgroup report, labels and model card, JSON round trip, inference on normal, erroneous and missing-input records, flags never alter a classification, review rules and their agreement with the Phase 3 labels, model code, shipped models.
+
+## See also
+Free-text note processing lives in `thanzi_screen.ml.nlp`: `docs/modules/nlp.md`.

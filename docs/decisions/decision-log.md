@@ -227,9 +227,27 @@ Phase 1 closed: approved by Edison 2026-11-07 (D10-D15 stand).
 - D134. Qwen3-style visible reasoning: Ollama `think` setting plus provider-independent removal of `<think>` text (closed, unopened and unclosed forms).
 
 ## Open issues from the local LLM client
-- I43. Does Edison want `POST /v1/llm/generate` at all? The Python client may be enough for now. The route takes free text; the client cannot tell identifiable from synthetic text, so keeping patient records out is a rule for callers. Default off either way.
+- I43 (decided 2026-11-08 by Edison: keep the route as it is; off by default). WAS: does Edison want `POST /v1/llm/generate` at all? The Python client may be enough for now. The route takes free text; the client cannot tell identifiable from synthetic text, so keeping patient records out is a rule for callers. Default off either way.
 - I44. Model choice and licences are not verified. Qwen2.5 sizes do not all share one licence (as far as I know, the 3B differs). Read the model card, then fill in the register (R16, R17) before any deployment. No weights in the repository.
 - I45. Not tested against a real Ollama or llama.cpp server, a real Qwen model, Docker or UniPod hardware. Only fake loopback servers and `MockTransport` were used. The compose example is untested. Needs one real run and a memory and latency measurement on the target machine. Python 3.11 not run locally (CI runs it).
 - I46. Delivery: the release image carries the code, switched off, without httpx. Hope decides whether to use the derived image, and where the model server runs (a private network with no route out; models must be put on a volume beforehand).
 - I47. Not done: streaming, circuit breaker, output safety filtering. Model text is unreviewed and must not reach health workers without clinician review (same rule as the Phase 5 wording, I18).
 
+## NLP for free-text notes (`thanzi_screen.ml.nlp`, 2026-11-08). Add-on, not a numbered phase. For Edison's review
+- D135. New package `thanzi_screen.ml.nlp` under the machine learning modules: extraction of findings from a free-text note, a cross-check against the structured entry, and best-effort identifier masking. Standard library only; `dependencies` stays empty.
+- D136. The lexicon is data (`lexicon.json`, shipped as package data), validated on load. Every concept maps to a finding already encoded in `thanzi_screen.rules` (CMAM 2016 Table 5); a test checks each value exists in the engine enums. Nothing here adds a clinical criterion.
+- D137. Method: lexicon match plus negation and uncertainty scope. Transparent and deterministic. Not a trained model.
+- D138. A negation or uncertainty trigger reaches at most 5 tokens before or 3 after a term, and never across a comma, full stop, semicolon, colon, line break or contrast word ("but", "however", "although", "though", "except"). Chosen so that an error shows as a missed negation (an extra check), not a hidden finding. The window sizes are ASSUMPTIONS.
+- D139. One typing error is tolerated only in single words of 8 or more letters with the same first letter. Short words never match fuzzily.
+- D140. Results never contain the note's own words: a mention carries the concept, the polarity and the matching lexicon term. Tested with made-up names.
+- D141. The cross-check is advisory (D9). It reports a finding in the note that the entry lacks (or lacks "not assessed"), a possible one, a note that denies something the entry records, and appetite disagreement. It never edits a field. Messages are worker-facing wording and are DRAFT (I49).
+- D142. Independence in both directions, enforced by AST tests that were checked to fail: `ml/nlp` imports nothing from `thanzi_screen`; nothing outside it imports it. It takes plain values, not engine objects.
+- D143. `redact` masks phone numbers (Malawi formats), email addresses, dates, runs of 8 or more digits, and names after a label. Best-effort. It does not remove the rule that identifiable text stays out of places it should not go (I43).
+- D144. Not wired into `POST /v1/screen`, the flags or the explanation layer. No route, schema or `openapi.json` change. No trained text model, because there is no real authorised note data (I48). HIV is excluded from the lexicon and the loader refuses it (D7, D86).
+
+## Open issues from the NLP add-on
+- I48. No real or authorised clinical notes exist, so nothing here is validated. The 30 gold notes are a regression set written by the team. Before any use, collect de-identified notes with approval, label them with Maria, and measure recall and false alerts. A trained model comes only after that.
+- I49. The lexicon is a draft: English only, no Chichewa terms, not reviewed by a clinician. Maria to review the terms and the worker-facing messages. Chichewa terms to be supplied by someone who can validate them. Same status as the Phase 5 wording (I18).
+- I50. Does Edison want it wired in (a field on the screen response, or a separate route)? That needs a schema and an `openapi.json` change and a privacy decision: the note text would travel through the gateway.
+- I51. Known limits: negation ends at a comma; no time, family-history or who-is-described handling; "fever" is not mapped to the high-fever danger sign.
+- I52. `redact` cannot find a name written without a label, a village or a nickname. Phone and ID patterns are Malawi-shaped and may miss other formats.

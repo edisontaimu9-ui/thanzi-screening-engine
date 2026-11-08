@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - NLP for free-text notes (add-on, not validated)
+- New package `thanzi_screen.ml.nlp`: finds clinical findings in a free-text note (present, absent, uncertain), cross-checks them against the structured entry (advisory reasons, never changes a result), and masks obvious identifiers (best-effort). Standard library only; lexicon in `lexicon.json` (draft, English, shipped as package data).
+- Not wired into the API: no route, schema or `openapi.json` change. Independent of the screening code in both directions (AST tests). HIV is excluded from the lexicon.
+- Tests: `tests/ml/test_nlp.py` (68), including a 30-note synthetic regression set (not validation).
+- Docs: `docs/modules/nlp.md`; decisions D135 to D144; open issues I48 to I52. I43 recorded as decided (keep the LLM route, off by default).
+
 ## Unreleased - local LLM client (add-on, not validated)
 - New package `thanzi_screen.llm`: async client for local model servers (Ollama, llama.cpp, OpenAI-compatible) with a provider registry and a mock provider. Configurable model, endpoint, timeouts and generation settings; concurrency limit, bounded queue, limited retries, health checks that never raise; `<think>` removal for Qwen3-style models. Independent of the screening code in both directions (tests enforce it).
 - Optional routes `GET /v1/llm/health` and `POST /v1/llm/generate`, mounted only when `THANZI_LLM_ENABLED=1`. `create_app(llm=...)` and a lifespan that closes the client. `docs/api/openapi.json` unchanged. Screening behaviour and `/health` unchanged (tested with a dead model server).
