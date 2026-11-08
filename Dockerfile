@@ -26,6 +26,9 @@ WORKDIR /app
 COPY pyproject.toml constraints.txt ./
 COPY src ./src
 RUN pip install -c constraints.txt ".[api]"
+# Preterm screening lives in this image (POST /v1/screen), not in a second one. Fail the build if its JSON data did not
+# reach the installed package. fenton2025_lms.json is CC BY-NC-ND 4.0 (Dr Tanis Fenton, 2025): shipped unmodified.
+RUN python -c "import json, pathlib, thanzi_screen.preterm as p; d = pathlib.Path(p.__file__).parent; [json.loads((d / n).read_text()) for n in ('fenton2025_lms.json', 'preterm_rules.json', 'routing_config.json')]; assert 'CC BY-NC-ND 4.0' in json.loads((d / 'fenton2025_lms.json').read_text())['meta']['license']"
 COPY models ./models
 
 # Non-root. Secrets (THANZI_GATEWAY_KEY, THANZI_AUDIT_KEY) are supplied at run time, never baked in.

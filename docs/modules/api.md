@@ -45,6 +45,9 @@ Gateway key goes in header `X-Gateway-Key`, audit key in `X-Audit-Key`. Missing 
 
 **No HIV information, and no programme for any MAM child (D82, D86).** For every MAM child: `programme` is null, `MAM.HIV_OTP` and `MAM.SFP` both show as `MAM.REFER`, summary line 2 is the same neutral referral line, and the same neutral warning is always present. The whole worker response is identical for `hiv_positive` true, false and null. A last scan drops any key or string containing "hiv" (any case) and counts it; it should never fire (a test checks this). The audit view keeps the real programme, rule codes, warnings, `referral_text` and the full `Explanation`.
 
+## Preterm routing
+`POST /v1/screen` also takes optional `gestational_age_weeks`, `birth_weight_g` (grams) and preterm fields. A baby born under 37 weeks or under 2500 g under 50 weeks PMA gets the preterm response (`route: preterm`, `preterm_level`, mapped `tier`). From 50 weeks PMA the under-5 response is returned on corrected age with `route: under5_corrected_age` and `birth_context`. See `docs/modules/preterm.md`.
+
 ## Errors
 422 with a stable `code` (`invalid_request`, `invalid_input`, `missing_field`, `unknown_field`, `invalid_json`) and a message that never echoes submitted values. 401 `unauthorised`. 403 `audit_forbidden`. 413 `payload_too_large` (declared body over 16 KB). 500 `internal_error`, generic, no trace and no input.
 

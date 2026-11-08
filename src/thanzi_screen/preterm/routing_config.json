@@ -1,0 +1,37 @@
+{
+  "_about": "Integration settings for routing preterm / low-birth-weight infants between the preterm engine and the under-5 engine. Separate from preterm_rules.json, which is kept exactly as supplied. Every value tagged 'proposed' needs clinician sign-off and is meant to be changed here, not in code.",
+  "route_to_preterm": {
+    "ga_weeks_below": 37,
+    "birth_weight_g_below": 2500,
+    "tag": "brief (integration task, 2026-11-08); needs clinician sign-off"
+  },
+  "plausible_ga_weeks": {
+    "min": 22,
+    "max": 44,
+    "tag": "proposed: Fenton starts at 22 weeks; the upper bound is an input sanity limit"
+  },
+  "plausible_weights": {
+    "birth_weight_g": {"min": 200, "max": 8000},
+    "weight_kg_on_preterm_route": {"min": 0.2, "max": 10},
+    "tag": "proposed: unit guards only. weight_kg is kilograms and birth_weight_g is grams; a swap (1.1 g, 1250 kg) is rejected, not converted. Needs clinician sign-off."
+  },
+  "corrected_age": {
+    "full_term_weeks": 40,
+    "applies_when_ga_weeks_below": 37,
+    "use_until_chronological_months": [
+      {"ga_weeks_below": 32, "months": 36, "tag": "brief: very/extremely preterm, until age 3"},
+      {"ga_weeks_below": 37, "months": 24, "tag": "proposed: the brief gives no end point for 32 to under 37 weeks; needs clinician sign-off"}
+    ]
+  },
+  "level_map": {
+    "_note": "Preterm referral level -> under-5 tier (the engine's existing levels: low_risk, mam, urgent, recheck). No new levels. follow_up -> mam is proposed: the under-5 engine has no follow-up tier. Needs clinician sign-off.",
+    "routine": "low_risk",
+    "follow_up": "mam",
+    "refer": "mam",
+    "urgent_refer": "urgent"
+  },
+  "oedema_on_preterm_route": {
+    "min_preterm_level": "refer",
+    "tag": "proposed: bilateral pitting oedema is a CMAM severe criterion (INF.OEDEMA) the preterm engine does not read. Raises to at most refer; only danger signs can give urgent_refer. Needs clinician sign-off."
+  }
+}

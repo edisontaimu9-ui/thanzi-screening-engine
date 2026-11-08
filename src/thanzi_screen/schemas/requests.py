@@ -13,6 +13,8 @@ DangerSignName = Literal["anorexia", "intractable_vomiting", "convulsions", "let
 ComplicationName = Literal["hypoglycaemia", "hypothermia", "infections", "severe_dehydration", "shock",
                            "very_severe_anaemia", "cardiac_failure", "severe_dermatosis",
                            "vitamin_a_deficiency_signs", "diarrhoea", "malaria"]
+NeonatalSignName = Literal["bilious_vomiting", "apnoea", "cyanosis", "abdominal_distension", "blood_in_stool",
+                           "feed_intolerance"]
 
 
 class ScreenRequest(BaseModel):
@@ -35,3 +37,23 @@ class ScreenRequest(BaseModel):
     visible_severe_wasting: bool | None = None
     too_weak_to_suckle: bool | None = None
     failure_to_gain_weight: bool | None = None
+
+    # ---- Birth context and preterm fields (all optional). Without gestational_age_weeks and birth_weight_g the
+    # request is screened exactly as before. See docs/modules/preterm.md for the routing rules. ----
+    gestational_age_weeks: Number | None = Field(
+        default=None, description="Gestational age at birth, decimal weeks (22 to 44). With birth_weight_g it decides "
+        "routing: born under 37 weeks or under 2500 g goes to the preterm engine until 50 weeks post-menstrual age, "
+        "then to the under-5 engine on corrected age.")
+    birth_weight_g: Number | None = Field(default=None, description="Birth weight in GRAMS (weight_kg is kilograms).")
+    hc_cm: Number | None = Field(default=None, description="Head circumference, cm. Preterm route only.")
+    birth_length_cm: Number | None = Field(default=None, description="Length at birth, cm. Preterm route only; needed for the length trend.")
+    birth_hc_cm: Number | None = Field(default=None, description="Head circumference at birth, cm. Preterm route only; needed for the head-growth trend.")
+    sick: bool | None = Field(default=None, description="Preterm route: clinician judges the baby sick (hospitalise).")
+    apnoea_last_7_days: bool | None = Field(default=None, description="Preterm route: apnoea in the last 7 days.")
+    temperature_unstable: bool | None = Field(default=None, description="Preterm route: unstable temperature.")
+    consecutive_days_gaining_weight: int | None = Field(default=None, description="Preterm route: consecutive days of weight gain. If null and failure_to_gain_weight is true, 0 is used.")
+    gastric_aspirate_pct: Number | None = Field(default=None, description="Preterm route: gastric aspirate as % of the last tube feed (0 to 100).")
+    neonatal_danger_signs: list[NeonatalSignName] | None = Field(
+        default=None, max_length=30, description="Preterm route: signs the CMAM danger-sign list does not have. "
+        "null: not assessed. []: assessed, none present. Convulsions, lethargy, hypoglycaemia, severe dehydration and "
+        "unable to feed are read from danger_signs, complications and too_weak_to_suckle, not asked twice.")

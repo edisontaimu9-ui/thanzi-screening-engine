@@ -17,6 +17,8 @@ from ..explain import messages as M
 from ..explain.compose import IGNORED_IN_WHY
 from ..ml.features import features_from_inputs
 from ..ml.flags import Models, flag_record
+from ..preterm import integration as preterm_integration
+from ..preterm.routing import PATH_CORRECTED, PATH_PRETERM, route as route_birth
 from ..rules import (
     Appetite, ClinicalInputs, Complication, DangerSign, OedemaGrade, RULE_SET_VERSION,
 )
@@ -28,7 +30,14 @@ VIEWS = ("worker", "audit")
 REQUIRED = ("sex", "age_days", "weight_kg", "length_height_cm", "measure_position", "oedema")
 OPTIONAL = ("muac_cm", "appetite", "danger_signs", "complications", "clinically_well_and_alert", "hiv_positive",
             "visible_severe_wasting", "too_weak_to_suckle", "failure_to_gain_weight")
-ALLOWED = REQUIRED + OPTIONAL
+BIRTH_OPTIONAL = ("gestational_age_weeks", "birth_weight_g", "hc_cm", "birth_length_cm", "birth_hc_cm", "sick",
+                  "apnoea_last_7_days", "temperature_unstable", "consecutive_days_gaining_weight",
+                  "gastric_aspirate_pct", "neonatal_danger_signs")
+_BIRTH_NUMBERS = ("gestational_age_weeks", "birth_weight_g", "hc_cm", "birth_length_cm", "birth_hc_cm",
+                  "gastric_aspirate_pct")
+_BIRTH_BOOLS = ("sick", "apnoea_last_7_days", "temperature_unstable")
+_NEONATAL = frozenset(preterm_integration.NEONATAL_SIGNS)
+ALLOWED = REQUIRED + OPTIONAL + BIRTH_OPTIONAL
 _BOOLS = ("clinically_well_and_alert", "hiv_positive", "visible_severe_wasting", "too_weak_to_suckle",
           "failure_to_gain_weight")
 _SAFE_ENGINE_MESSAGE = re.compile(r"^[A-Za-z_]+(?: [A-Za-z_,]+)*$")   # letters only: cannot carry a value
@@ -126,6 +135,26 @@ def parse_payload(payload: dict) -> tuple:
     return (sex, age, _number(payload, "weight_kg"), _number(payload, "length_height_cm"), position, clinical)
 
 
+def parse_birth(payload: dict) -> tuple[float | None, float | None, dict]:
+    """Birth context and preterm-only fields. Structure only; ranges are checked by the routing and the engine."""
+    for f in _BIRTH_NUMBERS:
+        if payload.get(f) is not None:
+            _number(payload, f)
+    for f in _BIRTH_BOOLS:
+        _optional_bool(payload, f)
+    days = payload.get("consecutive_days_gaining_weight")
+    if days is not None and (isinstance(days, bool) or not isinstance(days, int)):
+        raise _bad("consecutive_days_gaining_weight", "must be a whole number")
+    neo = payload.get("neonatal_danger_signs")
+    if neo is not None and (not isinstance(neo, list) or len(neo) > 30 or not all(isinstance(x, str) and x in _NEONATAL for x in neo)):
+        raise _bad("neonatal_danger_signs", "must be a list of accepted values, or null")
+    ga, bw = payload.get("gestational_age_weeks"), payload.get("birth_weight_g")
+    extra = {f: payload[f] for f in BIRTH_OPTIONAL[2:] if payload.get(f) is not None}
+    if neo is not None:
+        extra["neonatal_danger_signs"] = list(neo)
+    return (None if ga is None else float(ga)), (None if bw is None else float(bw)), extra
+
+
 def _engine_message(exc: InputError) -> str:
     text = str(exc)
     return text if _SAFE_ENGINE_MESSAGE.match(text) else "The measurements or clinical inputs were not accepted."
@@ -214,24 +243,57 @@ def build_audit_view(result: ClassificationResult, expl: Explanation, flags) -> 
             "explanation": expl.to_dict()}
 
 
+def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[str] = (), context: dict | None = None) -> dict:
+    """The existing under-5 flow. `context` (birth context) is added only when a route other than plain under5 ran."""
+    clinical = args[-1]
+    features, anthro, result = features_from_inputs(*args)
+    if models is None:
+        flags, expl = None, explain_rules_only(*args)
+    else:
+        flags = flag_record(*args, models)
+        expl = explain_parts(anthro, result, clinical, flags, features, models)
+    out = build_audit_view(result, expl, flags) if view == "audit" else build_worker_view(result, expl, flags)
+    if context is not None:
+        out = {**out, "route": context["route"], "birth_context": context}
+    if extra_warnings:
+        out["warnings"] = [*out["warnings"], *extra_warnings]
+    return out if view == "audit" else scrub_worker(out)
+
+
 def screen(payload: dict, view: str = "worker", models: Models | None = None) -> dict:
-    """Screen one child. `models=None` is degraded mode: rules result, summary and review check, no ML flag."""
+    """Screen one child. `models=None` is degraded mode: rules result, summary and review check, no ML flag.
+
+    Routing (docs/modules/preterm.md): with gestational_age_weeks and/or birth_weight_g, a baby born under 37 weeks
+    or under 2500 g goes to the preterm engine until 50 weeks post-menstrual age, then to the under-5 engine on
+    corrected age. Without birth context the request is screened exactly as before.
+    """
     if view not in VIEWS:
         raise ApiError(422, "invalid_request", "Field 'view' must be one of: worker, audit.")
     args = parse_payload(payload)
-    clinical = args[-1]
+    ga, bw, extra = parse_birth(payload)
     try:
-        features, anthro, result = features_from_inputs(*args)
-        if models is None:
-            flags, expl = None, explain_rules_only(*args)
-        else:
-            flags = flag_record(*args, models)
-            expl = explain_parts(anthro, result, clinical, flags, features, models)
+        rt = route_birth(args[1], ga, bw)
+        if rt.path == PATH_PRETERM:
+            sex, _age, weight, length, position, clinical = args
+            pi, warns = preterm_integration.to_preterm_input(
+                rt, sex, weight, length, position, extra, clinical.danger_signs, clinical.complications,
+                clinical.oedema.value, clinical.too_weak_to_suckle, clinical.failure_to_gain_weight)
+            out = preterm_integration.build_preterm_response(
+                rt, preterm_integration.run(pi, clinical.oedema.value), warns, view, pi)
+            out["status"] = wording.STATUS
+            return out if view == "audit" else scrub_worker(out)
+        if rt.path == PATH_CORRECTED:
+            msg = (f"Age corrected for prematurity: born at {rt.ga_weeks:g} weeks, {rt.age_days} days old, screened as "
+                   f"{rt.corrected_age_days} days. CMAM thresholds are applied to the corrected age. The ML recording-error "
+                   "flag is not run for corrected ages.")
+            return _under5((args[0], rt.age_days_used, *args[2:]), view, None, [msg], preterm_integration.birth_context(rt))
+        warns = [w for w in ("Birth weight is under 2500 g but gestational age was not given: preterm screening and "
+                             "corrected age were not applied.",) if rt.notes and "gestational_age_missing_for_low_birth_weight" in rt.notes]
+        if extra:
+            warns.append("Preterm-only fields were given but this baby is not screened by the preterm engine: they were ignored.")
+        return _under5(args, view, models, warns)
     except InputError as exc:
         raise ApiError(422, "invalid_input", _engine_message(exc)) from None
-    if view == "audit":
-        return build_audit_view(result, expl, flags)
-    return scrub_worker(build_worker_view(result, expl, flags))
 
 
 def version_info(models: Models | None) -> dict:

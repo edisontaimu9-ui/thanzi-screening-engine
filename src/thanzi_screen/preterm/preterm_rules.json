@@ -1,0 +1,148 @@
+{
+  "source": "COIN 2017 Participants' Manual (Malawi), Sessions 2, 12, 19 and wall charts; Fenton 2025 guidance sheet",
+  "birth_weight_class": [
+    {
+      "id": "ELBW",
+      "max_g_exclusive": 1000
+    },
+    {
+      "id": "VLBW",
+      "max_g_exclusive": 1500
+    },
+    {
+      "id": "LBW",
+      "max_g_exclusive": 2500
+    }
+  ],
+  "birth_size_for_ga": {
+    "sga_below_z": -1.2816,
+    "lga_above_z": 1.2816,
+    "note": "10th/90th percentile; define at birth only (Fenton calculator)"
+  },
+  "feeding_frequency": [
+    {
+      "if": "bw<1500 or ga<32",
+      "hours": 2
+    },
+    {
+      "if": "otherwise",
+      "hours": 3
+    }
+  ],
+  "fluid_ml_per_kg_day": {
+    "1": 60,
+    "2": 90,
+    "3": 120,
+    "4": 150,
+    "7_lbw_sga": 180,
+    "note": "days 5-6 not stated in COIN; hold at 150"
+  },
+  "route": {
+    "bw<1500_or_ga<32": {
+      "d1_3": "tube",
+      "d4_21": "tube_or_cup"
+    },
+    "bw1500_1800_or_ga32_34": {
+      "d1_3": "tube_or_cup",
+      "d4_21": "breast_else_cup"
+    },
+    "bw>1800_or_ga>34": {
+      "d1_3": "breast_else_cup",
+      "d4_21": "breast"
+    },
+    "note": "coordinated suck-swallow ~34 wk; babies >1500 g and >=32 wk put to breast 5-10 min around tube/cup feeds"
+  },
+  "tube_feed_aspirate_review_pct": 25,
+  "weight_pattern": {
+    "max_loss_pct_week1": 15,
+    "regain_birthweight_by_day": 14,
+    "sga_expected_loss": "none"
+  },
+  "kmc": {
+    "facility_below_g": 1500,
+    "ambulatory_g": [
+      1500,
+      1800
+    ],
+    "community_above_g": 1800,
+    "continuous_at_or_below_g": 2000
+  },
+  "hospitalise_if": [
+    "sick",
+    "not_gaining_weight",
+    "cannot_feed_breast_or_cup"
+  ],
+  "home_management_min_g": 1800,
+  "discharge_all_of": [
+    "fully_breastfed_or_ebm_cup",
+    "gaining_3_consecutive_days",
+    "no_apnoea_7_days",
+    "stable_temperature",
+    "mother_confident"
+  ],
+  "followup": {
+    "weekly_until_kg": 2.5
+  },
+  "supplements": {
+    "vitamin_k_mg_im_birth": 0.5,
+    "multivitamin_ml_day": [
+      0.3,
+      0.6
+    ],
+    "multivitamin_start": "full_feeds",
+    "multivitamin_until_months": 6,
+    "iron_mg_per_kg_day": [
+      2,
+      4
+    ],
+    "iron_start_weeks": 2,
+    "iron_until_months": 6
+  },
+  "phototherapy_preterm_lt35wk_umol_l": {
+    "day2": 170,
+    "day3": 260,
+    "day4_plus": 290,
+    "day1": "any visible jaundice"
+  },
+  "growth_assessment": {
+    "use_trajectory_not_single_point": true,
+    "min_interval_days": 7,
+    "language": "faltering growth (not failure)",
+    "correct_age_until_years": 3,
+    "fenton_max_pma_weeks": 50,
+    "z_decline_tiers": {
+      "mild": 0.8,
+      "moderate": 1.2,
+      "severe": 2.0,
+      "note": "Literature-based (weight/length: mild 0.8-1.2, moderate >1.2-2, severe >=2). Not COIN. No universal cut-off per Fenton; use as review flags, not diagnoses. Needs clinician sign-off."
+    },
+    "hc_decline": {
+      "follow_up_above": 1.0,
+      "refer_above": 2.0
+    },
+    "min_age_days": 14
+  },
+  "hand_over_to_under5_engine": {
+    "at_pma_weeks": 50,
+    "use": "corrected age with WHO standards"
+  },
+  "urgent_triggers": {
+    "note": "Danger-sign based; growth alone is never urgent. [COIN] = in manual; [proposed] = needs sign-off vs national neonatal guidelines / under-5 emergency signs.",
+    "any_of": [
+      "bilious_vomiting [COIN]",
+      "convulsions [proposed]",
+      "apnoea_now [proposed]",
+      "cyanosis [proposed]",
+      "hypoglycaemia_uncorrected [proposed]",
+      "abdominal_distension AND (blood_in_stool OR feed_intolerance) [proposed]",
+      "cannot_feed AND (dehydrated OR lethargic) [proposed]"
+    ],
+    "stabilise_before_transfer": [
+      "Keep warm (KMC or warm wrap)",
+      "Check/correct airway, breathing, circulation and blood glucose",
+      "Give first dose of antibiotics",
+      "Write referral note; send all investigations; mother accompanies baby",
+      "Keep feeding or fluids going during transport unless contraindicated"
+    ]
+  }
+}

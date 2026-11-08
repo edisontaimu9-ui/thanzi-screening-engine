@@ -19,6 +19,8 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "thanzi_screen.anthro" = ["reference_tables/*.csv", "reference_tables/MANIFEST.json"]
+# Preterm data. fenton2025_lms.json is CC BY-NC-ND 4.0 (Dr Tanis Fenton, 2025): ship it unmodified, with its attribution.
+"thanzi_screen.preterm" = ["fenton2025_lms.json", "preterm_rules.json", "routing_config.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
