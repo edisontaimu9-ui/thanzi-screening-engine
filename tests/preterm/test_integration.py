@@ -138,7 +138,7 @@ def test_level_map_covers_every_preterm_level_with_an_existing_under5_tier():
     ({"gestational_age_weeks": 36, "birth_weight_g": 2600, "weight_kg": 2.7, "age_days": 5}, "routine"),
     ({"gestational_age_weeks": 34, "birth_weight_g": 2100, "weight_kg": 2.0, "age_days": 3}, "follow_up"),
     ({"complications": ["infections"]}, "refer"),
-    ({"complications": ["hypoglycaemia"]}, "refer"),    # severity not assumed: a complication, not "not correcting"
+    ({"complications": ["hypoglycaemia"]}, "urgent_refer"),
     ({"neonatal_danger_signs": ["bilious_vomiting"]}, "urgent_refer"),
 ])
 def test_each_preterm_level_reaches_the_response_with_its_mapped_tier(extra, level):
@@ -201,23 +201,25 @@ def test_growth_alone_never_gives_an_urgent_referral_through_the_api():
     assert r["preterm_level"] == "refer" and r["tier"] != "urgent"
 
 
-def test_oedema_escalation_is_configured_per_grade_and_provisional(monkeypatch):
+def test_oedema_in_an_infant_is_an_inpatient_criterion_per_cmam_table_5(monkeypatch):
     calm = dict(gestational_age_weeks=36, birth_weight_g=2600, weight_kg=2.7, age_days=5)
     for grade in ("+", "++", "+++"):
         r = service.screen(payload(oedema=grade, **calm))
-        assert r["preterm_level"] == "refer" and r["tier"] == "mam" and any("provisional" in w.lower() for w in r["warnings"])
-    cfg = RT.CONFIG["oedema_on_preterm_route"]["min_preterm_level_by_grade"]
-    monkeypatch.setitem(cfg, "+++", "urgent_refer")          # an approved protocol could do this; it is not assumed
-    assert service.screen(payload(oedema="+++", **calm))["preterm_level"] == "urgent_refer"
+        assert r["preterm_level"] == "urgent_refer" and r["tier"] == "urgent"
+        assert any("oedema" in x for x in r["reasons"]) and any("antibiotics" in a for a in r["actions"])
+    assert service.screen(payload(oedema="none", **calm))["preterm_level"] != "urgent_refer"
+    # growth alone still never gives urgent_refer; oedema is a clinical sign, and the grade table is configurable
+    monkeypatch.setitem(RT.CONFIG["oedema_on_preterm_route"]["min_preterm_level_by_grade"], "+", "refer")
     assert service.screen(payload(oedema="+", **calm))["preterm_level"] == "refer"
 
 
-def test_hypoglycaemia_complication_is_refer_until_the_protocol_says_otherwise(monkeypatch):
+def test_hypoglycaemia_complication_is_the_urgent_trigger_per_cmam_table_5(monkeypatch):
     calm = dict(gestational_age_weeks=36, birth_weight_g=2600, weight_kg=2.7, age_days=5, complications=["hypoglycaemia"])
     r = service.screen(payload(**calm))
+    assert r["preterm_level"] == "urgent_refer" and "hypoglycaemia not correcting" in r["reasons"]
+    monkeypatch.setitem(RT.CONFIG["hypoglycaemia"], "complication_means_not_correcting", False)
+    r = service.screen(payload(**calm))
     assert r["preterm_level"] == "refer" and any("hypoglycaemia" in w.lower() for w in r["warnings"])
-    monkeypatch.setitem(RT.CONFIG["hypoglycaemia"], "complication_means_not_correcting", True)
-    assert service.screen(payload(**calm))["preterm_level"] == "urgent_refer"
 
 
 def test_any_danger_sign_or_complication_requires_referral():
@@ -325,14 +327,16 @@ def test_dockerfile_checks_that_the_preterm_data_reaches_the_image():
 
 
 # ---- decisions of 2026-11-08 ----
-def test_corrected_age_end_for_32_to_36_weeks_is_marked_provisional():
+def test_corrected_age_end_for_32_to_36_weeks_is_approved_not_provisional(monkeypatch):
     r = service.screen(payload(age_days=300, gestational_age_weeks=34, birth_weight_g=1800, weight_kg=6.0,
                                length_height_cm=62.0, muac_cm=None))
-    assert r["route"] == "under5_corrected_age" and r["birth_context"]["corrected_age_end_provisional"] is True
-    assert any("PROVISIONAL" in w for w in r["warnings"])
+    assert r["route"] == "under5_corrected_age" and r["birth_context"]["corrected_age_end_provisional"] is False
+    assert not any("PROVISIONAL" in w for w in r["warnings"])          # 24 months approved 2026-11-08
     vp = service.screen(payload(age_days=300, gestational_age_weeks=30, birth_weight_g=1300, weight_kg=6.0,
                                 length_height_cm=62.0, muac_cm=None))
     assert vp["birth_context"]["corrected_age_end_provisional"] is False and not any("PROVISIONAL" in w for w in vp["warnings"])
+    monkeypatch.setitem(RT.CONFIG["corrected_age"]["use_until_chronological_months"][1], "provisional", True)   # mechanism kept
+    assert RT.route(300, 34, 1800).corrected_age_provisional is True
 
 
 def test_term_low_birth_weight_baby_is_never_age_corrected():
@@ -409,3 +413,17 @@ def test_not_gaining_weight_uses_the_configured_age(monkeypatch):
     assert "not gaining weight" in engine.screen(i)["referral"]["reasons"]
     monkeypatch.setitem(engine.R["growth_assessment"], "min_age_days", 30)
     assert "not gaining weight" not in engine.screen(i)["referral"]["reasons"]
+
+
+def test_corrected_age_drives_the_age_dependent_cmam_criteria():
+    # 200 days old, born at 28 weeks: corrected 116 days, so the infant (under 6 months) criteria apply, not the child ones.
+    base = {"sex": "male", "age_days": 200, "weight_kg": 6.0, "length_height_cm": 62.0, "measure_position": "length",
+            "oedema": "+", "muac_cm": 11.0, "appetite": "passed", "danger_signs": [], "complications": [],
+            "clinically_well_and_alert": True, "too_weak_to_suckle": False, "failure_to_gain_weight": False,
+            "visible_severe_wasting": False}
+    chrono = service.screen(base)
+    corr = service.screen({**base, "gestational_age_weeks": 28, "birth_weight_g": 1000})
+    assert "INF.OEDEMA" in corr["rules_fired"] and "INF.OEDEMA" not in chrono["rules_fired"]     # infant criterion
+    assert "SAM.MUAC" not in corr["rules_fired"] and "SAM.MUAC" in chrono["rules_fired"]         # MUAC from 6 months corrected
+    direct = service.screen({**base, "age_days": 116})
+    assert (corr["classification"], corr["tier"], corr["rules_fired"]) == (direct["classification"], direct["tier"], direct["rules_fired"])

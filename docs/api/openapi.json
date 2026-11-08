@@ -1047,7 +1047,7 @@
                 "type": "null"
               }
             ],
-            "description": "Preterm route: hypoglycaemia is not correcting with treatment (the urgent trigger). The complications value hypoglycaemia alone counts as a complication (refer), pending the approved clinical protocol.",
+            "description": "Preterm route: hypoglycaemia is not correcting with treatment (the urgent trigger). The complications value hypoglycaemia is itself an urgent trigger on the preterm route (CMAM 2016 Table 5: inpatient).",
             "title": "Hypoglycaemia Not Correcting"
           },
           "length_height_cm": {

@@ -6,6 +6,7 @@
 - `ml/preterm_features.py`: `features()` row and vector, separate from `FEATURES` so saved models still load. `rule_level` is never a label.
 - `pyproject.toml` package data and a Dockerfile build check ship the JSON files in the image. Still one image.
 - Decisions applied (2026-11-08): follow_up has no under-5 tier; corrected-age end for GA 32 to under 37 weeks is provisional; hypoglycaemia and oedema escalation are configurable per the protocol; length and position are optional only on the preterm route; unknown GA gives a clinical-assessment flag; worker wording says "faltering growth" while the audit keeps CMAM terms; urgent triggers come from `preterm_rules.json`.
+- Approved (2026-11-08): 24-month corrected-age end; hypoglycaemia (complication) and any oedema grade give urgent_refer per CMAM 2016 Table 5; null tier allowed for follow_up; corrected age feeds all age-dependent CMAM criteria.
 - Open questions: `docs/decisions/decision-log.md` I32 to I40. Version stays 0.7.0 until Edison decides the release.
 
 ## 0.7.0 - Phase 7 (release candidate, not validated)

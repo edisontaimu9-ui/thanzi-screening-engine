@@ -62,4 +62,4 @@ class ScreenRequest(BaseModel):
         "unable to feed are read from danger_signs, complications and too_weak_to_suckle, not asked twice.")
     hypoglycaemia_not_correcting: bool | None = Field(
         default=None, description="Preterm route: hypoglycaemia is not correcting with treatment (the urgent trigger). "
-        "The complications value hypoglycaemia alone counts as a complication (refer), pending the approved clinical protocol.")
+        "The complications value hypoglycaemia is itself an urgent trigger on the preterm route (CMAM 2016 Table 5: inpatient).")

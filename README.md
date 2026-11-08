@@ -47,7 +47,7 @@ Release candidate `0.7.0`, **not validated**. Evidence: `docs/testing/test-repor
 ## Preterm and low-birth-weight babies
 `POST /v1/screen` routes by two optional fields, `gestational_age_weeks` and `birth_weight_g` (grams). Full detail: `docs/modules/preterm.md`.
 
-**Routing rules.** Born under 37 weeks or under 2500 g, and under 50 weeks post-menstrual age (PMA = gestational age + chronological age): the preterm engine (Fenton 2025 z-scores, COIN 2017 Malawi rules). From 50 weeks PMA: the under-5 engine on corrected age (chronological age minus (40 - GA) weeks), kept until age 3 if GA is under 32 weeks (24 months for 32 to under 37 weeks is provisional and flagged in responses). Without the two fields nothing changes.
+**Routing rules.** Born under 37 weeks or under 2500 g, and under 50 weeks post-menstrual age (PMA = gestational age + chronological age): the preterm engine (Fenton 2025 z-scores, COIN 2017 Malawi rules). From 50 weeks PMA: the under-5 engine on corrected age (chronological age minus (40 - GA) weeks), kept until age 3 if GA is under 32 weeks (24 months for 32 to under 37 weeks, approved). Corrected age feeds every age-dependent CMAM criterion (MUAC from 6 months, infant criteria) with the thresholds unchanged. Without the two fields nothing changes.
 
 **Level mapping** (one table in `routing_config.json`; no new levels):
 
@@ -64,4 +64,4 @@ Only danger signs give `urgent_refer`. Faltering growth is never called from one
 
 Born under 2500 g with no gestational age: under-5 flow, a warning and a clinical-assessment flag; gestational age is never assumed. Urgent triggers are configured in `preterm_rules.json`.
 
-**Needs clinician sign-off:** how gateways treat a null tier for follow_up, z-decline tiers, the [proposed] urgent triggers, the corrected-age end point for 32 to under 37 weeks, hypoglycaemia and oedema escalation (pending the approved protocol) and the input mapping. Release candidate, not validated.
+**Needs clinician sign-off:** how gateways treat a null tier for follow_up, z-decline tiers, the [proposed] urgent triggers, the corrected-age end point for 32 to under 37 weeks, and the mapping of the other under-5 inputs. Hypoglycaemia and oedema follow CMAM 2016 Table 5: both give urgent_refer. Release candidate, not validated.

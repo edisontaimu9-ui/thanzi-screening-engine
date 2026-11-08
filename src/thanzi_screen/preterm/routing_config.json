@@ -33,8 +33,7 @@
       {
         "ga_weeks_below": 37,
         "months": 24,
-        "provisional": true,
-        "tag": "PROVISIONAL: 24 months is a placeholder, not a confirmed rule. Verify against the clinical reference before use; responses carry a provisional warning while it applies."
+        "tag": "approved 2026-11-08 by Edison: based on the clinical guidelines. Add \"provisional\": true to show a provisional warning again."
       }
     ]
   },
@@ -47,14 +46,14 @@
   },
   "oedema_on_preterm_route": {
     "min_preterm_level_by_grade": {
-      "+": "refer",
-      "++": "refer",
-      "+++": "refer"
+      "+": "urgent_refer",
+      "++": "urgent_refer",
+      "+++": "urgent_refer"
     },
-    "tag": "PROVISIONAL, pending approved clinical protocol: severity is not assumed equal across grades. Edit per grade here. Oedema is not growth, so a grade may be set to urgent_refer once the protocol says so; until then none is."
+    "tag": "approved 2026-11-08, per CMAM 2016 Table 5 as encoded in rules_v2016.py: any bilateral pitting oedema in an infant under 6 months (INF.OEDEMA) and oedema +++ at any age (NRU.OEDEMA3) are inpatient criteria. Oedema is a clinical sign, not a growth measure. Per-grade values can be lowered here if the clinicians decide otherwise."
   },
   "hypoglycaemia": {
-    "complication_means_not_correcting": false,
-    "tag": "pending approved clinical protocol: the under-5 'hypoglycaemia' complication carries no severity, so by default it counts as a complication (refer). It becomes the urgent trigger 'hypoglycaemia not correcting' only if the request says hypoglycaemia_not_correcting is true, or if this is set to true once the protocol is approved."
+    "complication_means_not_correcting": true,
+    "tag": "approved 2026-11-08, per CMAM 2016 Table 5: hypoglycaemia is a listed medical complication (inpatient care), so the complications value hypoglycaemia is the urgent trigger on the preterm route. Set false to require the explicit hypoglycaemia_not_correcting field instead."
   }
 }
