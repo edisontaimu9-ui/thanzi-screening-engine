@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - growth monitoring (add-on, reference not yet verified)
+- New package `thanzi_screen.growth`: weight-gain velocity (g per day) between an earlier visit and this one, compared with the ASPEN reference range (R19), averaged across age bands. Advisory only (D9): the classification, tier, reasons, review, ML flags and wording are identical with and without it (tested). Standard library only; rule-based, so it works in degraded mode.
+- API: optional request field `previous_measurement` (`age_days`, `weight_kg`) and optional response field `growth_monitoring` in both views. Additive; `docs/api/openapi.json` regenerated. Under-5 route only; preterm and corrected-age babies get a warning that it was not run.
+- Not assessed, with a stated reason: interval under 28 days, implausible weight, girls 3 to 6 months (the source reads 21-21, treated as unusable), ages past the engine's range.
+- The reference table was transcribed from a screenshot and has not been checked against the handbook (I59). The 28-day minimum is an engineering choice (I60).
+- Tests: `tests/growth/test_velocity.py` (39), `tests/api/test_growth_monitoring.py` (67). Docs: `docs/modules/growth.md`, R19 in the register, decisions D157 to D163, open issues I59 to I63.
+
 ## Unreleased - deep learning (add-on, not validated)
 - New package `thanzi_screen.ml.dl`: dense neural network in plain Python (ReLU, Adam, early stopping, optional dropout, class weights, binary or softmax output, JSON save and load), presets `tiny`, `small`, `base` with a 20,000-parameter budget, hardware detection with a preset recommendation, training from the verified synthetic dataset, and inference (`flag_record_deep`, `compare_record`, `predict_batch`). Standard library only; no new packages and `dependencies` stays empty.
 - Switched on (D153, Edison 2026-11-08): `POST /v1/screen` adds `ml_flags.deep_recording_error` beside the logistic flag (which stays); `GET /version` adds `deep_model_version`. Model files carry `production: true`. Advisory only: classification, tier, reasons, review and wording are identical with and without it (tests). A failure in it is logged by type and screening continues. `THANZI_DEEP_ENABLED=0` turns it off. Additive contract change; `docs/api/openapi.json` regenerated. Only `api/app.py` and `api/service.py` import the package (AST test).

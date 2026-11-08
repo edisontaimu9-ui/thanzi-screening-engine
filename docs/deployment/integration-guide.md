@@ -75,6 +75,7 @@ Required: `sex`, `age_days`, `weight_kg`, `length_height_cm`, `measure_position`
   apart. Never fill a missing finding with a "normal" value: the API will not, and a wrong default can hide a danger sign.
 - Types are strict. Ranges and plausibility are the engine's job; the front end should still catch obvious typing slips early
   (a weight of 110 kg for a baby), because that is exactly what the recording-error flags exist for.
+- Optional `previous_measurement`: `{"age_days": int, "weight_kg": number}`, an earlier visit of the same child, for growth monitoring (section 7). Only those two keys. It must be earlier than this visit.
 - Body limit: 16 KB. One child per call. No batch.
 
 ## 5. The response and how to use it
@@ -91,6 +92,7 @@ babies.
 | `warnings[]` | strings | Show. For MAM a neutral referral warning is always present. |
 | `programme` | string, or `null` for every MAM child | Do not infer a programme when null. |
 | `ml_flags` | see below | Advisory prompts to recheck. |
+| `growth_monitoring` | optional object | Only when `previous_measurement` was sent. Advisory weight-gain check (section 7). |
 | `status`, `disclaimer` | fixed text | Must stay visible with the result. |
 | `*_version` | strings | Store with every result (section 8). |
 
@@ -132,6 +134,21 @@ Health: `GET /health` needs no key and returns `ok` or `degraded` (the logistic 
 **Front end (Hope).** Generate types from `docs/api/openapi.json` rather than hand-writing them, and mark `deep_recording_error`,
 `deep_model_version`, `route`, `birth_context` and `clinical_assessment` optional. Keep a strict schema from rejecting new
 optional fields. Show `status` and `disclaimer`. Keep working when `ml_flags.available` is false.
+
+**Growth monitoring (history).** The API stores nothing, so it cannot see a child's earlier visits. The gateway or app must
+keep each child's previous weight and age and send them as `previous_measurement`. Practical points:
+- Send the most recent earlier visit that has a weight. The age is `age_days` at that earlier visit (the gateway holds the date of
+  birth and converts; the API never receives it). Send nothing else about the visit.
+- If the most recent visit is under 28 days earlier, the API answers `interval_too_short`. A proposal, to confirm with Maria
+  (I60): send the most recent visit that is at least 28 days earlier instead, when one exists.
+- `growth_monitoring` is optional and advisory. Read `assessed`, `status`, `flagged` and `messages`. Show the messages when
+  `flagged` is true. When `assessed` is false, show the message (for example "compare again after at least 4 weeks") and do not treat
+  it as "growth is fine". Translate by `status` and `reason`, with the English message as the fallback.
+- A child can be `low_risk` and still be flagged for growth. Show both. The flag never changes the classification.
+- It is not run for preterm or corrected-age babies (a warning says so), and it works in degraded mode.
+- Reference values are not yet verified (I59) and the wording needs Maria's review (I61), so treat the flag as a prompt, not a result
+  to act on automatically. The API sets no CMAM finding and triggers no referral.
+- Handle the 422 for a bad earlier visit (same or later age, non-positive weight) as a data-entry error to fix in the app.
 
 **Analytics dashboard (proposal).** The repo says Hope owns the dashboard, de-identification and aggregation by district,
 facility and community (`docs/challenge-alignment.md`). The API returns no place and no facility: the gateway adds those from
@@ -190,6 +207,8 @@ The API stores nothing. If the gateway stores results, treat them as health data
 | Who holds the audit key and how it is accessed (I24) | Hope |
 | Accept the new optional fields, or switch the deep flag off (I57) | Hope |
 | What a worker sees when the two flags disagree (I58), and wording review (I18, I23) | Maria and Edison |
+| Store each child's last weight and age and send `previous_measurement`; handle `growth_monitoring` and its reasons (I63) | Hope |
+| Verify the growth reference table, the 28-day minimum, what a growth flag should trigger, and the wording (I59, I60, I61) | Maria and Edison |
 | Language layer: translation by code | NLP/AI team, with Edison's clinical input |
 | UniPod server specification and expected request volume (Q5) | Hope and Edison |
 | Real-data validation and fairness (I14, I15) | Needs Ministry data and Maria |

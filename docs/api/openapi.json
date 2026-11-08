@@ -38,6 +38,17 @@
             "title": "Explanation",
             "type": "object"
           },
+          "growth_monitoring": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GrowthMonitoring"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when previous_measurement was given and the baby is screened on the under-5 route. Advisory: never changes the classification."
+          },
           "ml_flags": {
             "$ref": "#/components/schemas/MlFlagsOut"
           },
@@ -332,6 +343,128 @@
           "message"
         ],
         "title": "ErrorBody",
+        "type": "object"
+      },
+      "GrowthMonitoring": {
+        "properties": {
+          "advisory": {
+            "title": "Advisory",
+            "type": "string"
+          },
+          "assessed": {
+            "title": "Assessed",
+            "type": "boolean"
+          },
+          "flagged": {
+            "description": "true only for below_range, including weight loss. Advisory.",
+            "title": "Flagged",
+            "type": "boolean"
+          },
+          "interval_days": {
+            "title": "Interval Days",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "rate_g_per_day": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate G Per Day"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why it was not assessed: interval_too_short, implausible_weight, reference_unverified, outside_reference_ages. null when assessed.",
+            "title": "Reason"
+          },
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          },
+          "reference_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference High"
+          },
+          "reference_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "g per day, averaged over the age bands the interval covers.",
+            "title": "Reference Low"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "below_range, within_range or above_range. null when not assessed.",
+            "title": "Status"
+          },
+          "weight_change_g": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Change G"
+          },
+          "weight_loss": {
+            "title": "Weight Loss",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "assessed",
+          "reason",
+          "status",
+          "flagged",
+          "weight_loss",
+          "interval_days",
+          "weight_change_g",
+          "rate_g_per_day",
+          "reference_low",
+          "reference_high",
+          "messages",
+          "reference",
+          "advisory"
+        ],
+        "title": "GrowthMonitoring",
         "type": "object"
       },
       "HealthResponse": {
@@ -781,6 +914,28 @@
         "title": "PretermResponse",
         "type": "object"
       },
+      "PreviousMeasurement": {
+        "additionalProperties": false,
+        "description": "An earlier visit of the same child, for weight-gain monitoring. The engine stores nothing, so the caller supplies it.",
+        "properties": {
+          "age_days": {
+            "description": "Age in whole days at that earlier visit. Must be before this visit.",
+            "title": "Age Days",
+            "type": "integer"
+          },
+          "weight_kg": {
+            "description": "Weight in kilograms at that earlier visit.",
+            "title": "Weight Kg",
+            "type": "number"
+          }
+        },
+        "required": [
+          "age_days",
+          "weight_kg"
+        ],
+        "title": "PreviousMeasurement",
+        "type": "object"
+      },
       "RecordingError": {
         "properties": {
           "flagged": {
@@ -1136,6 +1291,17 @@
             "title": "Oedema",
             "type": "string"
           },
+          "previous_measurement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PreviousMeasurement"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional earlier visit (age_days, weight_kg). With it the response adds growth_monitoring: weight gain per day compared with the ASPEN reference range (R19). Advisory only. Under-5 route only."
+          },
           "sex": {
             "enum": [
               "male",
@@ -1284,6 +1450,17 @@
           "disclaimer": {
             "title": "Disclaimer",
             "type": "string"
+          },
+          "growth_monitoring": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GrowthMonitoring"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when previous_measurement was given and the baby is screened on the under-5 route. Advisory: never changes the classification."
           },
           "ml_flags": {
             "$ref": "#/components/schemas/MlFlagsOut"

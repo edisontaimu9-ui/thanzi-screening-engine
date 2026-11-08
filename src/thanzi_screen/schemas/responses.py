@@ -31,6 +31,23 @@ class MlFlagsOut(BaseModel):
                                   "Present only when the deep models are loaded. Same meaning, same limits.")
 
 
+class GrowthMonitoring(BaseModel):
+    assessed: bool
+    reason: str | None = Field(description="Why it was not assessed: interval_too_short, implausible_weight, reference_unverified, "
+                                           "outside_reference_ages. null when assessed.")
+    status: str | None = Field(description="below_range, within_range or above_range. null when not assessed.")
+    flagged: bool = Field(description="true only for below_range, including weight loss. Advisory.")
+    weight_loss: bool
+    interval_days: int
+    weight_change_g: float | None
+    rate_g_per_day: float | None
+    reference_low: float | None = Field(description="g per day, averaged over the age bands the interval covers.")
+    reference_high: float | None
+    messages: list[str]
+    reference: str
+    advisory: str
+
+
 class WorkerResponse(BaseModel):
     view: str = "worker"
     worker_summary: list[str] = Field(description="2-3 lines. Never contains HIV information.")
@@ -47,6 +64,9 @@ class WorkerResponse(BaseModel):
     disclaimer: str
     route: str | None = Field(default=None, description="Only when birth context was given: under5 or under5_corrected_age.")
     birth_context: "BirthContext | None" = None
+    growth_monitoring: GrowthMonitoring | None = Field(
+        default=None, description="Only when previous_measurement was given and the baby is screened on the under-5 route. "
+                                  "Advisory: never changes the classification.")
     clinical_assessment: "ClinicalAssessment | None" = Field(
         default=None, description="Only when a baby under 2500 g has no gestational age: flagged for clinical assessment.")
 

@@ -26,6 +26,8 @@ where = ["src"]
 "thanzi_screen.preterm" = ["fenton2025_lms.json", "preterm_rules.json", "routing_config.json"]
 # NLP lexicon (D136): data, not code. Draft English terms, not clinically validated (I49).
 "thanzi_screen.ml.nlp" = ["lexicon.json"]
+# Growth velocity reference (R16): transcribed values, not yet verified against the handbook (I59).
+"thanzi_screen.growth" = ["aspen_weight_velocity.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -17,6 +17,14 @@ NeonatalSignName = Literal["bilious_vomiting", "apnoea", "cyanosis", "abdominal_
                            "feed_intolerance"]
 
 
+class PreviousMeasurement(BaseModel):
+    """An earlier visit of the same child, for weight-gain monitoring. The engine stores nothing, so the caller supplies it."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    age_days: int = Field(description="Age in whole days at that earlier visit. Must be before this visit.")
+    weight_kg: Number = Field(description="Weight in kilograms at that earlier visit.")
+
+
 class ScreenRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
@@ -40,6 +48,9 @@ class ScreenRequest(BaseModel):
     visible_severe_wasting: bool | None = None
     too_weak_to_suckle: bool | None = None
     failure_to_gain_weight: bool | None = None
+    previous_measurement: PreviousMeasurement | None = Field(
+        default=None, description="Optional earlier visit (age_days, weight_kg). With it the response adds growth_monitoring: "
+        "weight gain per day compared with the ASPEN reference range (R19). Advisory only. Under-5 route only.")
 
     # ---- Birth context and preterm fields (all optional). Without gestational_age_weeks and birth_weight_g the
     # request is screened exactly as before. See docs/modules/preterm.md for the routing rules. ----

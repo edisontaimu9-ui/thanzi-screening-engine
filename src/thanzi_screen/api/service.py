@@ -16,6 +16,7 @@ from ..anthro import InputError
 from ..explain import Explanation, explain_parts, explain_rules_only
 from ..explain import messages as M
 from ..explain.compose import IGNORED_IN_WHY
+from ..growth import assess_weight_velocity
 from ..ml.dl import DeepModels
 from ..ml.dl.predict import flag_from_features
 from ..ml.features import features_from_inputs
@@ -41,7 +42,8 @@ _BIRTH_NUMBERS = ("gestational_age_weeks", "birth_weight_g", "hc_cm", "birth_len
                   "gastric_aspirate_pct")
 _BIRTH_BOOLS = ("sick", "apnoea_last_7_days", "temperature_unstable", "hypoglycaemia_not_correcting")
 _NEONATAL = frozenset(preterm_integration.NEONATAL_SIGNS)
-ALLOWED = REQUIRED + OPTIONAL + BIRTH_OPTIONAL
+GROWTH_OPTIONAL = ("previous_measurement",)
+ALLOWED = REQUIRED + OPTIONAL + BIRTH_OPTIONAL + GROWTH_OPTIONAL
 _BOOLS = ("clinically_well_and_alert", "hiv_positive", "visible_severe_wasting", "too_weak_to_suckle",
           "failure_to_gain_weight")
 _SAFE_ENGINE_MESSAGE = re.compile(r"^[A-Za-z_]+(?: [A-Za-z_,]+)*$")   # letters only: cannot carry a value
@@ -166,6 +168,45 @@ def parse_birth(payload: dict) -> tuple[float | None, float | None, dict]:
     return (None if ga is None else float(ga)), (None if bw is None else float(bw)), extra
 
 
+def parse_previous(payload: dict) -> tuple[int, float] | None:
+    """Optional earlier visit. Structure only; the interval and plausibility rules are the growth module's."""
+    prev = payload.get("previous_measurement")
+    if prev is None:
+        return None
+    if not isinstance(prev, dict):
+        raise _bad("previous_measurement", "must be an object with age_days and weight_kg, or null")
+    if any(k not in ("age_days", "weight_kg") for k in prev):
+        raise ApiError(422, "unknown_field", "The request contains a field that is not accepted. "
+                                             "Names, identifiers and dates of birth are never accepted.")
+    for f in ("age_days", "weight_kg"):
+        if f not in prev:
+            raise ApiError(422, "missing_field", f"Missing required field: previous_measurement.{f}.")
+    age = prev["age_days"]
+    if isinstance(age, bool) or not isinstance(age, int):
+        raise _bad("previous_measurement.age_days", "must be a whole number")
+    return age, _number(prev, "weight_kg")
+
+
+_GROWTH_SKIPPED = ("Growth monitoring was not run: it needs the under-5 route, and this baby is screened on the preterm or "
+                   "corrected-age route.")
+
+
+def _growth(args: tuple, previous: tuple[int, float] | None) -> dict | None:
+    """Weight-gain monitoring for the under-5 route. Advisory. Never raises into the screen: bad input is a 422 before this."""
+    if previous is None:
+        return None
+    sex, age, weight = args[0], args[1], args[2]
+    try:
+        g = assess_weight_velocity(sex, previous[0], previous[1], age, weight)
+    except ValueError:
+        raise ApiError(422, "invalid_input", "previous_measurement must be earlier than this visit and its weight must be "
+                                             "a positive number.") from None
+    return {"assessed": g.assessed, "reason": g.reason, "status": g.status, "flagged": g.flagged,
+            "weight_loss": g.weight_loss, "interval_days": g.interval_days, "weight_change_g": g.weight_change_g,
+            "rate_g_per_day": g.rate_g_per_day, "reference_low": g.reference_low, "reference_high": g.reference_high,
+            "messages": list(g.messages), "reference": g.reference, "advisory": g.advisory}
+
+
 def _engine_message(exc: InputError) -> str:
     text = str(exc)
     return text if _SAFE_ENGINE_MESSAGE.match(text) else "The measurements or clinical inputs were not accepted."
@@ -273,7 +314,7 @@ def build_audit_view(result: ClassificationResult, expl: Explanation, flags, dee
 
 
 def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[str] = (), context: dict | None = None,
-            assessment: dict | None = None, deep: DeepModels | None = None) -> dict:
+            assessment: dict | None = None, deep: DeepModels | None = None, growth: dict | None = None) -> dict:
     """The existing under-5 flow. `context` (birth context) is added only when a route other than plain under5 ran."""
     clinical = args[-1]
     features, anthro, result = features_from_inputs(*args)
@@ -290,6 +331,8 @@ def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[
         out = {**out, "route": context["route"], "birth_context": context}
     if assessment is not None:
         out = {**out, "clinical_assessment": assessment}
+    if growth is not None:
+        out = {**out, "growth_monitoring": growth}
     if extra_warnings:
         out["warnings"] = [*out["warnings"], *extra_warnings]
     return out if view == "audit" else scrub_worker(display_wording(out))
@@ -337,6 +380,7 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None, de
         raise ApiError(422, "invalid_request", "Field 'view' must be one of: worker, audit.")
     args = parse_payload(payload, require_length=not _preterm_hint(payload))
     ga, bw, extra = parse_birth(payload)
+    previous = parse_previous(payload)
     try:
         rt = route_birth(args[1], ga, bw)
         if rt.path == PATH_PRETERM:
@@ -347,6 +391,8 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None, de
             out = preterm_integration.build_preterm_response(
                 rt, preterm_integration.run(pi, clinical.oedema.value), warns, view, pi)
             out["status"] = wording.STATUS
+            if previous is not None:
+                out["warnings"] = [*out.get("warnings", []), _GROWTH_SKIPPED]
             return out if view == "audit" else scrub_worker(display_wording(out))
         if rt.path == PATH_CORRECTED:
             msg = (f"Age corrected for prematurity: born at {rt.ga_weeks:g} weeks, {rt.age_days} days old, screened as "
@@ -355,6 +401,8 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None, de
             if rt.corrected_age_provisional:
                 msg += (f" PROVISIONAL: the corrected-age end point of {rt.corrected_age_until_months} months for this "
                         "gestational age is not confirmed. Verify against the clinical reference.")
+            if previous is not None:
+                msg += " " + _GROWTH_SKIPPED
             return _under5((args[0], rt.age_days_used, *args[2:]), view, None, [msg], preterm_integration.birth_context(rt))
         warns, assessment, ctx = [], None, None
         if "gestational_age_missing_for_low_birth_weight" in rt.notes:
@@ -365,7 +413,7 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None, de
             ctx = preterm_integration.birth_context(rt)
         if extra:
             warns.append("Preterm-only fields were given but this baby is not screened by the preterm engine: they were ignored.")
-        return _under5(args, view, models, warns, ctx, assessment, deep)
+        return _under5(args, view, models, warns, ctx, assessment, deep, _growth(args, previous))
     except InputError as exc:
         raise ApiError(422, "invalid_input", _engine_message(exc)) from None
 
