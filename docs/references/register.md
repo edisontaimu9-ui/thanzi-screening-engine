@@ -51,3 +51,6 @@ Tags: DOCUMENTED (stated in a source), ASSUMPTION, RECOMMENDATION.
 - RECOMMENDATION: Low-risk tier (counselling and routine monitoring). Not traced to a CMAM page.
 - RECOMMENDATION: four engine outputs (low risk, MAM, SAM-OTP eligible, SAM-inpatient) mapped to three user-facing tiers.
 - DECISION (Phase 1): linear interpolation of L, M, S between 0.5 cm rows.
+| R14 | Fenton 2025 Preterm Growth Chart Data (Dr Tanis Fenton), LMS tables for girls and boys, 22 to 50 weeks PMA | 2025 | Supplied by Edison in `preterm_service.zip` | CC BY-NC-ND 4.0: attribution, non-commercial, no derivatives | Weight, length, head circumference z-scores for the preterm engine | `fenton2025_lms.json`, unmodified, SHA-256 checked in a test | In use |
+| R15 | COIN 2017 Participants' Manual (Malawi), Sessions 2, 12 and 19 and wall charts | 2017 | Supplied by Edison in `preterm_service.zip` (rules transcribed in `preterm_rules.json`) | Malawi Ministry of Health | Feeding, KMC, referral and discharge rules for preterm and LBW babies | `preterm_rules.json`; values tagged "proposed" need clinician sign-off | In use |
+

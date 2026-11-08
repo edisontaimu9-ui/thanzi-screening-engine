@@ -42,6 +42,10 @@ class WorkerResponse(BaseModel):
     model_version: str
     status: str
     disclaimer: str
+    route: str | None = Field(default=None, description="Only when birth context was given: under5 or under5_corrected_age.")
+    birth_context: "BirthContext | None" = None
+    clinical_assessment: "ClinicalAssessment | None" = Field(
+        default=None, description="Only when a baby under 2500 g has no gestational age: flagged for clinical assessment.")
 
 
 class AuditResponse(WorkerResponse):
@@ -69,3 +73,62 @@ class VersionResponse(BaseModel):
     model_version: str
     status: str
     disclaimer: str
+
+
+class BirthContext(BaseModel):
+    route: str = Field(description="under5, preterm or under5_corrected_age.")
+    route_reason: str
+    gestational_age_weeks: float | None
+    birth_weight_g: float | None
+    born_preterm: bool = Field(description="Gestational age under 37 weeks.")
+    low_birth_weight: bool = Field(description="Birth weight under 2500 g.")
+    age_days: int = Field(description="Chronological age.")
+    pma_weeks: float | None = Field(description="Post-menstrual age: gestational age plus chronological age.")
+    corrected_age_days: int | None
+    corrected_age_until_chronological_months: int | None
+    age_days_used: int = Field(description="The age the engine that ran was given.")
+    birth_weight_class: str | None = Field(description="ELBW, VLBW, LBW or NORMAL.")
+    corrected_age_end_provisional: bool = Field(default=False, description="True while the corrected-age end point in use is provisional (GA 32 to under 37 weeks).")
+
+
+class ClinicalAssessment(BaseModel):
+    needed: bool
+    reasons: list[CodeMessage]
+
+
+class PretermResponse(BaseModel):
+    """Preterm route (born under 37 weeks or under 2500 g, under 50 weeks post-menstrual age). No HIV content."""
+    view: str = "worker"
+    route: str = "preterm"
+    worker_summary: list[str]
+    tier: str | None = Field(description="The under-5 tier this preterm level maps to (docs/modules/preterm.md). Null for follow_up: it has no under-5 tier, use preterm_level.")
+    tier_note: str | None = None
+    preterm_level: str = Field(description="routine, follow_up, refer or urgent_refer.")
+    reasons: list[str]
+    actions: list[str]
+    birth_context: BirthContext
+    pma_weeks: float
+    birth_classification: dict[str, str]
+    measurements: dict[str, Any] = Field(description="Fenton 2025 z-score and percentile per measure, or 'outside_fenton_range'.")
+    growth: dict[str, Any] | None = Field(description="Change in z-score from birth. Never a diagnosis from one percentile.")
+    feeding: dict[str, Any]
+    kmc: str
+    supplements: list[str]
+    handover: str | None = None
+    note: str
+    warnings: list[str]
+    rule_set_version: str
+    model_version: str
+    data_attribution: str = Field(description="Fenton 2025 data, CC BY-NC-ND 4.0, attribution required, non-commercial.")
+    status: str
+    disclaimer: str
+
+
+class PretermAuditResponse(PretermResponse):
+    view: str = "audit"
+    engine_output: dict[str, Any] = Field(description="The preterm engine's own output, before the oedema rule.")
+    ml_features: dict[str, float | None] = Field(description="features() row. Context only. rule_level is never a label.")
+
+
+for _m in (WorkerResponse, AuditResponse):
+    _m.model_rebuild()

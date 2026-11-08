@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased - preterm integration (not validated)
+- New `thanzi_screen.preterm`: the supplied preterm engine (Fenton 2025 + COIN 2017) added without logic changes, with `routing.py`, `routing_config.json` and `integration.py`. Fenton data kept unmodified (CC BY-NC-ND 4.0).
+- `POST /v1/screen` routes babies born under 37 weeks or under 2500 g: preterm engine under 50 weeks PMA, under-5 engine on corrected age after. New optional request fields (`gestational_age_weeks`, `birth_weight_g`, `neonatal_danger_signs` and others). Requests without them behave exactly as before. New response models `PretermResponse`, `PretermAuditResponse`, `BirthContext`; `docs/api/openapi.json` regenerated.
+- `ml/preterm_features.py`: `features()` row and vector, separate from `FEATURES` so saved models still load. `rule_level` is never a label.
+- `pyproject.toml` package data and a Dockerfile build check ship the JSON files in the image. Still one image.
+- Decisions applied (2026-11-08): follow_up has no under-5 tier; corrected-age end for GA 32 to under 37 weeks is provisional; hypoglycaemia and oedema escalation are configurable per the protocol; length and position are optional only on the preterm route; unknown GA gives a clinical-assessment flag; worker wording says "faltering growth" while the audit keeps CMAM terms; urgent triggers come from `preterm_rules.json`.
+- Approved (2026-11-08): 24-month corrected-age end; hypoglycaemia (complication) and any oedema grade give urgent_refer per CMAM 2016 Table 5; null tier allowed for follow_up; corrected age feeds all age-dependent CMAM criteria.
+- Open questions: `docs/decisions/decision-log.md` I32 to I40. Version stays 0.7.0 until Edison decides the release.
+
 ## 0.7.0 - Phase 7 (release candidate, not validated)
 - Test evidence: rule traceability matrix generated from a full run (`docs/testing/traceability.md`); property and invariant tests; hostile-input robustness tests; coverage reported in CI (not gated).
 - Case pack for clinical review (`docs/testing/case-pack.xlsx`), generated from the engine; CI fails if it drifts.

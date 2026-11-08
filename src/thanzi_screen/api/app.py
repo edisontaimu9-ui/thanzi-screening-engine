@@ -14,7 +14,10 @@ from fastapi.responses import JSONResponse
 
 from .. import __version__
 from ..ml.flags import Models, load_models
-from ..schemas import AuditResponse, ErrorBody, HealthResponse, ScreenRequest, VersionResponse, WorkerResponse
+from ..schemas import (
+    AuditResponse, ErrorBody, HealthResponse, PretermAuditResponse, PretermResponse, ScreenRequest, VersionResponse,
+    WorkerResponse,
+)
 from . import security, service
 
 log = logging.getLogger("thanzi.api")
@@ -46,6 +49,8 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     app = FastAPI(
         title="Thanzi screening engine API", version=__version__,
         description="Decision support for under-five malnutrition screening (CMAM 2016). Not a diagnosis. "
+                    "Babies born under 37 weeks or under 2500 g are routed to the preterm engine (Fenton 2025, CC BY-NC-ND 4.0) "
+                    "until 50 weeks post-menstrual age, then screened on corrected age. "
                     "Demonstration only: synthetic data, not validated on real children. Stateless. "
                     "Sits behind the gateway: every route except /health needs X-Gateway-Key.",
         docs_url="/docs" if docs else None, redoc_url="/redoc" if docs else None,
@@ -104,8 +109,9 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         return service.version_info(app.state.models)
 
     @app.post("/v1/screen", tags=["screen"], responses={
-        200: {"model": Union[WorkerResponse, AuditResponse],
-              "description": "Worker view by default. view=audit returns the audit view."},
+        200: {"model": Union[WorkerResponse, AuditResponse, PretermResponse, PretermAuditResponse],
+              "description": "Worker view by default. view=audit returns the audit view. A baby routed to the preterm "
+                             "engine gets the preterm response (route=preterm)."},
         401: {"model": ErrorBody}, 403: {"model": ErrorBody}, 413: {"model": ErrorBody}, 422: {"model": ErrorBody}})
     def screen(body: ScreenRequest, view: Literal["worker", "audit"] = "worker",
                x_audit_key: str | None = Header(default=None, alias=security.AUDIT_HEADER)):

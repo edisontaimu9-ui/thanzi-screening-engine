@@ -43,3 +43,25 @@ No gateway key, no start. Run it behind Hope's gateway on a private network. Det
 
 ## Testing, security checks and release (Phase 7)
 Release candidate `0.7.0`, **not validated**. Evidence: `docs/testing/test-report.md` (what was run, what was not), `docs/testing/traceability.md` (every CMAM rule and its tests), `docs/testing/case-pack.xlsx` (synthetic scenarios for clinical review). Deployment: `docs/deployment/runbook.md`, `deploy/docker-compose.example.yml`. Tools: `scripts/smoke_api.py`, `scripts/load_probe.py`. Install with `pip install -c constraints.txt -e ".[dev,api]"`.
+
+## Preterm and low-birth-weight babies
+`POST /v1/screen` routes by two optional fields, `gestational_age_weeks` and `birth_weight_g` (grams). Full detail: `docs/modules/preterm.md`.
+
+**Routing rules.** Born under 37 weeks or under 2500 g, and under 50 weeks post-menstrual age (PMA = gestational age + chronological age): the preterm engine (Fenton 2025 z-scores, COIN 2017 Malawi rules). From 50 weeks PMA: the under-5 engine on corrected age (chronological age minus (40 - GA) weeks), kept until age 3 if GA is under 32 weeks (24 months for 32 to under 37 weeks, approved). Corrected age feeds every age-dependent CMAM criterion (MUAC from 6 months, infant criteria) with the thresholds unchanged. Without the two fields nothing changes.
+
+**Level mapping** (one table in `routing_config.json`; no new levels):
+
+| Preterm level | Under-5 tier |
+|---|---|
+| routine | low_risk |
+| follow_up | none: kept as its own preterm disposition (`tier` null) |
+| refer | mam |
+| urgent_refer | urgent |
+
+Only danger signs give `urgent_refer`. Faltering growth is never called from one percentile: it needs a z-score decline from birth, after 14 days of age.
+
+**Data licence.** `src/thanzi_screen/preterm/fenton2025_lms.json` is Fenton 2025 data, CC BY-NC-ND 4.0 (attribution, non-commercial, no derivatives). Do not edit it. Responses carry the attribution.
+
+Born under 2500 g with no gestational age: under-5 flow, a warning and a clinical-assessment flag; gestational age is never assumed. Urgent triggers are configured in `preterm_rules.json`.
+
+**Needs clinician sign-off:** how gateways treat a null tier for follow_up, z-decline tiers, the [proposed] urgent triggers, the corrected-age end point for 32 to under 37 weeks, and the mapping of the other under-5 inputs. Hypoglycaemia and oedema follow CMAM 2016 Table 5: both give urgent_refer. Release candidate, not validated.

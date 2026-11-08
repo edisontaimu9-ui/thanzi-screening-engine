@@ -144,7 +144,8 @@ def test_worker_view_matches_the_engine_exactly(sweep, models):
         out = screen(p, "worker", models)
         assert out["classification"] == result.classification.value
         assert out["tier"] == result.tier.value
-        assert out["reasons"] == [{"code": c, "message": t} for c, t in
+        # Worker text may use the display-only wording ("faltering growth"); codes and the audit trace keep CMAM terms.
+        assert out["reasons"] == [{"code": c, "message": service.display_wording(t)} for c, t in
                                   explain(*args, models).classification_trace.reasons]
         assert [r["code"] for r in out["reasons"]] == list(result.reasons)
         if result.classification.value == "MAM":
@@ -153,7 +154,7 @@ def test_worker_view_matches_the_engine_exactly(sweep, models):
         else:
             assert out["rules_fired"] == list(result.rules_fired)
             assert out["programme"] == result.programme
-            assert out["worker_summary"] == list(explain(*args, models).summary)
+            assert out["worker_summary"] == service.display_wording(list(explain(*args, models).summary))
         assert out["rule_set_version"] == R.RULE_SET_VERSION and out["model_version"] == models.version
         flags = flag_record(*args, models)
         assert out["ml_flags"]["recording_error"]["flagged"] == flags.recording_error.flagged
