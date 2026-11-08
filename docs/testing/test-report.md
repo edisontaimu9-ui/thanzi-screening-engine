@@ -10,7 +10,7 @@ Decision support only. This report says what was run, where, and what was **not*
 ## Results run in the build environment
 | Area | What was run | Result |
 |---|---|---|
-| Full suite | `pytest` with API tests required, Python 3.11 and 3.12 | 590 passed, 2 expected failures (I28 markers), 0 failed, on both versions |
+| Full suite | `pytest` with API tests required, Python 3.11 and 3.12 | 591 passed, 2 expected failures (I28 markers), 0 failed (590 on the first GitHub run, before the Dockerfile test was added) |
 | Coverage | `coverage` with branch coverage, reported only (Q3) | 98% overall (1962 statements, 514 branches). Lowest: `data/validate.py` 80%; all others 95% or more |
 | Rule traceability | A plugin records which test makes each rule fire | All 23 rules exercised by at least one test (`traceability.md`) |
 | Property tests | 8 invariants on the full pipeline: lower MUAC, lower weight, higher oedema grade never less urgent; danger sign or complication never lowers urgency or leads to outpatient care; missing information never lowers urgency; output invariants over 5,000+ inputs | All pass. No defect found |
@@ -37,9 +37,10 @@ Startup to first healthy response: 0.43 s. Memory: 48 MB at start, 54 MB after 6
 - **I31 (wording, for Maria):** z-scores are shown to two decimals, so a child at -2.004 is classified moderate while the text says "-2.00 is from -3 up to -2".
 - **I29:** keys are environment variables only; readable by `docker inspect`.
 - The first scan of history flagged the Phase 6 CI test keys (D99).
+- **Trivy on GitHub (D104):** two HIGH findings in the Debian base image's `zlib1g`, both with fixes available. Dockerfile now applies OS security updates at build time.
 
 ## Not tested (read this)
-- **Docker build, the container, Trivy, the CI smoke steps and the release workflow were never run.** They are written and linted, and the smoke script was run against a local server, but the first real run is on GitHub (I30). Expect to paste a failing log once.
+- **Container smoke steps and the release workflow have not run yet.** GitHub has run the other jobs (D104): tests, coverage, traceability, OpenAPI, case pack, `pip-audit` and gitleaks passed; the image built; Trivy then failed the build on two fixable HIGH findings in the base image's zlib1g, fixed by an OS update step in the Dockerfile that the next run must confirm. The smoke script itself passed 19 checks against a local server (I30).
 - **Not run on UniPod servers or any target hardware.** Load numbers do not transfer.
 - **No clinical validation.** The engine matches the encoded CMAM 2016 rules. Whether the rules and wording are right for practice is Maria's review of `case-pack.xlsx` (I18, I23, I10).
 - **No real or Ministry data.** Machine-learning flags are trained on synthetic data; accuracy, fairness across districts, age and sex, and real recording errors are untested (I14, I15).
@@ -51,7 +52,7 @@ Startup to first healthy response: 0.43 s. Memory: 48 MB at start, 54 MB after 6
 ## Sign-off checklist (owner, status)
 | Item | Owner | Status |
 |---|---|---|
-| CI run on `main` green, including Docker, Trivy and gitleaks jobs | Edison | Pending first run (I30) |
+| CI run on `main` green, including the Docker job (Trivy and container smoke) | Edison | Tests, dependencies, secrets green; Docker job pending after the zlib fix (D104, I30) |
 | Case pack reviewed; agreement and comments returned | Maria | Pending |
 | Worker wording confirmed, including neutral MAM text and exact-boundary z display (I18, I23, I31) | Maria | Pending |
 | Referral slip wording replaces placeholders (I10) | Maria / MoH | Pending |

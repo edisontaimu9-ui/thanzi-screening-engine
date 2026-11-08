@@ -11,6 +11,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     THANZI_MODELS_DIR=/app/models \
     PORT=8080
 
+# Apply the Debian security updates available at build time. The first CI Trivy scan found two HIGH findings in the
+# base image's zlib1g that already had fixes (D104). Dependabot bumps of the base tag will also bring fixes.
+RUN apt-get update \
+ && apt-get -y --no-install-recommends upgrade \
+ && rm -rf /var/lib/apt/lists/*
+
 ARG VERSION=unknown
 LABEL org.opencontainers.image.title="thanzi-screen" \
       org.opencontainers.image.description="Thanzi under-five malnutrition screening API. Release candidate, not validated. Decision support only." \

@@ -87,3 +87,10 @@ def test_ci_file_is_valid_yaml_with_the_expected_jobs():
     steps = doc["jobs"]["docker"]["steps"]
     assert all("uses" in s or "run" in s for s in steps)
     assert doc["jobs"]["docker"]["needs"] == "test"
+
+
+def test_dockerfile_applies_os_security_updates_and_cleans_up():
+    code = re.sub(r"#.*", "", DOCKER)
+    assert "apt-get update" in code and "apt-get -y --no-install-recommends upgrade" in code
+    assert "rm -rf /var/lib/apt/lists/*" in code
+    assert code.index("apt-get") < code.index("pip install")          # before our dependencies are installed
