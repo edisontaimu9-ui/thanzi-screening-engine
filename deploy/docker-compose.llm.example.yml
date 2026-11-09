@@ -1,4 +1,4 @@
-# EXAMPLE ONLY, NOT TESTED ON A DOCKER HOST (issue I45). Hope's environment governs.
+# EXAMPLE ONLY, NOT TESTED ON A DOCKER HOST. Your environment governs.
 # The screening API plus a local Ollama server on a private network that has no route to the internet.
 #
 # 1. Build the derived image (see deploy/Dockerfile.llm) and load the release image as in docker-compose.example.yml.
@@ -33,7 +33,7 @@ services:
       THANZI_LLM_MODEL: ${THANZI_LLM_MODEL:-qwen2.5:1.5b}
       THANZI_LLM_MAX_CONCURRENCY: "1"
     networks:
-      - thanzi_private        # Hope's gateway joins this one
+      - thanzi_private        # the gateway joins this one
       - llm_private
     depends_on:
       - ollama

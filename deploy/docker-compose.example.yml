@@ -1,4 +1,4 @@
-# EXAMPLE ONLY (Phase 7, D102). Hope's environment governs. Shows the intended shape: a private network,
+# EXAMPLE ONLY. Your environment governs. Shows the intended shape: a private network,
 # no published port, keys supplied from the operator's environment, a read-only container with no extra privileges.
 #
 # 1. Make two different keys (32+ random characters each) and export them in the shell that runs compose,
@@ -8,9 +8,9 @@
 # 2. Load the release image:  gunzip -c thanzi-screen-v0.7.0-image.tar.gz | docker load
 # 3. docker compose -f deploy/docker-compose.example.yml up -d
 # Preterm screening is inside this same image: POST /v1/screen routes by gestational age and birth weight. No second service.
-# The gateway container (Hope's) joins the same network and calls http://thanzi:8080.
+# The gateway container joins the same network and calls http://thanzi:8080.
 # Limit: the image reads keys from environment variables only (no *_FILE support), so anyone who can run
-# `docker inspect` on the host can read them. Restrict host access, or ask for file-based keys (issue I29).
+# `docker inspect` on the host can read them. Restrict host access, or supply keys through your platform's secret mechanism.
 name: thanzi
 services:
   thanzi:

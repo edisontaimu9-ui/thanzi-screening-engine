@@ -2,7 +2,7 @@ name: Release
 
 # Runs when a version tag is pushed (for example v0.7.0). Builds the image, tests it, and publishes a GitHub
 # pre-release with the image tarball, SBOMs, checksums and the test evidence. It does not publish to any registry
-# (Phase 7 Q6: GHCR publishing is Hope's). Every release is marked pre-release: not validated.
+# (registry publishing is a deployment decision). Every release is marked pre-release: not validated.
 on:
   push:
     tags: ["v*"]

@@ -22,7 +22,7 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12"]
     env:
-      # API tests must run in CI. If FastAPI is missing they fail instead of skipping (D84).
+      # API tests must run in CI. If FastAPI is missing they fail instead of skipping.
       THANZI_REQUIRE_API_TESTS: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

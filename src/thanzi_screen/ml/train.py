@@ -1,4 +1,4 @@
-"""Train the Phase 4 models from a verified Phase 3 dataset. Deterministic for a given dataset and seed."""
+"""Train the logistic and tree models from a verified synthetic dataset. Deterministic for a given dataset and seed."""
 from __future__ import annotations
 
 import json
@@ -70,7 +70,7 @@ def train_all(csv_path, out_dir, seed: int = 0, epochs: int = 12) -> dict:
     acc = sum(max(tree.predict_dist(r["x"]).items(), key=lambda kv: kv[1])[0] == r["field"] for r in err_te) / max(1, len(err_te))
     field_metrics = {"test_accuracy_on_error_records": acc, "n_test_error_records": len(err_te), "train_error_records": len(err_tr)}
 
-    # ---- B replica (diagnostic only; B is rules-based, D45) ----
+    # ---- B replica (diagnostic only; B is rules-based) ----
     posb = sum(r["review"] for r in tr)
     rep = LogisticModel(FEATURES).fit([r["x"] for r in tr], [int(r["review"]) for r in tr], seed=seed + 1, epochs=epochs,
                                       pos_weight=max(1.0, (len(tr) - posb) / max(1, posb)) ** 0.5)
@@ -102,7 +102,7 @@ def _pct(x):
 def _card(s: dict, meta: dict) -> str:
     t, op = s["test"], s["operating_point"]
     lines = [
-        "# Model card: Phase 4 advisory flags", "", f"**{STATEMENT}**", "",
+        "# Model card: advisory recording-error flags", "", f"**{STATEMENT}**", "",
         f"Version {meta['version']}. Trained on synthetic dataset SHA-256 `{meta['trained_on_manifest_sha256'][:16]}...` "
         f"({meta['dataset_rows']} rows), seed {meta['seed']}. Plain-Python models saved as JSON.", "",
         "## Models",
@@ -110,13 +110,13 @@ def _card(s: dict, meta: dict) -> str:
         "- `recording_field_tree.json`: shallow decision tree, suggests which field to recheck.",
         "- `review_replica_diagnostic.json`: NOT production. Target B is a rules-based flag (`thanzi_screen.rules.review`); this model only measures how well ML copies it.", "",
         "## Operating point (chosen on validation)",
-        f"Threshold {op['threshold']:.4f}. Target: at least 80% recall on errors Phase 1 flags miss, at most 10% of records flagged. "
+        f"Threshold {op['threshold']:.4f}. Target: at least 80% recall on errors the anthropometry flags miss, at most 10% of records flagged. "
         f"Met on validation: **{op['operating_point_met']}**.", "",
         "## Test results (synthetic data)",
         f"- ML flag: precision {_pct(t['ml']['precision'])}, recall {_pct(t['ml']['recall'])}, alert rate {_pct(t['ml']['alert_rate'])}, AUC {t['auc']:.3f}.",
-        f"- Phase 1 flags alone: precision {_pct(t['phase1_only']['precision'])}, recall {_pct(t['phase1_only']['recall'])}.",
-        f"- Phase 1 or ML: recall {_pct(t['union']['recall'])}, alert rate {_pct(t['union']['alert_rate'])}.",
-        f"- Recall on errors Phase 1 misses ({t['errors_missed_by_phase1']} records): {_pct(t['ml_recall_on_missed_by_phase1'])}.",
+        f"- Anthropometry flags alone: precision {_pct(t['phase1_only']['precision'])}, recall {_pct(t['phase1_only']['recall'])}.",
+        f"- Anthropometry flags or ML: recall {_pct(t['union']['recall'])}, alert rate {_pct(t['union']['alert_rate'])}.",
+        f"- Recall on errors the anthropometry flags miss ({t['errors_missed_by_phase1']} records): {_pct(t['ml_recall_on_missed_by_phase1'])}.",
         f"- Field suggestion accuracy on error records: {_pct(s['field']['test_accuracy_on_error_records'])}.",
         f"- Boundary stress test: {s['boundary']['ml_alerts']} false alarms in {s['boundary']['n']} records; "
         f"{s['boundary']['alerts_with_exact_6_month_age']} of them have an age that is an exact 6-month multiple (the boundary set uses 365 days), which the model treats as age heaping. "
@@ -125,10 +125,10 @@ def _card(s: dict, meta: dict) -> str:
         "## Recall by error type (test)",
     ]
     for k, v in t["by_error_type"].items():
-        lines.append(f"- {k}: ML {_pct(v['ml_recall'])}, Phase 1 {_pct(v['phase1_recall'])}, either {_pct(v['union_recall'])} (n={v['n']}).")
+        lines.append(f"- {k}: ML {_pct(v['ml_recall'])}, Anthropometry flags {_pct(v['phase1_recall'])}, either {_pct(v['union_recall'])} (n={v['n']}).")
     lines += ["", "## Limits",
-              "- Error types and rates are assumptions (D41). Real recording errors are messier.",
+              "- Error types and rates are assumptions. Real recording errors are messier.",
               "- Age heaping is caught here only because the synthetic injection rounds ages exactly to 6-month multiples. Real heaping is fuzzy and is a population pattern, so this result will not transfer.",
               "- Synthetic districts carry no signal, so the district report checks the code, not real fairness. Fairness testing needs real data.",
-              "- Retrain when real prevalence figures (R9) and WHO MUAC tables (R8) are used in Phase 3.", ""]
+              "- Retrain when real prevalence figures (R9) and WHO MUAC tables (R8) are adopted for the synthetic data generator.", ""]
     return "\n".join(lines)

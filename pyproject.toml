@@ -11,9 +11,9 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest", "openpyxl", "httpx~=0.28.1", "pyyaml", "coverage"]
-# HTTP edge only (Phase 6). The engine itself stays standard library.
+# HTTP edge only. The engine itself stays standard library.
 api = ["fastapi~=0.162.2", "pydantic~=2.14.3", "uvicorn~=0.54.0"]
-# Optional local LLM client (D128-D133): the HTTP transport for Ollama and llama.cpp servers. Off by default and not in
+# Optional local LLM client: the HTTP transport for Ollama and llama.cpp servers. Off by default and not in
 # the release image. The package imports without it, and the mock provider needs nothing.
 llm = ["httpx~=0.28.1"]
 
@@ -24,9 +24,9 @@ where = ["src"]
 "thanzi_screen.anthro" = ["reference_tables/*.csv", "reference_tables/MANIFEST.json"]
 # Preterm data. fenton2025_lms.json is CC BY-NC-ND 4.0 (Dr Tanis Fenton, 2025): ship it unmodified, with its attribution.
 "thanzi_screen.preterm" = ["fenton2025_lms.json", "preterm_rules.json", "routing_config.json"]
-# NLP lexicon (D136): data, not code. Draft English terms, not clinically validated (I49).
+# NLP lexicon: data, not code. Draft English terms, not clinically validated.
 "thanzi_screen.ml.nlp" = ["lexicon.json"]
-# Growth velocity reference (R16): transcribed values, not yet verified against the handbook (I59).
+# Growth velocity reference (R19): transcribed from the ASPEN handbook and verified against it.
 "thanzi_screen.growth" = ["aspen_weight_velocity.json"]
 
 [tool.pytest.ini_options]
@@ -38,6 +38,6 @@ source = ["thanzi_screen"]
 branch = true
 
 [tool.coverage.report]
-# Reported only. No failure threshold yet (Phase 7 Q3): set one after reviewing the measured numbers.
+# Reported only. No failure threshold yet: set one after reviewing the measured numbers.
 show_missing = true
 skip_empty = true

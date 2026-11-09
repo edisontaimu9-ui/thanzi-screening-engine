@@ -1,67 +1,125 @@
-# thanzi-screening-engine
+# Thanzi Screening Engine
 
-Independent, modular under-five (0-59 months) malnutrition screening engine for Thanzi AI, Malawi.
+Stateless screening service for acute malnutrition in children under five (0 to 59 months), built for use in Malawi. It
+classifies a child against the Malawi CMAM guidelines (2016), screens preterm and low-birth-weight babies, and returns
+advisory data-quality and growth flags.
 
-**Status:** Phases 0 and 1 complete (Phase 1 approved 2026-11-07). Phase 2 (CMAM classification) closed 2026-11-07. Phase 3 (synthetic data) closed 2026-11-07. Phase 4 (advisory ML flags) closed 2026-11-07. Phase 5 (explainability) closed 2026-11-07. Phase 6 (FastAPI packaging) closed 2026-11-07. Phase 7 (testing and deployment readiness) closed 2026-11-08 as release candidate 0.7.0, **not validated**. See `docs/HANDOFF.md` for the current state and how to continue.
+> **Decision support only. Not a diagnostic device.** A trained health worker makes every clinical decision.
+> Release `0.7.0` is a release candidate that has **not** been clinically validated or run on real patient data.
+> See [Known limitations](#known-limitations).
+
+## Features
+
+- WHO Child Growth Standards z-scores (weight-for-age, length/height-for-age, weight-for-length/height, head
+  circumference-for-age) with the WHO adjusted method beyond ±3 SD.
+- CMAM 2016 classification and referral: low risk, MAM, SAM (outpatient, inpatient, assessment needed) or unable to
+  classify. Every rule traces to a source and page.
+- Preterm and low-birth-weight screening (Fenton 2025 growth data, COIN 2017 rules) with hand-over to the under-five
+  engine on corrected age.
+- Advisory flags that never change a classification: recording-error detection (logistic and small neural network),
+  a rules-based review check, and growth monitoring between two visits (weight gain and z-score trends).
+- Plain-language worker summary and a full audit trace.
+- Optional local language-model client (disabled by default) and a free-text note checker (library only).
 
 ## Principles
-- Independent codebase: no dependency on, or reuse of, any other project's code or data.
-- Clinical rules (`rules/`) are separate from machine learning (`ml/`).
-- Every clinical rule traces to a reference in `docs/references/register.md`.
-- AI may add flags or escalate for review. It never diagnoses, and never overrides or downgrades a clinical rule.
-- Synthetic data only until ethics and data-sharing approval exists.
-- Decision support only; not a diagnostic device.
 
-## Layout
-```
-docs/        HANDOFF.md, specs/, references/, decisions/
-src/thanzi_screen/  anthro/ rules/ ml/ explain/ api/ schemas/
-data/        synthetic/
-tests/       anthro/ rules/ ml/ api/ safety/
-scripts/     build_reference_tables.py, data generation, export_openapi.py
-```
-
-## Phases
-0 Discovery and spec (done) | 1 Anthropometrics (done) | 2 Clinical classification (done) | 3 Data engineering (done) | 4 ML flags (done) | 5 Explainability (done) | 6 FastAPI packaging (implemented, CI pending) | 7 Testing and deployment readiness
-
-Licence: not yet chosen.
+- Clinical rules (`rules/`) are separate from machine learning (`ml/`). Machine learning can add a flag or ask for a
+  review. It never diagnoses and never overrides or downgrades a clinical rule.
+- Missing information is never assumed normal. An unassessed finding stays "not assessed".
+- No child identifiers are accepted, stored or logged. The service is stateless.
+- Worker responses contain no HIV information and no programme for moderate cases. The audit view needs a second key.
+- The engine uses only the Python standard library. The HTTP layer is the only runtime dependency set.
 
 ## Quick start
-```
-pip install pytest
+
+Requires Python 3.11 or 3.12.
+
+```bash
+pip install -c constraints.txt -e ".[dev,api]"
 python -m pytest -q
+
+export THANZI_GATEWAY_KEY=$(openssl rand -hex 24)
+uvicorn --factory thanzi_screen.api.app:create_app_from_env --host 127.0.0.1 --port 8080
 ```
-See `docs/modules/anthro.md`, `docs/modules/rules.md`, `docs/modules/data.md`, `docs/modules/ml.md`, `docs/modules/explain.md`, `docs/modules/llm.md` (optional local LLM client, off by default), `docs/modules/nlp.md` (free-text note checks, advisory, draft), `docs/modules/growth.md` (weight-gain monitoring between visits, advisory, reference not yet verified), `docs/modules/dl.md` (lightweight deep learning, advisory flag beside the logistic one).
 
-## Run the API (Phase 6)
+```bash
+curl -s -H "X-Gateway-Key: $THANZI_GATEWAY_KEY" -H "Content-Type: application/json" \
+  http://127.0.0.1:8080/v1/screen -d '{
+    "sex": "male", "age_days": 500, "weight_kg": 9.5, "length_height_cm": 75.0,
+    "measure_position": "length", "oedema": "none", "muac_cm": 12.0, "appetite": "passed",
+    "danger_signs": [], "complications": [], "clinically_well_and_alert": true}'
 ```
-pip install -e ".[dev,api]"
-THANZI_GATEWAY_KEY=<16+ characters> uvicorn --factory thanzi_screen.api.app:create_app_from_env
-python -m pytest -q
+
+The service refuses to start without `THANZI_GATEWAY_KEY`.
+
+## API summary
+
+| Route | Key | Purpose |
+|---|---|---|
+| `GET /health` | none | `ok` or `degraded` |
+| `GET /version` | gateway | Engine, rule set and model versions |
+| `GET /v1/about` | gateway | Versions, uptime and component state |
+| `GET /v1/metrics` | gateway | Request counts and `/v1/screen` latency |
+| `POST /v1/screen?view=worker` | gateway | Screen one child (default view) |
+| `POST /v1/screen?view=audit` | gateway + audit | Full detail, may contain HIV information |
+| `GET /v1/llm/health`, `POST /v1/llm/generate` | gateway | Only when `THANZI_LLM_ENABLED=1` |
+
+Contract: [`docs/api/openapi.json`](docs/api/openapi.json). Details: [docs/modules/api.md](docs/modules/api.md).
+
+## Repository layout
+
 ```
-No gateway key, no start. Run it behind Hope's gateway on a private network. Details and the deployment checklist: `docs/modules/api.md`. Contract: `docs/api/openapi.json`.
+src/thanzi_screen/
+  anthro/     WHO z-scores and reference tables
+  rules/      CMAM 2016 classification, review check
+  preterm/    Preterm and low-birth-weight engine and routing
+  growth/     Weight-gain and z-score trend monitoring
+  ml/         Recording-error flags, neural network (dl), note checker (nlp)
+  explain/    Worker summary and audit trace
+  api/        FastAPI service, security, metrics
+  schemas/    Request and response models (the API contract)
+  llm/        Optional local language-model client
+  data/       Synthetic data generator and validation
+models/       Trained advisory models and model cards
+deploy/       Example container configuration
+docs/         Documentation
+scripts/      Training, contract export, smoke test, load probe
+tests/        Unit, property, robustness, API and safety tests
+```
 
-## Testing, security checks and release (Phase 7)
-Release candidate `0.7.0`, **not validated**. Evidence: `docs/testing/test-report.md` (what was run, what was not), `docs/testing/traceability.md` (every CMAM rule and its tests), `docs/testing/case-pack.xlsx` (synthetic scenarios for clinical review). Deployment: `docs/deployment/runbook.md`, `deploy/docker-compose.example.yml`. Tools: `scripts/smoke_api.py`, `scripts/load_probe.py`. Install with `pip install -c constraints.txt -e ".[dev,api]"`.
+## Documentation
 
-## Preterm and low-birth-weight babies
-`POST /v1/screen` routes by two optional fields, `gestational_age_weeks` and `birth_weight_g` (grams). Full detail: `docs/modules/preterm.md`.
-
-**Routing rules.** Born under 37 weeks or under 2500 g, and under 50 weeks post-menstrual age (PMA = gestational age + chronological age): the preterm engine (Fenton 2025 z-scores, COIN 2017 Malawi rules). From 50 weeks PMA: the under-5 engine on corrected age (chronological age minus (40 - GA) weeks), kept until age 3 if GA is under 32 weeks (24 months for 32 to under 37 weeks, approved). Corrected age feeds every age-dependent CMAM criterion (MUAC from 6 months, infant criteria) with the thresholds unchanged. Without the two fields nothing changes.
-
-**Level mapping** (one table in `routing_config.json`; no new levels):
-
-| Preterm level | Under-5 tier |
+| Topic | Document |
 |---|---|
-| routine | low_risk |
-| follow_up | none: kept as its own preterm disposition (`tier` null) |
-| refer | mam |
-| urgent_refer | urgent |
+| Architecture and data flow | [docs/architecture.md](docs/architecture.md) |
+| Environment variables | [docs/configuration.md](docs/configuration.md) |
+| API endpoints, requests, errors | [docs/modules/api.md](docs/modules/api.md) |
+| Deployment runbook | [docs/deployment/runbook.md](docs/deployment/runbook.md) |
+| Gateway integration | [docs/deployment/integration.md](docs/deployment/integration.md) |
+| Security, validation, error handling | [docs/security.md](docs/security.md) |
+| Monitoring and maintenance | [docs/operations.md](docs/operations.md) |
+| Testing and rule traceability | [docs/testing/test-report.md](docs/testing/test-report.md), [docs/testing/traceability.md](docs/testing/traceability.md) |
+| References and licences | [docs/references/register.md](docs/references/register.md) |
+| Modules | `docs/modules/`: anthro, rules, preterm, growth, ml, dl, nlp, explain, data, llm |
+| Model cards | [models/MODEL_CARD.md](models/MODEL_CARD.md), [models/DL_MODEL_CARD.md](models/DL_MODEL_CARD.md) |
+| Changes | [CHANGELOG.md](CHANGELOG.md) |
 
-Only danger signs give `urgent_refer`. Faltering growth is never called from one percentile: it needs a z-score decline from birth, after 14 days of age.
+## Known limitations
 
-**Data licence.** `src/thanzi_screen/preterm/fenton2025_lms.json` is Fenton 2025 data, CC BY-NC-ND 4.0 (attribution, non-commercial, no derivatives). Do not edit it. Responses carry the attribution.
+- **Not clinically validated.** The rules match the encoded CMAM 2016 text and are tested for behaviour. Clinical
+  review of the case pack (`docs/testing/case-pack.xlsx`) and worker wording is outstanding.
+- **Machine-learning flags are trained on synthetic data only.** Real recording errors are messier. Accuracy and
+  fairness across districts, ages and sexes are untested.
+- **No cross-check against WHO Anthro software output** on real sample records.
+- **Not load tested on target hardware.** Measurements come from a single-vCPU build host.
+- **Network isolation, TLS, rate limiting and audit logging are deployment responsibilities.** The service speaks plain
+  HTTP and must run on a private network behind a gateway.
+- **Referral slip wording is a placeholder**, and the MUAC model used for synthetic data is a placeholder.
+- **Only English wording** exists. Translation by stable code is the integrator's task.
+- **Preterm and corrected-age babies are excluded from growth monitoring** and from the recording-error flags.
 
-Born under 2500 g with no gestational age: under-5 flow, a warning and a clinical-assessment flag; gestational age is never assumed. Urgent triggers are configured in `preterm_rules.json`.
+## Licence and data
 
-**Needs clinician sign-off:** how gateways treat a null tier for follow_up, z-decline tiers, the [proposed] urgent triggers, the corrected-age end point for 32 to under 37 weeks, and the mapping of the other under-5 inputs. Hypoglycaemia and oedema follow CMAM 2016 Table 5: both give urgent_refer. Release candidate, not validated.
+No licence has been chosen for the code. `src/thanzi_screen/preterm/fenton2025_lms.json` is Fenton 2025 data under
+CC BY-NC-ND 4.0 (attribution, non-commercial, no derivatives): do not edit it. WHO tables and the CMAM guideline have
+their own terms; see the [reference register](docs/references/register.md).

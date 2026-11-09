@@ -246,7 +246,7 @@ def test_deep_files_labels_and_card(trained):
         assert tuple(obj["metadata"]["feature_names"]) == FEATURES
     assert a["model"]["parameters"] <= MAX_PARAMS and tuple(f["model"]["classes"]) == FIELDS
     card = (d / "models" / "DL_MODEL_CARD.md").read_text()
-    assert "Not validated on real children" in card and "Against the Phase 4 logistic model (same dataset" in card
+    assert "Not validated on real children" in card and "Against the logistic model (same dataset" in card
     assert summary["baseline_test"] is not None
 
 

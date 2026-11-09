@@ -1,9 +1,9 @@
-"""Black-box smoke test for a running Thanzi screening API (Phase 7, D96). Standard library only.
+"""Black-box smoke test for a running Thanzi screening API. Standard library only.
 
     python scripts/smoke_api.py --base-url http://127.0.0.1:8080 \
         --gateway-key "$THANZI_GATEWAY_KEY" --audit-key "$THANZI_AUDIT_KEY"
 
-Used by CI against the Docker container and by Hope after any deployment. Sends synthetic requests only.
+Used by CI against the Docker container and by operators after any deployment. Sends synthetic requests only.
 Exit code 0 when every check passes, 1 otherwise. Keys can also come from the environment
 (THANZI_GATEWAY_KEY, THANZI_AUDIT_KEY). Without --audit-key the audit checks are skipped and said so.
 """
@@ -81,7 +81,7 @@ def main() -> int:
     code1, t1 = call(base, "POST", "/v1/screen", {**MAM, "hiv_positive": True}, gw)
     code2, t2 = call(base, "POST", "/v1/screen", {**MAM, "hiv_positive": False}, gw)
     code3, t3 = call(base, "POST", "/v1/screen", MAM, gw)
-    check("moderate child: worker view identical for HIV true, false and not given (D86)",
+    check("moderate child: worker view identical for HIV true, false and not given",
           code1 == code2 == code3 == 200 and t1 == t2 == t3, f"{code1} {code2} {code3}")
     mam = json.loads(t1) if code1 == 200 else {}
     check("moderate child: no programme and no hiv text in the worker view", mam.get("programme") is None and "hiv" not in t1.lower(), t1[:120])

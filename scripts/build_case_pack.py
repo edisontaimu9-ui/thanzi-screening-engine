@@ -1,4 +1,4 @@
-"""Case pack for clinical review (Phase 7, D95): scenarios run through the engine, with blank columns for Maria.
+"""Case pack for clinical review: scenarios run through the engine, with blank columns for the reviewer.
 
     python scripts/build_case_pack.py            # write docs/testing/case-pack.xlsx
     python scripts/build_case_pack.py --check    # exit 1 if the committed workbook differs from a fresh run
@@ -104,7 +104,7 @@ def scenarios() -> list[dict]:
     c.append(_case("Normal measurements, MUAC 13.5, full assessment", b, w_norm, muac_cm=13.5, **FULL))
     c.append(_case("Normal measurements, no MUAC, nothing else assessed", b, w_norm))
     c.append(_case("Normal measurements, MUAC 13.5, nothing else assessed", b, w_norm, muac_cm=13.5))
-    # ---- Implausible measurements (D12, D23)
+    # ---- Implausible measurements 
     c.append(_case("Implausibly low weight (3.0 kg at 10 months), normal MUAC", b, 3.0, muac_cm=13.5, **FULL))
     c.append(_case("Implausibly low weight (3.0 kg at 10 months), MUAC 11.0", b, 3.0, muac_cm=11.0, **FULL))
     # ---- Age boundary (D-Q5)
@@ -212,10 +212,10 @@ def build_workbook(rows: list[dict]):
         ("Case C000 | Clinician agrees? = No | Comment = Expected inpatient care because the child cannot drink. Checked against Table 5, p.16.", f),
         ("(C000 is an example only. It is not one of the cases.)", f),
         ("Notes", bold),
-        ("The worker view never shows the programme for a moderate case, and never shows HIV information (D86). "
+        ("The worker view never shows the programme for a moderate case, and never shows HIV information. "
          "The 'Programme (engine)' column shows the real programme for review. Anthropometric z-scores are computed from the WHO 2006 tables. "
-         "Measurements marked 'implausible' are ignored by the rules (D12, D23). The 'Rules' sheet lists every rule and its source page. "
-         "Open wording items: I10 (referral slip text, placeholder), I18 and I23 (worker wording).", f),
+         "Measurements marked 'implausible' are ignored by the rules. The 'Rules' sheet lists every rule and its source page. "
+         "Open wording items: the referral slip text (placeholder) and the worker wording.", f),
     ]
     for r, (text, font) in enumerate(lines, start=1):
         cell = ws.cell(row=r, column=1, value=text)

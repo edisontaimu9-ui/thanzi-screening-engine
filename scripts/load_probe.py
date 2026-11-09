@@ -1,12 +1,12 @@
-"""Small load probe for POST /v1/screen (Phase 7, D97). Standard library only. Synthetic requests only.
+"""Small load probe for POST /v1/screen. Standard library only. Synthetic requests only.
 
     python scripts/load_probe.py --base-url http://127.0.0.1:8080 --gateway-key "$THANZI_GATEWAY_KEY" \
         --concurrency 4 --requests 2000
 
 Reports status counts, latency percentiles and throughput for the stated concurrency. It sets no pass or fail
-threshold: targets need Hope's expected load and the UniPod server specification (Phase 7 Q5). Record the
+threshold: targets need the expected load and the target server specification. Record the
 environment (CPU, memory, container limits, workers) next to any numbers you keep. Do not point it at a shared or
-production service without Hope's agreement.
+production service without the owner's agreement.
 """
 from __future__ import annotations
 

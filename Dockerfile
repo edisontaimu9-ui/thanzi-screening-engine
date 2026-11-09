@@ -1,7 +1,7 @@
-# Thanzi screening engine API (Phases 6-7). Stateless. Runtime dependencies only, no dev extras.
+# Thanzi screening engine API. Stateless. Runtime dependencies only, no dev extras.
 # Dependency versions are pinned by constraints.txt. The base image is a floating tag: Dependabot watches it, and the
 # deployer may pin it by digest (see docs/deployment/runbook.md).
-# Run behind Hope's gateway on a private network. No port is published by this image.
+# Run behind a gateway on a private network. No port is published by this image.
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -12,7 +12,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=8080
 
 # Apply the Debian security updates available at build time. The first CI Trivy scan found two HIGH findings in the
-# base image's zlib1g that already had fixes (D104). Dependabot bumps of the base tag will also bring fixes.
+# base image's zlib1g that already had fixes. Dependabot bumps of the base tag will also bring fixes.
 RUN apt-get update \
  && apt-get -y --no-install-recommends upgrade \
  && rm -rf /var/lib/apt/lists/*

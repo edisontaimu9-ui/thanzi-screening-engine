@@ -1,11 +1,11 @@
 # Local LLM client (`thanzi_screen.llm`)
 
-Status: **proposed add-on, not a numbered phase**. Built on branch `feat/llm-client` at Edison's request (2026-11-08). Decisions D128 to D134, open issues I43 to I47 in `docs/decisions/decision-log.md`. Off by default. Not validated on real hardware (I45).
+Status: optional, **off by default**. Not validated on real hardware and not part of screening.
 
 ## What it is, and what it is not
 A small async client that sends text to a **local** language model server (Ollama, llama.cpp, or any OpenAI-compatible server) and returns text. It exists so later features (for example, drafting plain-language wording for clinician review) can use a small model such as Qwen without the screening engine knowing which model, server or provider is behind it.
 
-It is **not** part of screening. The model's text is never an input to classification, referral, flags or explanations. The screening code does not import it, it does not import the screening code, and tests fail if either changes (D128).
+It is **not** part of screening. The model's text is never an input to classification, referral, flags or explanations. The screening code does not import it, it does not import the screening code, and tests fail if either changes.
 
 ## Layout
 ```
@@ -75,16 +75,16 @@ All are optional environment variables (full annotated list: `deploy/llm.env.exa
 | `_MAX_TOKENS` / `_TEMPERATURE` / `_TOP_P` / `_TOP_K` / `_SEED` / `_CONTEXT_TOKENS` | 256 / 0.2 / unset / unset / unset / 2048 | Generation. Context size is honoured by Ollama only; llama.cpp fixes it with `-c` at start-up |
 | `THANZI_LLM_ALLOW_REMOTE` | 0 | See Privacy |
 
-## Privacy and security (D131)
+## Privacy and security
 - **Off by default**, and the route set is absent when off.
 - **Local only by default.** The endpoint must be loopback, a private or link-local IP, `localhost`, a single-word name (a Docker service such as `ollama`) or end in `.internal`, `.local`, `.lan`, `.localdomain`, `.svc`. Anything else is refused at start-up. A remote endpoint needs `THANZI_LLM_ALLOW_REMOTE=1` **and** https, and should happen only after a data protection review. A single-word name could in theory resolve to a public host through DNS search domains; run the model on a network that has no route out (compose example).
 - **No credentials in URLs**, no query strings, no redirects followed, proxy environment variables ignored (a stray `HTTPS_PROXY` cannot carry private traffic out).
 - **Nothing sensitive in logs or errors.** Logs hold provider, model, latency, token counts and error codes. Prompts, replies, URLs and server error text are never logged or copied into an exception. Tests check this.
 - **Replies are size-capped** while they are read, and parsed as JSON objects only.
-- **Gateway key** protects both routes. The generate route is not for patient records: the prompt limit is small, the response says so, and the standing rule applies (synthetic data first, no identifiable patient data without authorisation). The client cannot tell whether text is identifiable, so keeping records out is a rule for callers, not a filter (I43).
+- **Gateway key** protects both routes. The generate route is not for patient records: the prompt limit is small, the response says so, and the standing rule applies (synthetic data first, no identifiable patient data without authorisation). The client cannot tell whether text is identifiable, so keeping records out is a rule for callers, not a filter.
 - **Tests use synthetic text only** (`SYN-0001` style markers) and a fake loopback server. No test calls an external API.
 
-## Low-resource guidance (D132)
+## Low-resource guidance
 - Start with a 0.5B to 1.7B model at 4-bit quantisation. A 1.5B model needs roughly 1 to 2 GB of RAM plus context; check on the real machine.
 - Keep `MAX_CONCURRENCY=1`. Two generations at once on a small CPU are slower than two in turn and may run out of memory (an Ollama 500 is not retried for that reason).
 - Keep context (2048) and `max_tokens` (256) small. These are the biggest levers on speed and memory.
@@ -93,7 +93,7 @@ All are optional environment variables (full annotated list: `deploy/llm.env.exa
 - Qwen3-style models think out loud by default. Set `THANZI_LLM_THINK=false` (Ollama) to save tokens; any `<think>` text that still arrives is removed.
 
 ## Models
-No weights are in this repository. Model tags change, and model licences differ between sizes of one family (as far as I know the Qwen2.5 3B model is under a different licence from the 0.5B and 1.5B models). Before any deployment, read the model card, and record source, version, date and licence in `docs/references/register.md` (R16 and R17 are placeholders, I44).
+No weights are in this repository. Model tags change, and model licences differ between sizes of one family (as far as I know the Qwen2.5 3B model is under a different licence from the 0.5B and 1.5B models). Before any deployment, read the model card, and record source, version, date and licence in `docs/references/register.md` (R16 and R17 are placeholders).
 
 ## Setup examples
 Ollama on the same machine:
@@ -108,5 +108,5 @@ curl -H "X-Gateway-Key: <key>" http://127.0.0.1:8080/v1/llm/health
 ## Tests
 `tests/llm/` (config and privacy policy, providers against `httpx.MockTransport`, client limits and retries, real loopback servers, isolation, packaging) and `tests/api/test_llm_routes.py` (routes, error mapping, shutdown, log privacy, screening unchanged with a dead model server). Without httpx, `tests/llm/test_providers.py` and `test_network.py` skip (they fail in CI, where `THANZI_REQUIRE_API_TESTS=1`).
 
-## Not done (see I45 to I47)
-No streaming, no circuit breaker, no filtering of model output, no real-server run and no UniPod measurement. Model text must not be shown to health workers without clinician review.
+## Not done
+No streaming, no circuit breaker, no filtering of model output, no real-server run and no measurement on target hardware. Model text must not be shown to health workers without clinician review.

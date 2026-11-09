@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Train Phase 4 models from a verified synthetic dataset.
+"""Train the logistic and tree models from a verified synthetic dataset.
 
 Usage: python scripts/train_models.py [--data data/synthetic/synthetic_children.csv] [--out models] [--seed 0]
 """

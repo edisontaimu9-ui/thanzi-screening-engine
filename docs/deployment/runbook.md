@@ -1,77 +1,97 @@
-# Deployment runbook (for Hope)
+# Deployment runbook
 
-Release candidate `0.7.0`. **Not clinically validated. Decision support only.** The service is stateless: no database, no stored requests.
+Release candidate `0.7.0`. **Not clinically validated. Decision support only.** The service is stateless: no database,
+no stored requests.
 
 ## What you get
-A Docker image, `thanzi-screen`. It listens on port 8080 inside the container and publishes no port by itself. It runs as a non-root user. Dependency versions are pinned (`constraints.txt`); `SHA256SUMS` and two SBOMs come with the release.
 
-## What it does not do (yours to provide)
-- TLS, rate limiting, authentication of end users, audit logging of who called what. The gateway holds these.
-- Network isolation (I21): run it on a private network only your gateway can reach. The service has no CORS headers and does not log request bodies, but it is not designed to face the internet.
-- Storage of any kind. If the gateway logs requests, those logs hold child measurements: treat them as health data.
+A Docker image, `thanzi-screen`. It listens on port 8080 inside the container, publishes no port by itself and runs as a
+non-root user. Dependency versions are pinned (`constraints.txt`). Each release includes `SHA256SUMS`, two SBOMs, the
+OpenAPI contract and test evidence.
 
-## Before you load it
-1. Check the checksums: `sha256sum -c SHA256SUMS` (the image tarball is in the list).
-2. Load: `gunzip -c thanzi-screen-v0.7.0-image.tar.gz | docker load`
+## What it does not provide
 
-## Settings (environment variables)
-| Variable | Needed | Meaning |
-|---|---|---|
-| `THANZI_GATEWAY_KEY` | yes | Shared secret the gateway sends as `X-Gateway-Key`. At least 16 characters (use 48 hex). The service **refuses to start** without it or with a short one. |
-| `THANZI_AUDIT_KEY` | no | Second secret for `?view=audit`, sent as `X-Audit-Key` together with the gateway key. Must differ from the gateway key. If unset the audit view is off. The audit view carries HIV information and the real programme: give the key only to people entitled to it (I24). |
-| `PORT` | no | Listening port, default 8080. |
-| `THANZI_MODELS_DIR` | no | Already set in the image. If the models are missing or mismatched the service starts in degraded mode: rules result unchanged, ML flag unavailable (`/health` says `degraded`). |
-| `THANZI_DEEP_ENABLED` | no | Default on. Set `0` (or `false`, `no`, `off`) to switch off the deep recording-error flag without a rebuild. Screening and the logistic flag are unchanged either way. If the deep model files are missing or mismatched the flag is absent and `/health` stays `ok`. |
+- TLS, rate limiting, end-user authentication and audit logging of who called what. The gateway provides these.
+- Network isolation. Run it on a private network that only the gateway can reach. It sends no CORS headers and does not
+  log request bodies, but it is not designed to face the internet.
+- Storage. If the gateway logs requests, those logs hold child measurements. Treat them as health data.
 
-Never set `THANZI_DEV_MODE`. It exposes docs routes and can run without a key. Keys are read from environment variables only (I29): anyone who can run `docker inspect` on the host can read them.
-
-Make keys with `openssl rand -hex 24`. Rotate by starting a new container with new keys, switching the gateway, and stopping the old one.
-
-## Run
-See `deploy/docker-compose.example.yml` (private network, no published port, read-only filesystem, no extra privileges, 256 MB limit). It is an example and was not run on a Docker host in Phase 7: try it in staging first. Plain form:
-
-    docker run -d --name thanzi --network <private-network> \
-      -e THANZI_GATEWAY_KEY -e THANZI_AUDIT_KEY thanzi-screen:v0.7.0
-
-## Check it after every deployment
-From a machine that can reach the container:
-
-    python scripts/smoke_api.py --base-url http://<host>:8080 \
-      --gateway-key "$THANZI_GATEWAY_KEY" --audit-key "$THANZI_AUDIT_KEY"
-
-It sends synthetic children only and prints PASS or FAIL for 19 checks: key handling, docs routes off, worker view hides HIV and programme, audit view needs both keys. All must pass.
-
-## Health and monitoring
-- `GET /health` needs no key and returns only `{"status": "ok"}` or `"degraded"`. The image has a built-in healthcheck (`docker inspect --format '{{.State.Health.Status}}'`).
-- Alert on `degraded` (models missing) and on repeated 5xx from the service.
-- `GET /v1/about` (gateway key) lists the version and state of each component: engine, `ml_logistic`, `ml_deep`, growth monitoring, LLM service. `GET /v1/metrics` (gateway key) gives request counts by route and status, the 5xx count and `/v1/screen` latency. Both hold no child data. The counters live in memory: they reset on restart and each worker counts its own requests, so keep the readings if you want history. See `docs/deployment/integration-guide.md` section 6.
-- Logs hold no keys and no request values (checked in CI). They do hold access lines (client address, path, status).
-
-## Rollback
-Keep the previous image tarball. Stop the new container, start the old image with the same keys, run the smoke test.
-
-## Pinning the base image (optional)
-The Dockerfile uses the `python:3.12-slim` tag. For a fully fixed build, resolve its digest on a machine with registry access (`docker buildx imagetools inspect python:3.12-slim`) and change the `FROM` line to `python:3.12-slim@sha256:<digest>`.
-
-## Measured performance (from the test report, not UniPod)
-One worker on one 2.1 GHz vCPU, 2000 requests: about 550 to 790 requests per second, median latency 1.7 ms (1 client) to 20 ms (16 clients), 48 MB at start, 54 MB after load. Run `scripts/load_probe.py` on UniPod hardware and send the numbers; targets need your expected load.
-
-## Tools and dependencies (for the programme technical lead)
-The programme asks teams to send their tools and dependencies in advance so the environment can be prepared. For this engine:
+## Requirements
 
 | Need | Detail |
 |---|---|
-| Python | 3.11 or 3.12 |
-| Runtime packages (API only) | `fastapi~=0.162.2`, `pydantic~=2.14.3`, `uvicorn~=0.54.0`. The engine, rules and ML flags use the standard library only |
+| Python (source install) | 3.11 or 3.12 |
+| Runtime packages (API) | `fastapi~=0.162.2`, `pydantic~=2.14.3`, `uvicorn~=0.54.0`. The engine, rules and ML flags use the standard library only |
 | Dev and test packages | `pytest`, `openpyxl`, `httpx~=0.28.1`, `pyyaml`, `coverage` |
-| Exact versions | Pinned in `constraints.txt`: `pip install -c constraints.txt -e ".[dev,api]"` |
+| Exact versions | `pip install -c constraints.txt -e ".[dev,api]"` |
 | Container | Docker, to load and run the released image (about 47 MB compressed) |
-| Source | Git, to clone `https://github.com/edisontaimu9-ui/thanzi-screening-engine` |
 | Network | GitHub and PyPI access for the first install, or an offline copy of the pinned packages |
-| GPU | Not used. The service is CPU only. The workstation GPU (RTX A4000, 16 GB) is not needed to run or test it |
+| GPU | Not used. The service is CPU only |
 
-## Target hardware (as stated by the programme)
-Development workstations with Intel Core 9 processors and an NVIDIA RTX A4000 GPU (16 GB), or the GPU configuration the UniPod confirms. This describes the programme's development environment, not a production server specification. The measured performance above was taken on one vCPU, so it is a floor, not a forecast for that hardware. Run `scripts/load_probe.py` there and send the numbers.
+## Load the release
 
-## Contacts and owners
-Network isolation, TLS, audit key holder: Hope. Clinical wording and review: Maria Talimire. Engine and releases: Edison.
+1. Verify checksums: `sha256sum -c SHA256SUMS`
+2. Load the image: `gunzip -c thanzi-screen-v0.7.0-image.tar.gz | docker load`
+
+## Settings
+
+See [configuration](../configuration.md). Minimum: `THANZI_GATEWAY_KEY`. Add `THANZI_AUDIT_KEY` only if the audit view is
+needed. Never set `THANZI_DEV_MODE` in production.
+
+Rotate keys by starting a new container with new keys, switching the gateway, and stopping the old container.
+
+## Run
+
+[`deploy/docker-compose.example.yml`](../../deploy/docker-compose.example.yml) shows the intended shape: private network,
+no published port, read-only filesystem, dropped capabilities, no extra privileges and a 256 MB memory limit. It has not
+been run on a Docker host: try it in staging first. Plain form:
+
+```bash
+docker run -d --name thanzi --network <private-network> \
+  -e THANZI_GATEWAY_KEY -e THANZI_AUDIT_KEY thanzi-screen:v0.7.0
+```
+
+## Verify every deployment
+
+From a machine that can reach the container:
+
+```bash
+python scripts/smoke_api.py --base-url http://<host>:8080 \
+  --gateway-key "$THANZI_GATEWAY_KEY" --audit-key "$THANZI_AUDIT_KEY"
+```
+
+It sends synthetic children only and prints PASS or FAIL for 19 checks: key handling, documentation routes off, worker
+view hides HIV and programme, audit view needs both keys. All must pass.
+
+## Health and monitoring
+
+See [operations](../operations.md).
+
+## Rollback
+
+Keep the previous image tarball. Stop the new container, start the old image with the same keys, run the smoke test.
+To disable only the neural-network flag, set `THANZI_DEEP_ENABLED=0` and restart (no rebuild).
+
+## Pinning the base image (optional)
+
+The Dockerfile uses the `python:3.12-slim` tag. For a fully fixed build, resolve its digest
+(`docker buildx imagetools inspect python:3.12-slim`) and change the `FROM` line to
+`python:3.12-slim@sha256:<digest>`.
+
+## Measured performance (build host, not target hardware)
+
+One worker on one 2.1 GHz vCPU, 2,000 requests: about 550 to 790 requests per second, median latency 1.7 ms (1 client)
+to 20 ms (16 clients), 48 MB at start and 54 MB after load. Run `scripts/load_probe.py` on the target hardware and set
+targets from the expected load.
+
+## Pre-production checklist
+
+1. Private network only, no published port.
+2. TLS terminated at the gateway.
+3. Keys from a secret store, never baked into an image or committed.
+4. Audit-key holder decided and audit-view use logged.
+5. Rate limiting and request logging (without bodies) at the gateway.
+6. The gateway does not forward the audit header from browsers.
+7. Alerts on `degraded` and on repeated 5xx.
+8. Worker wording and the case pack reviewed by a qualified clinician.
+9. Load tested on the target servers.

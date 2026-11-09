@@ -1,4 +1,4 @@
-# Pinned versions of every package the project installs, direct and transitive (Phase 7, D98).
+# Pinned versions of every package the project installs, direct and transitive.
 # Used by CI, the Docker build and the release build:  pip install -c constraints.txt ".[api]"
 # It is a constraints file: it limits versions, it does not add packages. Refresh with:
 #   python scripts/refresh_constraints.py

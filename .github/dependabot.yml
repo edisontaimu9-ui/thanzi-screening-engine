@@ -1,4 +1,4 @@
-# Weekly update proposals (Phase 7, D100). Each proposal is a pull request that runs the full CI.
+# Weekly update proposals. Each proposal is a pull request that runs the full CI.
 # constraints.txt is refreshed by hand with scripts/refresh_constraints.py because Dependabot does not read it.
 version: 2
 updates:

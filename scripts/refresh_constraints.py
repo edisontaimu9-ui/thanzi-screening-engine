@@ -1,4 +1,4 @@
-"""Refresh constraints.txt from a clean virtual environment (Phase 7, D98).
+"""Refresh constraints.txt from a clean virtual environment.
 
     python scripts/refresh_constraints.py
 
@@ -15,7 +15,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-HEADER = """# Pinned versions of every package the project installs, direct and transitive (Phase 7, D98).
+HEADER = """# Pinned versions of every package the project installs, direct and transitive.
 # Used by CI, the Docker build and the release build:  pip install -c constraints.txt ".[api]"
 # It is a constraints file: it limits versions, it does not add packages. Refresh with:
 #   python scripts/refresh_constraints.py

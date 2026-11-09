@@ -1,5 +1,5 @@
-"""Train the deep models from a verified Phase 3 dataset. Deterministic for a given dataset, seed and settings.
-Same data, same splits, same operating-point rule and same report as Phase 4, so the numbers compare directly."""
+"""Train the deep models from a verified synthetic dataset. Deterministic for a given dataset, seed and settings.
+Same data, same splits, same operating-point rule and same report as the logistic models, so the numbers compare directly."""
 from __future__ import annotations
 
 import json
@@ -26,7 +26,7 @@ def _history(net: Network) -> dict:
 
 
 def _baseline(directory, sha):
-    """Phase 4 logistic test metrics, only when trained on this very dataset."""
+    """logistic test metrics, only when trained on this very dataset."""
     if directory is None:
         return None
     path = Path(directory) / A_FILE
@@ -114,34 +114,34 @@ def _card(s: dict, meta: dict) -> str:
         f"Adam, learning rate {meta['learning_rate']}, dropout {meta['dropout']}, up to {meta['epochs_max']} epochs, early stopping on validation loss "
         f"(patience {meta['patience']}). Error flag: {tr['error']['epochs_run']} epochs run, best epoch {tr['error']['best_epoch']}. "
         f"Field model: {tr['field']['epochs_run']} epochs run, best epoch {tr['field']['best_epoch']}.", "",
-        "## Operating point (chosen on validation, same rule as Phase 4)",
-        f"Threshold {op['threshold']:.4f}. Target: at least 80% recall on errors Phase 1 flags miss, at most 10% of records flagged. "
+        "## Operating point (chosen on validation, same rule as the logistic model)",
+        f"Threshold {op['threshold']:.4f}. Target: at least 80% recall on errors the anthropometry flags miss, at most 10% of records flagged. "
         f"Met on validation: **{op['operating_point_met']}**.", "",
         "## Test results (synthetic data)",
         f"- Deep flag: precision {_pct(t['ml']['precision'])}, recall {_pct(t['ml']['recall'])}, alert rate {_pct(t['ml']['alert_rate'])}, AUC {t['auc']:.3f}.",
-        f"- Phase 1 flags alone: precision {_pct(t['phase1_only']['precision'])}, recall {_pct(t['phase1_only']['recall'])}.",
-        f"- Phase 1 or deep flag: recall {_pct(t['union']['recall'])}, alert rate {_pct(t['union']['alert_rate'])}.",
-        f"- Recall on errors Phase 1 misses ({t['errors_missed_by_phase1']} records): {_pct(t['ml_recall_on_missed_by_phase1'])}.",
+        f"- Anthropometry flags alone: precision {_pct(t['phase1_only']['precision'])}, recall {_pct(t['phase1_only']['recall'])}.",
+        f"- Anthropometry flags or deep flag: recall {_pct(t['union']['recall'])}, alert rate {_pct(t['union']['alert_rate'])}.",
+        f"- Recall on errors the anthropometry flags miss ({t['errors_missed_by_phase1']} records): {_pct(t['ml_recall_on_missed_by_phase1'])}.",
         f"- Field suggestion accuracy on error records: {_pct(s['field']['test_accuracy_on_error_records'])}.",
         f"- Boundary stress test: {s['boundary']['ml_alerts']} false alarms in {s['boundary']['n']} records; "
         f"{s['boundary']['alerts_with_exact_6_month_age']} of them have an age that is an exact 6-month multiple.",
     ]
     b = s["baseline_test"]
     if b:
-        lines += ["", "## Against the Phase 4 logistic model (same dataset, same test split)",
+        lines += ["", "## Against the logistic model (same dataset, same test split)",
                   f"- Logistic: precision {_pct(b['ml']['precision'])}, recall {_pct(b['ml']['recall'])}, alert rate {_pct(b['ml']['alert_rate'])}, AUC {b['auc']:.3f}, "
-                  f"recall on errors Phase 1 misses {_pct(b['ml_recall_on_missed_by_phase1'])}.",
+                  f"recall on errors the anthropometry flags miss {_pct(b['ml_recall_on_missed_by_phase1'])}.",
                   f"- Deep: precision {_pct(t['ml']['precision'])}, recall {_pct(t['ml']['recall'])}, alert rate {_pct(t['ml']['alert_rate'])}, AUC {t['auc']:.3f}, "
-                  f"recall on errors Phase 1 misses {_pct(t['ml_recall_on_missed_by_phase1'])}."]
+                  f"recall on errors the anthropometry flags miss {_pct(t['ml_recall_on_missed_by_phase1'])}."]
     else:
-        lines += ["", "## Against the Phase 4 logistic model", "Not compared in this run (no Phase 4 models trained on this dataset were given)."]
+        lines += ["", "## Against the logistic model", "Not compared in this run (no logistic models trained on this dataset were given)."]
     lines += ["", "## Recall by error type (test)"]
     for k, v in t["by_error_type"].items():
-        lines.append(f"- {k}: deep {_pct(v['ml_recall'])}, Phase 1 {_pct(v['phase1_recall'])}, either {_pct(v['union_recall'])} (n={v['n']}).")
+        lines.append(f"- {k}: deep {_pct(v['ml_recall'])}, Anthropometry flags {_pct(v['phase1_recall'])}, either {_pct(v['union_recall'])} (n={v['n']}).")
     lines += ["", "## Limits",
-              "- Same synthetic data and assumed error types as Phase 4 (D41). Real recording errors are messier, so these numbers say little about real use.",
+              "- Same synthetic data and assumed error types as the logistic model. Real recording errors are messier, so these numbers say little about real use.",
               "- The synthetic task is nearly linearly separable, so a deeper network has little to gain here. Any gap to the logistic model on this data is not evidence about real data.",
-              "- Age heaping is caught only because the synthetic injection rounds ages exactly (D54, I16). The same artefact applies here.",
-              "- Fairness cannot be tested without real data (I15). Neural networks are harder to audit than the logistic model; `top_signals` is an occlusion check, not a full explanation.",
-              "- Retrain when real prevalence figures (R9) and WHO MUAC tables (R8) are used in Phase 3.", ""]
+              "- Age heaping is caught only because the synthetic injection rounds ages exactly. The same artefact applies here.",
+              "- Fairness cannot be tested without real data. Neural networks are harder to audit than the logistic model; `top_signals` is an occlusion check, not a full explanation.",
+              "- Retrain when real prevalence figures (R9) and WHO MUAC tables (R8) are adopted for the synthetic data generator.", ""]
     return "\n".join(lines)
