@@ -149,7 +149,7 @@ keep each child's previous weight and age and send them as `previous_measurement
   it as "growth is fine". Translate by `status` and `reason`, with the English message as the fallback.
 - A child can be `low_risk` and still be flagged for growth. Show both. The flag never changes the classification.
 - It is not run for preterm or corrected-age babies (a warning says so), and it works in degraded mode.
-- The weight-gain reference is verified (I59 closed) but the 1.0 SD trend threshold (I64) and the wording (I61) still need review, so treat the flag as a prompt, not a result
+- The reference, the 1.0 SD trend threshold and the wording are verified by Edison (I59, I64, I61 closed), but the feature is not validated on real children, so treat the flag as a prompt, not a result
   to act on automatically. For girls aged 3 to 6 months `reference_derived` is true: say so next to the result (D164). The API sets no CMAM finding and triggers no referral.
 - Handle the 422 for a bad earlier visit (same or later age, non-positive weight) as a data-entry error to fix in the app.
 
@@ -211,7 +211,7 @@ The API stores nothing. If the gateway stores results, treat them as health data
 | Accept the new optional fields, or switch the deep flag off (I57) | Hope |
 | What a worker sees when the two flags disagree (I58), and wording review (I18, I23) | Maria and Edison |
 | Store each child's last weight and age (and length with its position, and head circumference, if held) and send `previous_measurement`; handle `growth_monitoring`, `trends`, `review_suggested` and the not-assessed reasons (I63, I68) | Hope |
-| Confirm the 1.0 SD trend threshold, the derived girls 3 to 6 month range, the head circumference limits, and the wording (I64, I65, I66, I61) | Maria and Edison |
+| Send a source for corrected-age growth if trends should run for those babies (I67) | Edison |
 | Language layer: translation by code | NLP/AI team, with Edison's clinical input |
 | UniPod server specification and expected request volume (Q5) | Hope and Edison |
 | Real-data validation and fairness (I14, I15) | Needs Ministry data and Maria |

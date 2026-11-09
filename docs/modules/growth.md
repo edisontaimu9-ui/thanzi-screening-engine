@@ -78,10 +78,11 @@ earlier visit's length is converted by the engine's 0.7 cm rule if it was measur
 Not used, and why: length and height velocity, rows for 7 years and over, the preterm monitoring rows (D160); a separate
 "flat line" rule (D173); corrected-age trends (D172).
 
-## Design choices that need clinical confirmation
+## Design choices (verified by Edison 2026-11-09, D174)
 - The 1.0 SD fall (I64) and the derived girls 3 to 6 month range (I66).
 - Head circumference plausibility limits of -5 to +5 (I65).
-- The wording of the messages (Maria, I61).
+- The wording of the messages (I61).
+Still open: corrected-age trends need a source (I67), and Hope's side (I68). The feature is advisory and not validated on real children.
 
 ## Tests
 `tests/growth/test_velocity.py` (40), `tests/growth/test_trend.py` (63), `tests/anthro/test_hc_tables.py` (19),
