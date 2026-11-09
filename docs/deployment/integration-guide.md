@@ -130,6 +130,33 @@ Health: `GET /health` needs no key and returns `ok` or `degraded` (the logistic 
 5xx. Check versions with `GET /version`: `api_version`, `engine_version`, `rule_set_version`, `model_version`,
 `deep_model_version` (null when off).
 
+### Monitoring and "about" information (the gateway should GET it)
+The gateway should poll the read-only endpoints below on a schedule, keep the latest answer, and use it for alerting and for an
+admin or "About" page in Hope's dashboard. None of these calls carries a child's data. This list is only what the API offers
+today. There is **no** single "about" or metrics endpoint, so the gateway assembles the picture from these calls.
+
+| Component | Gateway calls | Key | What it gives | What to do with it |
+|---|---|---|---|---|
+| Screening engine (rules) | `GET /version` | `X-Gateway-Key` | `api_version`, `engine_version`, `rule_set_version`, `status`, `disclaimer` | Show on the About page. Record the versions next to each stored result (section 8). Alert when a version changes without a planned release. |
+| ML service (the logistic and deep recording-error models) | `GET /health`, `GET /version` | none for `/health`, gateway key for `/version` | `/health`: `ok` or `degraded`. `/version`: `model_version`, `deep_model_version` (null when the deep model is off) | The ML models run **inside** the screening API, not as a separate service, so there is no separate ML URL to poll. Alert on `degraded`. `deep_model_version` null means the deep flag is off or its files are missing, and screening is unaffected. |
+| Screening API process | `GET /health` | none | `ok` or `degraded` only | Use it for the container and load-balancer health check. Alert on `degraded`, on a failed call, and on repeated 5xx from `/v1/screen`. |
+| LLM service (optional) | `GET /v1/llm/health` | `X-Gateway-Key` | `state` (`ok`, `degraded` or `unavailable`), `provider`, `model`, `detail`, `model_available`, `latency_ms` | Exists only when `THANZI_LLM_ENABLED=1`. Otherwise it returns 404, which is normal, not a fault. HTTP 503 means `unavailable`. Show it on the About page. **Never** let it affect screening or the screening health status: the API already keeps them apart. |
+
+*Parameters worth tracking at the gateway* (all measured by the gateway from its own calls, since the API keeps no counters
+and writes no request log):
+- Availability: result of each poll of `/health` and `/version`, and the time of the last success.
+- Latency of `POST /v1/screen` (the API measured about 2 ms median on a 2.1 GHz vCPU, so a large rise is a signal).
+- Count of each response status (200, 401, 403, 413, 422, 500) and the rate of 5xx. A rise in 401 means a key fault. A rise in
+  422 means a data-entry or gateway bug.
+- Versions currently reported by `/version`, and the time they last changed.
+- For the LLM service when enabled: `state`, `detail` and `latency_ms` from `/v1/llm/health`.
+- From the stored results (section 8): how often each flag and `review_suggested` fires, per facility (see the analytics dashboard
+  in section 7).
+
+*Rules for these calls.* Poll every 30 to 60 seconds (proposal). Cache the answer rather than calling the API on every
+page view. Send the gateway key only from the server. Treat `/version` and `/v1/llm/health` as sensitive enough to keep off
+public pages: show them to admins only. Do not poll `/v1/screen` as a health check, because that sends a child record.
+
 ## 7. Other components
 **Front end (Hope).** Generate types from `docs/api/openapi.json` rather than hand-writing them, and mark `deep_recording_error`,
 `deep_model_version`, `route`, `birth_context`, `clinical_assessment` and `growth_monitoring` optional. Keep a strict schema from rejecting new
@@ -257,6 +284,7 @@ The API stores nothing. If the gateway stores results, treat them as health data
 | What a worker sees when the two flags disagree (I58), and wording review (I18, I23) | Maria and Edison |
 | Store each child's last weight and age (and length with its position, and head circumference, if held) and send `previous_measurement`; handle `growth_monitoring`, `trends`, `review_suggested` and the not-assessed reasons (I63, I68) | Hope |
 | Send a source for corrected-age growth if trends should run for those babies (I67) | Edison |
+| Poll `/health`, `/version` and (if enabled) `/v1/llm/health`; track the parameters in section 6; show an About page to admins | Hope |
 | Language layer: translation by code | NLP/AI team, with Edison's clinical input |
 | UniPod server specification and expected request volume (Q5) | Hope and Edison |
 | Real-data validation and fairness (I14, I15) | Needs Ministry data and Maria |
