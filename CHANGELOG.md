@@ -10,7 +10,7 @@
 
 - Edison verified the 1.0 SD trend threshold, the derived girls 3 to 6 month range, the head circumference limits and the message wording (D174): I64, I65, I66 closed, I61 closed. Docs only; no code change.
 
-- I67 and I69 closed by decision (out of scope until a source exists); I68 closed on our side only, Hope's confirmation is not in hand (D175). Docs only.
+- I67 and I69 closed by decision (out of scope until a source exists); I68 closed on our side only: Hope has not started the gateway or backend and will follow the engine design (D175). Docs only.
 
 ## Unreleased - growth monitoring (add-on)
 - New package `thanzi_screen.growth`: weight-gain velocity (g per day) between an earlier visit and this one, compared with the ASPEN reference range (R19), averaged across age bands. Advisory only (D9): the classification, tier, reasons, review, ML flags and wording are identical with and without it (tested). Standard library only; rule-based, so it works in degraded mode.

@@ -85,7 +85,7 @@ Not used, and why: length and height velocity, rows for 7 years and over, the pr
 The feature is advisory and not validated on real children.
 
 ## Out of scope for this release (closed by decision, D175)
-Corrected-age trends (no source, I67); preterm velocity per kg; single-value head circumference cut-offs; BMI-for-age and MUAC trends (no cited cut-offs or tables, I69). Each can be added when a source is supplied. Hope's gateway work (I68) is delivered on our side only: the integration guide and OpenAPI contract are done, and Hope has not confirmed the gateway changes.
+Corrected-age trends (no source, I67); preterm velocity per kg; single-value head circumference cut-offs; BMI-for-age and MUAC trends (no cited cut-offs or tables, I69). Each can be added when a source is supplied. Hope's gateway work (I68) is delivered on our side only: Hope has not started the gateway or backend and will follow the engine design, so the integration guide (section 7) and the OpenAPI contract are his specification.
 
 ## Tests
 `tests/growth/test_velocity.py` (40), `tests/growth/test_trend.py` (63), `tests/anthro/test_hc_tables.py` (19),
