@@ -1,9 +1,10 @@
 """Request and response models for the HTTP edge and the OpenAPI contract (Phase 6). Needs pydantic."""
 from .requests import ScreenRequest
 from .responses import (
-    AuditResponse, BirthContext, ClinicalAssessment, ErrorBody, HealthResponse, PretermAuditResponse, PretermResponse,
-    VersionResponse, WorkerResponse,
+    AboutResponse, AuditResponse, BirthContext, ClinicalAssessment, ComponentInfo, ErrorBody, HealthResponse, LatencyStats,
+    MetricsResponse, PretermAuditResponse, PretermResponse, VersionResponse, WorkerResponse,
 )
 
-__all__ = ["AuditResponse", "BirthContext", "ClinicalAssessment", "ErrorBody", "HealthResponse", "PretermAuditResponse", "PretermResponse",
-           "ScreenRequest", "VersionResponse", "WorkerResponse"]
+__all__ = ["AboutResponse", "AuditResponse", "BirthContext", "ClinicalAssessment", "ComponentInfo", "ErrorBody", "HealthResponse",
+           "LatencyStats", "MetricsResponse", "PretermAuditResponse", "PretermResponse", "ScreenRequest", "VersionResponse",
+           "WorkerResponse"]

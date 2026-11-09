@@ -67,6 +67,17 @@ def client_from_env(env: Mapping[str, str] | None = None) -> LLMClient | None:
     return build_client(env=env) if enabled_from_env(env) else None
 
 
+def about_component(client: LLMClient | None) -> dict:
+    """The entry for GET /v1/about (D176). Reads configuration only: it never calls the model server and never returns its address."""
+    if client is None:
+        return {"name": "llm_service", "state": "off", "version": None,
+                "detail": "Not enabled (THANZI_LLM_ENABLED is not 1). GET /v1/llm/health does not exist."}
+    cfg = client.config
+    return {"name": "llm_service", "state": "ok", "version": cfg.model,
+            "detail": f"Enabled, provider {cfg.provider}. Configured only: call GET /v1/llm/health for the live state. "
+                      "Not part of screening."}
+
+
 def _error(exc: LLMError) -> JSONResponse:
     status = next((s for cls, s in _STATUS.items() if isinstance(exc, cls)), 502)
     headers = {"Retry-After": "5"} if isinstance(exc, LLMBusyError) else None

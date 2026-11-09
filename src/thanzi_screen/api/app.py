@@ -6,6 +6,7 @@ Needs THANZI_GATEWAY_KEY (the service refuses to start without it). See docs/mod
 import contextlib
 import logging
 import os
+import time
 from typing import Literal, Union
 
 from fastapi import FastAPI, Header, Request
@@ -17,11 +18,12 @@ from .. import __version__
 from ..ml.dl import DeepModels, load_deep_models
 from ..ml.flags import Models, load_models
 from ..schemas import (
-    AuditResponse, ErrorBody, HealthResponse, PretermAuditResponse, PretermResponse, ScreenRequest, VersionResponse,
-    WorkerResponse,
+    AboutResponse, AuditResponse, ErrorBody, HealthResponse, MetricsResponse, PretermAuditResponse, PretermResponse,
+    ScreenRequest, VersionResponse, WorkerResponse,
 )
 from ..llm import LLMClient
 from . import llm_routes, security, service
+from .metrics import Metrics
 
 log = logging.getLogger("thanzi.api")
 MAX_BODY_BYTES = 16_384
@@ -92,6 +94,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         docs_url="/docs" if docs else None, redoc_url="/redoc" if docs else None,
         openapi_url="/openapi.json" if docs else None, lifespan=_lifespan)
     app.state.models, app.state.config, app.state.deep = loaded, cfg, loaded_deep
+    app.state.metrics = metrics = Metrics()
 
     # ---- access control: before routing and before body validation, so nothing leaks to unauthenticated callers ----
     @app.middleware("http")
@@ -103,6 +106,18 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
             if length and length.isdigit() and int(length) > MAX_BODY_BYTES:
                 return _error(413, "payload_too_large", "Request body is too large.")
         return await call_next(request)
+
+    @app.middleware("http")
+    async def count_requests(request: Request, call_next):
+        """Outermost, so refused calls (401, 413) are counted too. Records the route label, status and duration only (D176)."""
+        t0 = time.perf_counter()
+        status = 500
+        try:
+            response = await call_next(request)
+            status = response.status_code
+            return response
+        finally:
+            metrics.record(request.url.path, status, time.perf_counter() - t0)
 
     # ---- errors: stable codes, never the submitted values ----
     @app.exception_handler(service.ApiError)
@@ -143,6 +158,18 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     @app.get("/version", response_model=VersionResponse, tags=["ops"])
     def version():
         return service.version_info(app.state.models, app.state.deep)
+
+    @app.get("/v1/about", response_model=AboutResponse, tags=["ops"])
+    def about():
+        """What is running: versions and state of the engine, the ML models, growth monitoring and the optional LLM service."""
+        paths = sorted(p for p in app.openapi()["paths"] if p.startswith(("/v1/", "/health", "/version")))
+        optional = [llm_routes.about_component(getattr(app.state, "llm", None))]
+        return service.about_info(app.state.models, app.state.deep, optional, metrics.uptime_seconds(), paths)
+
+    @app.get("/v1/metrics", response_model=MetricsResponse, tags=["ops"])
+    def metrics_snapshot():
+        """Request counts by route and status, and /v1/screen latency. Counts and durations only, in memory (D176)."""
+        return {**metrics.snapshot(), "scope": "process"}
 
     @app.post("/v1/screen", tags=["screen"], responses={
         200: {"model": Union[WorkerResponse, AuditResponse, PretermResponse, PretermAuditResponse],

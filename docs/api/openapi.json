@@ -1,6 +1,73 @@
 {
   "components": {
     "schemas": {
+      "AboutResponse": {
+        "description": "What this service is and what is running inside it. Read-only, no child data.",
+        "properties": {
+          "api_version": {
+            "title": "Api Version",
+            "type": "string"
+          },
+          "components": {
+            "description": "screening_engine, ml_logistic, ml_deep, growth_monitoring and llm_service, in that order.",
+            "items": {
+              "$ref": "#/components/schemas/ComponentInfo"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "disclaimer": {
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "health": {
+            "description": "ok, or degraded when the ML models are missing or mismatched. Same as /health.",
+            "title": "Health",
+            "type": "string"
+          },
+          "routes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Routes",
+            "type": "array"
+          },
+          "rule_set_version": {
+            "title": "Rule Set Version",
+            "type": "string"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "uptime_seconds": {
+            "title": "Uptime Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "service",
+          "api_version",
+          "engine_version",
+          "rule_set_version",
+          "status",
+          "disclaimer",
+          "health",
+          "uptime_seconds",
+          "components",
+          "routes"
+        ],
+        "title": "AboutResponse",
+        "type": "object"
+      },
       "AuditResponse": {
         "properties": {
           "birth_context": {
@@ -311,6 +378,41 @@
           "message"
         ],
         "title": "CodeMessage",
+        "type": "object"
+      },
+      "ComponentInfo": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "state": {
+            "description": "ok, degraded, off or not_run. For the LLM service see its own /v1/llm/health.",
+            "title": "State",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "name",
+          "state",
+          "detail"
+        ],
+        "title": "ComponentInfo",
         "type": "object"
       },
       "ErrorBody": {
@@ -670,6 +772,133 @@
           "guide"
         ],
         "title": "IndicatorTrendOut",
+        "type": "object"
+      },
+      "LatencyStats": {
+        "properties": {
+          "calls_measured": {
+            "description": "How many recent /v1/screen calls the figures cover (at most `window`).",
+            "title": "Calls Measured",
+            "type": "integer"
+          },
+          "max_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Ms"
+          },
+          "mean_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Ms"
+          },
+          "p50_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null until a screening call has been made.",
+            "title": "P50 Ms"
+          },
+          "p95_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P95 Ms"
+          },
+          "window": {
+            "title": "Window",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "calls_measured",
+          "window",
+          "p50_ms",
+          "p95_ms",
+          "max_ms",
+          "mean_ms"
+        ],
+        "title": "LatencyStats",
+        "type": "object"
+      },
+      "MetricsResponse": {
+        "description": "Counts and durations only. Never a body, a value, an address or anything about a child (D176).",
+        "properties": {
+          "by_route": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Requests per known route. Anything else is counted under `other`.",
+            "title": "By Route",
+            "type": "object"
+          },
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Responses per HTTP status code.",
+            "title": "By Status",
+            "type": "object"
+          },
+          "requests_total": {
+            "title": "Requests Total",
+            "type": "integer"
+          },
+          "scope": {
+            "description": "process: held in memory, reset on restart, one count per worker process.",
+            "title": "Scope",
+            "type": "string"
+          },
+          "screen_latency": {
+            "$ref": "#/components/schemas/LatencyStats"
+          },
+          "server_errors": {
+            "description": "Responses with a 5xx status.",
+            "title": "Server Errors",
+            "type": "integer"
+          },
+          "since": {
+            "description": "When this process started, Unix seconds.",
+            "title": "Since",
+            "type": "number"
+          },
+          "uptime_seconds": {
+            "title": "Uptime Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "since",
+          "uptime_seconds",
+          "requests_total",
+          "server_errors",
+          "by_route",
+          "by_status",
+          "screen_latency",
+          "scope"
+        ],
+        "title": "MetricsResponse",
         "type": "object"
       },
       "MlFlagsOut": {
@@ -1822,6 +2051,60 @@
           }
         },
         "summary": "Health",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/v1/about": {
+      "get": {
+        "description": "What is running: versions and state of the engine, the ML models, growth monitoring and the optional LLM service.",
+        "operationId": "about_v1_about_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AboutResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "GatewayKey": []
+          }
+        ],
+        "summary": "About",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/v1/metrics": {
+      "get": {
+        "description": "Request counts by route and status, and /v1/screen latency. Counts and durations only, in memory (D176).",
+        "operationId": "metrics_snapshot_v1_metrics_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "GatewayKey": []
+          }
+        ],
+        "summary": "Metrics Snapshot",
         "tags": [
           "ops"
         ]

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - about and metrics endpoints (add-on)
+- New `GET /v1/about` (gateway key): service and rule-set versions, `health`, uptime, route list and a `components` list (`screening_engine`, `ml_logistic`, `ml_deep`, `growth_monitoring`, `llm_service`) with state, version and detail. It never calls the LLM server and never returns its address. The ML models run inside the API, so they are components, not a separate service.
+- New `GET /v1/metrics` (gateway key): requests per known route (anything else under `other`), responses per status code, 5xx count, and `/v1/screen` latency (p50, p95, max, mean over the last 1000 calls). Counts and durations only, in memory, reset on restart, one count per worker process (D176). Refused calls (401, 413) are counted.
+- New `src/thanzi_screen/api/metrics.py`; `about_info` in `api/service.py`; schemas `AboutResponse`, `ComponentInfo`, `MetricsResponse`, `LatencyStats`. Additive contract change; `docs/api/openapi.json` regenerated. `/health` and `/version` unchanged.
+- Tests: `tests/api/test_about_metrics.py` (15); the every-route-needs-the-key test now covers both routes.
+- Docs: `docs/deployment/integration-guide.md` section 6 (what the gateway should GET, what to track, rules), `docs/modules/api.md`, `docs/deployment/runbook.md`. Decision D176.
+
 ## Unreleased - growth trends and verified weight-gain reference (add-on)
 - New `thanzi_screen.growth.trend`: change in WHO z-score between two visits for weight-for-age, length/height-for-age and head circumference-for-age. Weight and length are flagged for a fall of 1.0 SD or more, or a new fall below -2 or -3; head size for a change of 1.0 SD or more either way. Advisory only (D9), stateless, standard library. A flag sets `review_suggested` and a clinician-review note; no CMAM finding, no referral (D170).
 - API: `previous_measurement` gains optional `length_height_cm`, `measure_position` and `hc_cm`; this visit's `hc_cm` is reused on the under-5 route. `growth_monitoring` gains `trends`, `review_suggested`, `review_note` and `reference_derived`. All additive; `docs/api/openapi.json` regenerated. Existing keys unchanged.

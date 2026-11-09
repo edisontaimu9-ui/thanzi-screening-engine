@@ -25,6 +25,8 @@ Regenerate the contract after any API change: `python scripts/export_openapi.py`
 |---|---|---|
 | `GET /health` | none | `{"status": "ok"}` or `"degraded"`. Nothing else. |
 | `GET /version` | gateway | engine, rule set and model versions, status, disclaimer |
+| `GET /v1/about` | gateway | what is running: versions, health, uptime, routes and the state of each component (engine, ML models, growth monitoring, LLM service). No child data (D176) |
+| `GET /v1/metrics` | gateway | request counts by route and status, 5xx count, `/v1/screen` latency (p50, p95, max, mean). Counts and durations only, in memory, reset on restart, per process (D176) |
 | `POST /v1/screen?view=worker` | gateway | default view. One child per call |
 | `POST /v1/screen?view=audit` | gateway + `X-Audit-Key` | full detail. May contain HIV information |
 

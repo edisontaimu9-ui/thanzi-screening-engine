@@ -127,35 +127,54 @@ Measured on one 2.1 GHz vCPU (not UniPod): median about 2 ms single client, abou
 5 second client timeout is generous (proposal). Repeat the measurement on UniPod hardware (`scripts/load_probe.py`).
 
 Health: `GET /health` needs no key and returns `ok` or `degraded` (the logistic models). Alert on `degraded` and on repeated
-5xx. Check versions with `GET /version`: `api_version`, `engine_version`, `rule_set_version`, `model_version`,
-`deep_model_version` (null when off).
+5xx. Check versions with `GET /v1/about` (or `GET /version`): `api_version`, `engine_version`, `rule_set_version`, and the
+`model_version` and `deep_model_version` of the ML components (`deep_model_version` is null on `/version` when off).
 
 ### Monitoring and "about" information (the gateway should GET it)
 The gateway should poll the read-only endpoints below on a schedule, keep the latest answer, and use it for alerting and for an
-admin or "About" page in Hope's dashboard. None of these calls carries a child's data. This list is only what the API offers
-today. There is **no** single "about" or metrics endpoint, so the gateway assembles the picture from these calls.
+admin "About" page in Hope's dashboard. None of these calls carries a child's data.
 
-| Component | Gateway calls | Key | What it gives | What to do with it |
-|---|---|---|---|---|
-| Screening engine (rules) | `GET /version` | `X-Gateway-Key` | `api_version`, `engine_version`, `rule_set_version`, `status`, `disclaimer` | Show on the About page. Record the versions next to each stored result (section 8). Alert when a version changes without a planned release. |
-| ML service (the logistic and deep recording-error models) | `GET /health`, `GET /version` | none for `/health`, gateway key for `/version` | `/health`: `ok` or `degraded`. `/version`: `model_version`, `deep_model_version` (null when the deep model is off) | The ML models run **inside** the screening API, not as a separate service, so there is no separate ML URL to poll. Alert on `degraded`. `deep_model_version` null means the deep flag is off or its files are missing, and screening is unaffected. |
-| Screening API process | `GET /health` | none | `ok` or `degraded` only | Use it for the container and load-balancer health check. Alert on `degraded`, on a failed call, and on repeated 5xx from `/v1/screen`. |
-| LLM service (optional) | `GET /v1/llm/health` | `X-Gateway-Key` | `state` (`ok`, `degraded` or `unavailable`), `provider`, `model`, `detail`, `model_available`, `latency_ms` | Exists only when `THANZI_LLM_ENABLED=1`. Otherwise it returns 404, which is normal, not a fault. HTTP 503 means `unavailable`. Show it on the About page. **Never** let it affect screening or the screening health status: the API already keeps them apart. |
+| What the gateway needs | Call | Key | Gives |
+|---|---|---|---|
+| Is it up (container and load-balancer check) | `GET /health` | none | `ok` or `degraded` only |
+| About: versions and every component in one answer | `GET /v1/about` | `X-Gateway-Key` | `api_version`, `engine_version`, `rule_set_version`, `status`, `disclaimer`, `health`, `uptime_seconds`, `routes`, and `components` |
+| Monitoring parameters: counts and timings | `GET /v1/metrics` | `X-Gateway-Key` | `since`, `uptime_seconds`, `requests_total`, `server_errors`, `by_route`, `by_status`, `screen_latency` (`p50_ms`, `p95_ms`, `max_ms`, `mean_ms`) |
+| Live state of the optional LLM service | `GET /v1/llm/health` | `X-Gateway-Key` | `state`, `provider`, `model`, `detail`, `model_available`, `latency_ms` |
+| Versions only (older, still available) | `GET /version` | `X-Gateway-Key` | The same version fields as `/v1/about`, plus `model_version` and `deep_model_version` |
 
-*Parameters worth tracking at the gateway* (all measured by the gateway from its own calls, since the API keeps no counters
-and writes no request log):
-- Availability: result of each poll of `/health` and `/version`, and the time of the last success.
-- Latency of `POST /v1/screen` (the API measured about 2 ms median on a 2.1 GHz vCPU, so a large rise is a signal).
-- Count of each response status (200, 401, 403, 413, 422, 500) and the rate of 5xx. A rise in 401 means a key fault. A rise in
-  422 means a data-entry or gateway bug.
-- Versions currently reported by `/version`, and the time they last changed.
-- For the LLM service when enabled: `state`, `detail` and `latency_ms` from `/v1/llm/health`.
-- From the stored results (section 8): how often each flag and `review_suggested` fires, per facility (see the analytics dashboard
-  in section 7).
+`/v1/about` lists five `components`, each with `name`, `state`, `version` and `detail`:
+
+| Component | `state` values | Notes |
+|---|---|---|
+| `screening_engine` | `ok` | The CMAM 2016 rules, the preterm engine and the corrected-age route. Never depends on the ML models. `version` is the rule set. |
+| `ml_logistic` | `ok`, `degraded` | The advisory recording-error flag. `degraded` means the model files are missing or mismatched. Screening still returns the rules result. |
+| `ml_deep` | `ok`, `off` | The second advisory flag. `off` means switched off or its files are missing. Screening is unaffected. |
+| `growth_monitoring` | `ok` | Advisory weight-gain and z-score trends. Needs `previous_measurement`. |
+| `llm_service` | `ok`, `off` | `off` unless `THANZI_LLM_ENABLED=1`. When `ok` it only means the service is configured. `/v1/about` never calls the model server: use `GET /v1/llm/health` for the live state. |
+
+The ML models run **inside** the screening API. There is no separate ML service or URL to poll. The ML service's state is
+the `ml_logistic` and `ml_deep` components.
+
+*What `/v1/metrics` counts.* Requests per known route (anything else is counted under `other`), responses per HTTP status
+(401 and 413 refusals included), and the time `/v1/screen` took over the most recent 1000 calls. It holds counts and durations
+only: never a body, a value, a client address, a key or anything about a child (D176). The numbers are kept in memory for
+that process, start again from zero on restart, and each worker process counts its own requests. A read of `/v1/metrics` counts
+from the next read. The gateway should store the readings over time if it wants history or charts, and work out rates
+from the difference between two readings.
+
+*Parameters worth tracking at the gateway.*
+- Availability: the result of each poll of `/health` and `/v1/about`, and the time of the last success.
+- `health` and each component `state` from `/v1/about`. Alert on `degraded`.
+- `screen_latency.p95_ms` and `max_ms` (about 2 ms median was measured on a 2.1 GHz vCPU, so a large rise is a signal).
+- `server_errors` and the rate of change of `by_status`: a rise in 401 means a key fault, a rise in 422 means a data-entry or gateway bug, a rise in 5xx means alert.
+- Versions from `/v1/about`, and the time they last changed. Alert when one changes without a planned release.
+- A fall in `uptime_seconds` between two readings means the service restarted, and the counters started again.
+- The LLM service, when enabled: `state`, `detail` and `latency_ms` from `/v1/llm/health`.
+- From the stored results (section 8), the gateway's own counts of how often each flag and `review_suggested` fires per facility (see the analytics dashboard in section 7). The API does not count these.
 
 *Rules for these calls.* Poll every 30 to 60 seconds (proposal). Cache the answer rather than calling the API on every
-page view. Send the gateway key only from the server. Treat `/version` and `/v1/llm/health` as sensitive enough to keep off
-public pages: show them to admins only. Do not poll `/v1/screen` as a health check, because that sends a child record.
+page view. Send the gateway key only from the server. Show `/v1/about` and `/v1/metrics` to admins only, not on public pages.
+Do not poll `/v1/screen` as a health check, because that sends a child record.
 
 ## 7. Other components
 **Front end (Hope).** Generate types from `docs/api/openapi.json` rather than hand-writing them, and mark `deep_recording_error`,
@@ -284,7 +303,7 @@ The API stores nothing. If the gateway stores results, treat them as health data
 | What a worker sees when the two flags disagree (I58), and wording review (I18, I23) | Maria and Edison |
 | Store each child's last weight and age (and length with its position, and head circumference, if held) and send `previous_measurement`; handle `growth_monitoring`, `trends`, `review_suggested` and the not-assessed reasons (I63, I68) | Hope |
 | Send a source for corrected-age growth if trends should run for those babies (I67) | Edison |
-| Poll `/health`, `/version` and (if enabled) `/v1/llm/health`; track the parameters in section 6; show an About page to admins | Hope |
+| Poll `/health`, `/v1/about`, `/v1/metrics` and (if enabled) `/v1/llm/health`; keep the readings; alert as in section 6; show an About page to admins | Hope |
 | Language layer: translation by code | NLP/AI team, with Edison's clinical input |
 | UniPod server specification and expected request volume (Q5) | Hope and Edison |
 | Real-data validation and fairness (I14, I15) | Needs Ministry data and Maria |

@@ -38,7 +38,7 @@ def post(c, body=None, view=None, headers=HG, **kw):
 
 # ---- access ----
 def test_every_route_but_health_needs_the_gateway_key(client):
-    for method, path in (("get", "/version"), ("post", "/v1/screen"), ("get", "/docs"), ("get", "/openapi.json"),
+    for method, path in (("get", "/version"), ("get", "/v1/about"), ("get", "/v1/metrics"), ("post", "/v1/screen"), ("get", "/docs"), ("get", "/openapi.json"),
                          ("get", "/redoc"), ("get", "/nope"), ("delete", "/v1/screen"), ("post", "/v1/screen?view=audit")):
         r = getattr(client, method)(path)
         assert r.status_code == 401, path

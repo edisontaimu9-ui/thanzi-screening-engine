@@ -450,3 +450,29 @@ def version_info(models: Models | None, deep: DeepModels | None = None) -> dict:
     if deep is not None:
         out["deep_model_version"] = deep.version
     return out
+
+
+def about_info(models: Models | None, deep: DeepModels | None, optional_components: list[dict], uptime_seconds: float,
+               routes: list[str]) -> dict:
+    """What is running inside this service (D176). No child data, no address, no key. Calls no other server.
+    `optional_components` are reported after the built-in ones; the app supplies them."""
+    v = version_info(models, deep)
+    comps = [
+        {"name": "screening_engine", "state": "ok", "version": RULE_SET_VERSION,
+         "detail": "CMAM 2016 rules, preterm engine and corrected-age route. Does not depend on the ML models."},
+        {"name": "ml_logistic", "state": "ok" if models is not None else "degraded",
+         "version": None if models is None else models.version,
+         "detail": "Advisory recording-error flag, runs inside this service." if models is not None
+         else "Model files missing or mismatched: screening returns the rules result with ml_flags.available false."},
+        {"name": "ml_deep", "state": "ok" if deep is not None else "off",
+         "version": None if deep is None else deep.version,
+         "detail": "Second advisory flag, runs inside this service." if deep is not None
+         else "Switched off (THANZI_DEEP_ENABLED=0) or its files are missing. Screening is unaffected."},
+        {"name": "growth_monitoring", "state": "ok", "version": None,
+         "detail": "Advisory weight-gain and z-score trends. Needs previous_measurement. Under-5 route only."},
+        *optional_components,
+    ]
+    return {"service": "Thanzi screening engine API", "api_version": v["api_version"], "engine_version": v["engine_version"],
+            "rule_set_version": v["rule_set_version"], "status": v["status"], "disclaimer": v["disclaimer"],
+            "health": "ok" if models is not None else "degraded", "uptime_seconds": round(uptime_seconds, 1),
+            "components": comps, "routes": routes}

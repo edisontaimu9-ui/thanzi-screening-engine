@@ -44,6 +44,7 @@ It sends synthetic children only and prints PASS or FAIL for 19 checks: key hand
 ## Health and monitoring
 - `GET /health` needs no key and returns only `{"status": "ok"}` or `"degraded"`. The image has a built-in healthcheck (`docker inspect --format '{{.State.Health.Status}}'`).
 - Alert on `degraded` (models missing) and on repeated 5xx from the service.
+- `GET /v1/about` (gateway key) lists the version and state of each component: engine, `ml_logistic`, `ml_deep`, growth monitoring, LLM service. `GET /v1/metrics` (gateway key) gives request counts by route and status, the 5xx count and `/v1/screen` latency. Both hold no child data. The counters live in memory: they reset on restart and each worker counts its own requests, so keep the readings if you want history. See `docs/deployment/integration-guide.md` section 6.
 - Logs hold no keys and no request values (checked in CI). They do hold access lines (client address, path, status).
 
 ## Rollback

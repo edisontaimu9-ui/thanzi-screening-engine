@@ -130,6 +130,49 @@ class VersionResponse(BaseModel):
     disclaimer: str
 
 
+class LatencyStats(BaseModel):
+    calls_measured: int = Field(description="How many recent /v1/screen calls the figures cover (at most `window`).")
+    window: int
+    p50_ms: float | None = Field(description="null until a screening call has been made.")
+    p95_ms: float | None
+    max_ms: float | None
+    mean_ms: float | None
+
+
+class MetricsResponse(BaseModel):
+    """Counts and durations only. Never a body, a value, an address or anything about a child (D176)."""
+    since: float = Field(description="When this process started, Unix seconds.")
+    uptime_seconds: float
+    requests_total: int
+    server_errors: int = Field(description="Responses with a 5xx status.")
+    by_route: dict[str, int] = Field(description="Requests per known route. Anything else is counted under `other`.")
+    by_status: dict[str, int] = Field(description="Responses per HTTP status code.")
+    screen_latency: LatencyStats
+    scope: str = Field(description="process: held in memory, reset on restart, one count per worker process.")
+
+
+class ComponentInfo(BaseModel):
+    name: str
+    state: str = Field(description="ok, degraded, off or not_run. For the LLM service see its own /v1/llm/health.")
+    version: str | None = None
+    detail: str
+
+
+class AboutResponse(BaseModel):
+    """What this service is and what is running inside it. Read-only, no child data."""
+    service: str
+    api_version: str
+    engine_version: str
+    rule_set_version: str
+    status: str
+    disclaimer: str
+    health: str = Field(description="ok, or degraded when the ML models are missing or mismatched. Same as /health.")
+    uptime_seconds: float
+    components: list[ComponentInfo] = Field(
+        description="screening_engine, ml_logistic, ml_deep, growth_monitoring and llm_service, in that order.")
+    routes: list[str]
+
+
 class BirthContext(BaseModel):
     route: str = Field(description="under5, preterm or under5_corrected_age.")
     route_reason: str
