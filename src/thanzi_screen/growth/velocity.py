@@ -31,6 +31,8 @@ MESSAGES = {
     "implausible_weight": "A weight looks implausible, so weight gain was not assessed. Recheck both weights.",
     "reference_unverified": "Weight gain could not be assessed for this age and sex: the reference range is not confirmed yet.",
     "outside_reference_ages": "Weight gain could not be assessed: the interval goes outside the ages the reference covers.",
+    "derived_reference": ("For girls aged 3 to 6 months the handbook gives one value (21 g per day), so the range used here was "
+                          "derived from it. Treat this result with extra care."),
 }
 
 
@@ -49,6 +51,7 @@ class GrowthAssessment:
     messages: tuple[str, ...]
     reference: str = REFERENCE_ID
     advisory: str = ADVISORY
+    reference_derived: bool = False       # True when the interval touches a range that was derived, not published (D164)
 
 
 @lru_cache(maxsize=1)
@@ -56,9 +59,10 @@ def _reference() -> dict:
     return json.loads((Path(__file__).with_name("aspen_weight_velocity.json")).read_text(encoding="utf-8"))
 
 
-def _bands(sex: str) -> list[tuple[float, float, list[float] | None]]:
+def _bands(sex: str) -> list[tuple[float, float, list[float] | None, bool]]:
     key = "boys" if sex == "male" else "girls"
-    return [(b["from_months"] * DAYS_PER_MONTH, b["to_months"] * DAYS_PER_MONTH, b[key]) for b in _reference()["bands"]]
+    return [(b["from_months"] * DAYS_PER_MONTH, b["to_months"] * DAYS_PER_MONTH, b[key], bool(b.get(f"{key}_derived")))
+            for b in _reference()["bands"]]
 
 
 def _plausible(sex: str, age_days: int, weight_kg: float) -> bool:
@@ -100,18 +104,22 @@ def assess_weight_velocity(sex: str, previous_age_days: int, previous_weight_kg:
     change_g = round((weight_kg - previous_weight_kg) * 1000.0, 6)      # rounded so a gain exactly on a range end is not
     rate = round(change_g / interval, 6)                                  # pushed outside it by floating-point error
     low = high = covered = 0.0
-    for start, end, rng in _bands(sex):
+    derived = False
+    for start, end, rng, is_derived in _bands(sex):
         days = min(end, age_days) - max(start, previous_age_days)
         if days <= 0:
             continue
         if rng is None:
             return _not_assessed("reference_unverified", interval, change=round(change_g, 1), rate=round(rate, 2))
         low, high, covered = low + rng[0] * days, high + rng[1] * days, covered + days
+        derived = derived or is_derived
     if covered < interval - 1e-6:
         return _not_assessed("outside_reference_ages", interval, change=round(change_g, 1), rate=round(rate, 2))
     low, high = round(low / interval, 6), round(high / interval, 6)
     status = "below_range" if rate < low else "above_range" if rate > high else "within_range"
     loss = weight_kg < previous_weight_kg
     msgs = (MESSAGES["weight_loss"],) if loss else (MESSAGES["below_range"],) if status == "below_range" else ()
+    if msgs and derived:
+        msgs = (*msgs, MESSAGES["derived_reference"])
     return GrowthAssessment(True, None, status, interval, round(change_g, 1), round(rate, 2), round(low, 2), round(high, 2),
-                            status == "below_range", loss, msgs)
+                            status == "below_range", loss, msgs, reference_derived=derived)

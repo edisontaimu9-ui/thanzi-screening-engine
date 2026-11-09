@@ -24,6 +24,11 @@ SOURCES = [
     ("wfl_girls_0-to-2-years_zscores__1_.xlsx", "wfl_girls.csv", "wfl", "female", "R1"),
     ("wfh_boys_2-to-5-years_zscores.xlsx", "wfh_boys.csv", "wfh", "male", "R1"),
     ("wfh_girls_2-to-5-years_zscores.xlsx", "wfh_girls.csv", "wfh", "female", "R1"),
+    # Head circumference-for-age (R20): weekly 0-13 weeks and monthly 0-60 months, L = 1 throughout
+    ("hcfa-boys-0-13-zscores.xlsx", "hcfa_boys_0_13.csv", "hcfa", "male", "R20"),
+    ("hcfa-boys-0-5-zscores.xlsx", "hcfa_boys_0_5.csv", "hcfa", "male", "R20"),
+    ("hcfa-girls-0-13-zscores.xlsx", "hcfa_girls_0_13.csv", "hcfa", "female", "R20"),
+    ("hcfa-girls-0-5-zscores.xlsx", "hcfa_girls_0_5.csv", "hcfa", "female", "R20"),
 ]
 
 

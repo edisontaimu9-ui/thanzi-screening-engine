@@ -398,6 +398,12 @@
             "title": "Reference",
             "type": "string"
           },
+          "reference_derived": {
+            "default": false,
+            "description": "true when the weight-gain range used was derived, not published (girls 3 to 6 months).",
+            "title": "Reference Derived",
+            "type": "boolean"
+          },
           "reference_high": {
             "anyOf": [
               {
@@ -421,6 +427,23 @@
             "description": "g per day, averaged over the age bands the interval covers.",
             "title": "Reference Low"
           },
+          "review_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
+          },
+          "review_suggested": {
+            "default": false,
+            "description": "true when the weight-gain result or any trend is flagged. Advisory: a clinician should review the child's growth.",
+            "title": "Review Suggested",
+            "type": "boolean"
+          },
           "status": {
             "anyOf": [
               {
@@ -432,6 +455,10 @@
             ],
             "description": "below_range, within_range or above_range. null when not assessed.",
             "title": "Status"
+          },
+          "trends": {
+            "$ref": "#/components/schemas/GrowthTrendsOut",
+            "description": "z-score trends across the two visits."
           },
           "weight_change_g": {
             "anyOf": [
@@ -467,6 +494,44 @@
         "title": "GrowthMonitoring",
         "type": "object"
       },
+      "GrowthTrendsOut": {
+        "properties": {
+          "head_circumference_for_age": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IndicatorTrendOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only when both visits gave a head circumference."
+          },
+          "length_height_for_age": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IndicatorTrendOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only when both visits gave a length or height with its position."
+          },
+          "weight_for_age": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IndicatorTrendOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "GrowthTrendsOut",
+        "type": "object"
+      },
       "HealthResponse": {
         "properties": {
           "status": {
@@ -479,6 +544,132 @@
           "status"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "IndicatorTrendOut": {
+        "properties": {
+          "assessed": {
+            "title": "Assessed",
+            "type": "boolean"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "fell, rose or steady. Weight and length are flagged only for a fall; head size for either.",
+            "title": "Direction"
+          },
+          "flagged": {
+            "title": "Flagged",
+            "type": "boolean"
+          },
+          "guide": {
+            "title": "Guide",
+            "type": "string"
+          },
+          "indicator": {
+            "description": "weight_for_age, length_height_for_age or head_circumference_for_age.",
+            "title": "Indicator",
+            "type": "string"
+          },
+          "lines_crossed": {
+            "description": "Whole z-score lines (-3 to +3) between the two values.",
+            "items": {
+              "type": "integer"
+            },
+            "title": "Lines Crossed",
+            "type": "array"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why it was not assessed: interval_too_short, implausible_measurement, outside_reference_ages, oedema_weight_unreliable. null when assessed.",
+            "title": "Reason"
+          },
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          },
+          "status_change": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "below_minus2 or below_minus3 when newly below that line (weight and length only).",
+            "title": "Status Change"
+          },
+          "z_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Change"
+          },
+          "z_current": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Current"
+          },
+          "z_previous": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Previous"
+          }
+        },
+        "required": [
+          "indicator",
+          "assessed",
+          "reason",
+          "z_previous",
+          "z_current",
+          "z_change",
+          "direction",
+          "lines_crossed",
+          "status_change",
+          "flagged",
+          "messages",
+          "reference",
+          "guide"
+        ],
+        "title": "IndicatorTrendOut",
         "type": "object"
       },
       "MlFlagsOut": {
@@ -916,12 +1107,52 @@
       },
       "PreviousMeasurement": {
         "additionalProperties": false,
-        "description": "An earlier visit of the same child, for weight-gain monitoring. The engine stores nothing, so the caller supplies it.",
+        "description": "An earlier visit of the same child, for growth monitoring. The engine stores nothing, so the caller supplies it.",
         "properties": {
           "age_days": {
             "description": "Age in whole days at that earlier visit. Must be before this visit.",
             "title": "Age Days",
             "type": "integer"
+          },
+          "hc_cm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional. Head circumference at that visit, cm. With hc_cm on this visit, adds the head-circumference trend.",
+            "title": "Hc Cm"
+          },
+          "length_height_cm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional. Length or height at that visit, cm. With measure_position, adds the length/height-for-age trend.",
+            "title": "Length Height Cm"
+          },
+          "measure_position": {
+            "anyOf": [
+              {
+                "enum": [
+                  "length",
+                  "height"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required when length_height_cm is given: how that earlier visit was measured.",
+            "title": "Measure Position"
           },
           "weight_kg": {
             "description": "Weight in kilograms at that earlier visit.",
@@ -1189,7 +1420,7 @@
                 "type": "null"
               }
             ],
-            "description": "Head circumference, cm. Preterm route only.",
+            "description": "Head circumference, cm. Preterm route. On the under-5 route it is used only for the head-circumference trend, when previous_measurement.hc_cm is also given.",
             "title": "Hc Cm"
           },
           "hiv_positive": {
@@ -1300,7 +1531,7 @@
                 "type": "null"
               }
             ],
-            "description": "Optional earlier visit (age_days, weight_kg). With it the response adds growth_monitoring: weight gain per day compared with the ASPEN reference range (R19). Advisory only. Under-5 route only."
+            "description": "Optional earlier visit (age_days, weight_kg). With it the response adds growth_monitoring: weight gain per day compared with the ASPEN reference range (R19), and z-score trends for weight, length or height, and head circumference (WHO tables). Advisory only. Under-5 route only."
           },
           "sex": {
             "enum": [

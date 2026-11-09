@@ -16,7 +16,7 @@ from ..anthro import InputError
 from ..explain import Explanation, explain_parts, explain_rules_only
 from ..explain import messages as M
 from ..explain.compose import IGNORED_IN_WHY
-from ..growth import assess_weight_velocity
+from ..growth import REVIEW_NOTE, PreviousVisit, assess_trends, assess_weight_velocity
 from ..ml.dl import DeepModels
 from ..ml.dl.predict import flag_from_features
 from ..ml.features import features_from_inputs
@@ -168,14 +168,17 @@ def parse_birth(payload: dict) -> tuple[float | None, float | None, dict]:
     return (None if ga is None else float(ga)), (None if bw is None else float(bw)), extra
 
 
-def parse_previous(payload: dict) -> tuple[int, float] | None:
+_PREVIOUS_KEYS = ("age_days", "weight_kg", "length_height_cm", "measure_position", "hc_cm")
+
+
+def parse_previous(payload: dict) -> PreviousVisit | None:
     """Optional earlier visit. Structure only; the interval and plausibility rules are the growth module's."""
     prev = payload.get("previous_measurement")
     if prev is None:
         return None
     if not isinstance(prev, dict):
         raise _bad("previous_measurement", "must be an object with age_days and weight_kg, or null")
-    if any(k not in ("age_days", "weight_kg") for k in prev):
+    if any(k not in _PREVIOUS_KEYS for k in prev):
         raise ApiError(422, "unknown_field", "The request contains a field that is not accepted. "
                                              "Names, identifiers and dates of birth are never accepted.")
     for f in ("age_days", "weight_kg"):
@@ -184,27 +187,47 @@ def parse_previous(payload: dict) -> tuple[int, float] | None:
     age = prev["age_days"]
     if isinstance(age, bool) or not isinstance(age, int):
         raise _bad("previous_measurement.age_days", "must be a whole number")
-    return age, _number(prev, "weight_kg")
+    weight = _number(prev, "weight_kg")
+    length = None if prev.get("length_height_cm") is None else _number(prev, "length_height_cm")
+    hc = None if prev.get("hc_cm") is None else _number(prev, "hc_cm")
+    position = prev.get("measure_position")
+    if length is not None and position is None:
+        raise ApiError(422, "missing_field", "Missing required field: previous_measurement.measure_position.")
+    if position is not None and position not in ("length", "height"):
+        raise _bad("previous_measurement.measure_position", "must be one of: length, height")
+    return PreviousVisit(age, weight, length, position, hc)
 
 
 _GROWTH_SKIPPED = ("Growth monitoring was not run: it needs the under-5 route, and this baby is screened on the preterm or "
                    "corrected-age route.")
 
 
-def _growth(args: tuple, previous: tuple[int, float] | None) -> dict | None:
-    """Weight-gain monitoring for the under-5 route. Advisory. Never raises into the screen: bad input is a 422 before this."""
+def _trend_dict(t) -> dict:
+    return {"indicator": t.indicator, "assessed": t.assessed, "reason": t.reason, "z_previous": t.z_previous,
+            "z_current": t.z_current, "z_change": t.z_change, "direction": t.direction,
+            "lines_crossed": list(t.lines_crossed), "status_change": t.status_change, "flagged": t.flagged,
+            "messages": list(t.messages), "reference": t.reference, "guide": t.guide}
+
+
+def _growth(args: tuple, previous: PreviousVisit | None, hc_cm: float | None = None) -> dict | None:
+    """Weight-gain velocity and z-score trends for the under-5 route. Advisory. Bad input is a 422, never a 500."""
     if previous is None:
         return None
-    sex, age, weight = args[0], args[1], args[2]
+    sex, age, weight, length, position, clinical = args[0], args[1], args[2], args[3], args[4], args[-1]
     try:
-        g = assess_weight_velocity(sex, previous[0], previous[1], age, weight)
+        g = assess_weight_velocity(sex, previous.age_days, previous.weight_kg, age, weight)
+        t = assess_trends(sex, previous, age, weight, length, position, hc_cm, clinical.oedema is not OedemaGrade.NONE)
     except ValueError:
-        raise ApiError(422, "invalid_input", "previous_measurement must be earlier than this visit and its weight must be "
-                                             "a positive number.") from None
+        raise ApiError(422, "invalid_input", "previous_measurement must be earlier than this visit and its measurements "
+                                             "must be positive numbers.") from None
+    review = g.flagged or t.flagged
     return {"assessed": g.assessed, "reason": g.reason, "status": g.status, "flagged": g.flagged,
             "weight_loss": g.weight_loss, "interval_days": g.interval_days, "weight_change_g": g.weight_change_g,
             "rate_g_per_day": g.rate_g_per_day, "reference_low": g.reference_low, "reference_high": g.reference_high,
-            "messages": list(g.messages), "reference": g.reference, "advisory": g.advisory}
+            "messages": list(g.messages), "reference": g.reference, "advisory": g.advisory,
+            "reference_derived": g.reference_derived,
+            "trends": {x.indicator: _trend_dict(x) for x in t.indicators},
+            "review_suggested": review, "review_note": REVIEW_NOTE if review else None}
 
 
 def _engine_message(exc: InputError) -> str:
@@ -411,9 +434,11 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None, de
             assessment = {"needed": True, "reasons": [{"code": "gestational_age_unknown_low_birth_weight", "message":
                           "Born under 2500 g with unknown gestational age: a clinician should assess whether the baby is preterm."}]}
             ctx = preterm_integration.birth_context(rt)
-        if extra:
+        hc_used = previous is not None and previous.hc_cm is not None and extra.get("hc_cm") is not None
+        ignored = {k: v for k, v in extra.items() if not (k == "hc_cm" and hc_used)}
+        if ignored:
             warns.append("Preterm-only fields were given but this baby is not screened by the preterm engine: they were ignored.")
-        return _under5(args, view, models, warns, ctx, assessment, deep, _growth(args, previous))
+        return _under5(args, view, models, warns, ctx, assessment, deep, _growth(args, previous, extra.get("hc_cm") if hc_used else None))
     except InputError as exc:
         raise ApiError(422, "invalid_input", _engine_message(exc)) from None
 

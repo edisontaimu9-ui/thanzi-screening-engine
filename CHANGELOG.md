@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased - growth monitoring (add-on, reference not yet verified)
+## Unreleased - growth trends and verified weight-gain reference (add-on)
+- New `thanzi_screen.growth.trend`: change in WHO z-score between two visits for weight-for-age, length/height-for-age and head circumference-for-age. Weight and length are flagged for a fall of 1.0 SD or more, or a new fall below -2 or -3; head size for a change of 1.0 SD or more either way. Advisory only (D9), stateless, standard library. A flag sets `review_suggested` and a clinician-review note; no CMAM finding, no referral (D170).
+- API: `previous_measurement` gains optional `length_height_cm`, `measure_position` and `hc_cm`; this visit's `hc_cm` is reused on the under-5 route. `growth_monitoring` gains `trends`, `review_suggested`, `review_note` and `reference_derived`. All additive; `docs/api/openapi.json` regenerated. Existing keys unchanged.
+- New WHO head circumference-for-age tables (R20, four files, checksummed in `MANIFEST.json`; `scripts/build_reference_tables.py` extended; the existing eight tables are byte-identical). Technical guide R21 added to the register.
+- R19 weight table verified against the handbook by Edison. Girls 3 to 6 months reads 21-21 there, so a range of 17 to 25 g/day is derived (D164) and marked `reference_derived`. This replaces the earlier "not assessed" for that band. The 28-day minimum is kept (D171).
+- Preterm and corrected-age babies still skip growth monitoring with a warning (D172).
+- Tests: `tests/growth/test_trend.py` (63), `tests/anthro/test_hc_tables.py` (19), `tests/api/test_growth_trends.py` (62); weight-gain tests updated for the verified reference. Decisions D164 to D173; open issues I64 to I69; I59 closed, I60 and I61 decided, I62 partly closed.
+
+## Unreleased - growth monitoring (add-on)
 - New package `thanzi_screen.growth`: weight-gain velocity (g per day) between an earlier visit and this one, compared with the ASPEN reference range (R19), averaged across age bands. Advisory only (D9): the classification, tier, reasons, review, ML flags and wording are identical with and without it (tested). Standard library only; rule-based, so it works in degraded mode.
 - API: optional request field `previous_measurement` (`age_days`, `weight_kg`) and optional response field `growth_monitoring` in both views. Additive; `docs/api/openapi.json` regenerated. Under-5 route only; preterm and corrected-age babies get a warning that it was not run.
 - Not assessed, with a stated reason: interval under 28 days, implausible weight, girls 3 to 6 months (the source reads 21-21, treated as unusable), ages past the engine's range.

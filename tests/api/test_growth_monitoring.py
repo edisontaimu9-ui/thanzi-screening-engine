@@ -94,7 +94,8 @@ def test_not_assessed_cases_say_why(models, deep):
     assert short["growth_monitoring"]["reason"] == "interval_too_short" and short["growth_monitoring"]["status"] is None
     girl = {**NOW, "sex": "female", "age_days": 140, "weight_kg": 6.2, "length_height_cm": 62.0}
     g = service.screen({**girl, "previous_measurement": {"age_days": 100, "weight_kg": 5.5}}, "worker", models, deep)
-    assert g["growth_monitoring"]["reason"] == "reference_unverified" and not g["growth_monitoring"]["flagged"]
+    assert g["growth_monitoring"]["assessed"] and g["growth_monitoring"]["reference_derived"]
+    assert g["growth_monitoring"]["status"] == "within_range" and not g["growth_monitoring"]["flagged"]   # 700 g in 40 days
 
 
 @pytest.mark.parametrize("bad,code", [

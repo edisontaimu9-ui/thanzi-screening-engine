@@ -31,6 +31,31 @@ class MlFlagsOut(BaseModel):
                                   "Present only when the deep models are loaded. Same meaning, same limits.")
 
 
+class IndicatorTrendOut(BaseModel):
+    indicator: str = Field(description="weight_for_age, length_height_for_age or head_circumference_for_age.")
+    assessed: bool
+    reason: str | None = Field(description="Why it was not assessed: interval_too_short, implausible_measurement, "
+                                           "outside_reference_ages, oedema_weight_unreliable. null when assessed.")
+    z_previous: float | None
+    z_current: float | None
+    z_change: float | None
+    direction: str | None = Field(description="fell, rose or steady. Weight and length are flagged only for a fall; head size for either.")
+    lines_crossed: list[int] = Field(description="Whole z-score lines (-3 to +3) between the two values.")
+    status_change: str | None = Field(description="below_minus2 or below_minus3 when newly below that line (weight and length only).")
+    flagged: bool
+    messages: list[str]
+    reference: str
+    guide: str
+
+
+class GrowthTrendsOut(BaseModel):
+    weight_for_age: IndicatorTrendOut | None = None
+    length_height_for_age: IndicatorTrendOut | None = Field(
+        default=None, description="Present only when both visits gave a length or height with its position.")
+    head_circumference_for_age: IndicatorTrendOut | None = Field(
+        default=None, description="Present only when both visits gave a head circumference.")
+
+
 class GrowthMonitoring(BaseModel):
     assessed: bool
     reason: str | None = Field(description="Why it was not assessed: interval_too_short, implausible_weight, reference_unverified, "
@@ -46,6 +71,12 @@ class GrowthMonitoring(BaseModel):
     messages: list[str]
     reference: str
     advisory: str
+    reference_derived: bool = Field(default=False, description="true when the weight-gain range used was derived, not published "
+                                                               "(girls 3 to 6 months).")
+    trends: GrowthTrendsOut = Field(default_factory=GrowthTrendsOut, description="z-score trends across the two visits.")
+    review_suggested: bool = Field(default=False, description="true when the weight-gain result or any trend is flagged. "
+                                                              "Advisory: a clinician should review the child's growth.")
+    review_note: str | None = None
 
 
 class WorkerResponse(BaseModel):

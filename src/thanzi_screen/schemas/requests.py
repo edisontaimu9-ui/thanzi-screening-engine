@@ -18,11 +18,17 @@ NeonatalSignName = Literal["bilious_vomiting", "apnoea", "cyanosis", "abdominal_
 
 
 class PreviousMeasurement(BaseModel):
-    """An earlier visit of the same child, for weight-gain monitoring. The engine stores nothing, so the caller supplies it."""
+    """An earlier visit of the same child, for growth monitoring. The engine stores nothing, so the caller supplies it."""
     model_config = ConfigDict(extra="forbid", strict=True)
 
     age_days: int = Field(description="Age in whole days at that earlier visit. Must be before this visit.")
     weight_kg: Number = Field(description="Weight in kilograms at that earlier visit.")
+    length_height_cm: Number | None = Field(
+        default=None, description="Optional. Length or height at that visit, cm. With measure_position, adds the length/height-for-age trend.")
+    measure_position: Literal["length", "height"] | None = Field(
+        default=None, description="Required when length_height_cm is given: how that earlier visit was measured.")
+    hc_cm: Number | None = Field(
+        default=None, description="Optional. Head circumference at that visit, cm. With hc_cm on this visit, adds the head-circumference trend.")
 
 
 class ScreenRequest(BaseModel):
@@ -50,7 +56,8 @@ class ScreenRequest(BaseModel):
     failure_to_gain_weight: bool | None = None
     previous_measurement: PreviousMeasurement | None = Field(
         default=None, description="Optional earlier visit (age_days, weight_kg). With it the response adds growth_monitoring: "
-        "weight gain per day compared with the ASPEN reference range (R19). Advisory only. Under-5 route only.")
+        "weight gain per day compared with the ASPEN reference range (R19), and z-score trends for weight, length or height, and head "
+        "circumference (WHO tables). Advisory only. Under-5 route only.")
 
     # ---- Birth context and preterm fields (all optional). Without gestational_age_weeks and birth_weight_g the
     # request is screened exactly as before. See docs/modules/preterm.md for the routing rules. ----
@@ -59,7 +66,7 @@ class ScreenRequest(BaseModel):
         "routing: born under 37 weeks or under 2500 g goes to the preterm engine until 50 weeks post-menstrual age, "
         "then to the under-5 engine on corrected age.")
     birth_weight_g: Number | None = Field(default=None, description="Birth weight in GRAMS (weight_kg is kilograms).")
-    hc_cm: Number | None = Field(default=None, description="Head circumference, cm. Preterm route only.")
+    hc_cm: Number | None = Field(default=None, description="Head circumference, cm. Preterm route. On the under-5 route it is used only for the head-circumference trend, when previous_measurement.hc_cm is also given.")
     birth_length_cm: Number | None = Field(default=None, description="Length at birth, cm. Preterm route only; needed for the length trend.")
     birth_hc_cm: Number | None = Field(default=None, description="Head circumference at birth, cm. Preterm route only; needed for the head-growth trend.")
     sick: bool | None = Field(default=None, description="Preterm route: clinician judges the baby sick (hospitalise).")

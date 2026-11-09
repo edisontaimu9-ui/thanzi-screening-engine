@@ -1,75 +1,96 @@
 # Module: growth monitoring, `thanzi_screen.growth` (add-on, not a numbered phase)
 
-Detects slow weight gain between two visits and says so as an **advisory** flag. It never changes a classification, tier,
-reason, review, ML flag or wording (D9, D159). Standard library only. Rule-based, so it also works in degraded mode.
-**Reference values are not yet verified** (I59).
+Compares a child with their own earlier visit and says so as an **advisory** flag. It never changes a classification, tier,
+reason, review, ML flag or wording (D9, D159, D170). Standard library only. Rule-based, so it also works in degraded mode.
 
-## What it does
-Given the child's sex, an earlier weight and age, and this visit's weight and age, it:
-1. checks the interval is at least 28 days and both weights are plausible (D162);
-2. works out the average gain in g per day;
-3. finds the ASPEN reference range (R19) for the ages in between, averaged over the days spent in each age band;
-4. returns `below_range`, `within_range` or `above_range`. Only `below_range` (which includes weight loss) is flagged.
+Two checks, both from one optional `previous_measurement`:
+1. **Weight gain** (`velocity.py`): average grams per day against the ASPEN reference range (R19, verified by Edison 2026-11-09).
+2. **Trends** (`trend.py`, D165): change in WHO z-score for weight-for-age, length/height-for-age and head
+   circumference-for-age between the two visits.
 
 `flagged` means "a person should look at feeding, illness and the measurements". It is not a diagnosis and not a CMAM
-classification. The reference is a range for term infants and paediatric patients, so a low gain is a prompt, not a verdict.
+classification. Any flag also sets `review_suggested` with the note "A clinician should review this child's growth." (D170).
 
 ## Why the caller sends the earlier visit
 The engine stores nothing and accepts no child identifier (D25), so it cannot look up history. Hope's gateway or app holds the
 child's records and sends one earlier visit as `previous_measurement` (D158). Without it nothing changes.
 
 ## API
-Request (optional): `"previous_measurement": {"age_days": 274, "weight_kg": 8.5}`. Only those two keys. A date of birth, name or
-any other key is a 422. The earlier age must be before this visit.
+Request (optional): `"previous_measurement": {"age_days": 122, "weight_kg": 6.5, "length_height_cm": 62.3, "measure_position": "length", "hc_cm": 40.0}`.
+Only `age_days` and `weight_kg` are required. `length_height_cm` needs `measure_position` (`length` or `height`, how that visit
+was measured). Any other key (a name, a date of birth) is a 422. The earlier age must be before this visit. This visit's
+length and position are already required on the under-5 route; its head circumference is the existing optional `hc_cm`.
 
-Response (optional, both views): `growth_monitoring`
+Response (optional, both views): `growth_monitoring`. The weight-gain keys are as before (`assessed`, `reason`, `status`,
+`flagged`, `weight_loss`, `interval_days`, `weight_change_g`, `rate_g_per_day`, `reference_low`, `reference_high`, `messages`,
+`reference`, `advisory`), plus:
 ```json
-{"assessed": true, "reason": null, "status": "below_range", "flagged": true, "weight_loss": false,
- "interval_days": 31, "weight_change_g": 50.0, "rate_g_per_day": 1.61,
- "reference_low": 4.0, "reference_high": 12.0,
- "messages": ["Weight gain since the last visit is below the usual range for this age. This may be a sign of growth faltering. A health worker should check feeding, illness and the measurements."],
- "reference": "R19", "advisory": "Advisory only. It does not change the classification. A trained health worker decides."}
+{"reference_derived": false,
+ "trends": {"length_height_for_age": {"indicator": "length_height_for_age", "assessed": true, "reason": null,
+   "z_previous": -0.77, "z_current": -2.66, "z_change": -1.88, "direction": "fell", "lines_crossed": [-1, -2],
+   "status_change": "below_minus2", "flagged": true,
+   "messages": ["Length or height for age has fallen across z-score lines since the last visit. This may be a sign of slowing linear growth (stunting). A health worker should check feeding, illness and the measurements.",
+                "The latest value is newly below -2 SD on the WHO standard."],
+   "reference": "R4", "guide": "R21"}, "weight_for_age": {"...": "same shape"}},
+ "review_suggested": true, "review_note": "A clinician should review this child's growth."}
 ```
-That example is a 10-month-old boy, healthy by every CMAM measure (`classification: low_risk`), who gained 50 g in 31 days.
+That example is the WHO guide's own case study 2 (a boy, 4 and 18 months). Weight-for-age is normal there, length-for-age has
+fallen from near the median to below -2.
 
-When not assessed: `assessed: false`, `reason` is one of `interval_too_short`, `implausible_weight`, `reference_unverified`,
-`outside_reference_ages`, `status` is null, `flagged` is false and `messages` explains in plain words.
+`trends` has `weight_for_age` always, `length_height_for_age` only when both visits gave a length with its position, and
+`head_circumference_for_age` only when both visits gave a head circumference. An indicator that is not assessed has
+`assessed: false` and a `reason`.
+
+## The rules
+| Indicator | Flagged when | Source |
+|---|---|---|
+| Weight gain | below the ASPEN range for the ages in between (weight loss included). Above is reported, never flagged | R19, D161 |
+| Weight-for-age | z falls 1.0 SD or more, or newly falls below -2 or -3 | R5, R21, D166 |
+| Length/height-for-age | same | R4, R21, D166 |
+| Head circumference-for-age | z changes 1.0 SD or more, up or down. No single-value cut-off | R20, R21, D167 |
+
+A rise in weight or length is reported (`direction: rose`) and not flagged. A z-score of exactly -2.0 is not below -2.
+`lines_crossed` lists the whole lines from -3 to +3 between the two values. The 1.0 SD is an engineering choice (D168, I64): the
+guide says a line crossing a z-score line is a warning but gives no number of SD.
 
 | Situation | Result |
 |---|---|
 | No `previous_measurement` | No `growth_monitoring` key. Response identical to before. |
-| Interval under 28 days | `interval_too_short`: "Compare again after at least 4 weeks." |
-| A weight outside the engine's weight-for-age plausibility limits | `implausible_weight`. Not flagged: a typing slip is not growth faltering. |
-| Girl aged 3 to 6 months (any part of the interval) | `reference_unverified` until the table is checked (I59). |
-| Earlier age not before this visit, or weight not positive | 422 `invalid_input`. Wrong types or missing keys: 422 `invalid_request`, `missing_field`, `unknown_field`. |
-| Preterm or corrected-age route | Not run. A warning says so. |
+| Interval under 28 days | Everything `interval_too_short`: "Compare again after at least 4 weeks." (D171) |
+| A z-score outside the engine's limits | `implausible_measurement` for that indicator. Not flagged: a typing slip is not a trend. |
+| Oedema on this visit | Weight-for-age trend `oedema_weight_unreliable`. Length and head still run. |
+| Past 1856 days (all) or 1826 days (head) | `outside_reference_ages` |
+| Girl aged 3 to 6 months | Weight gain uses the derived range 17 to 25 g/day; `reference_derived: true` and a message when below range (D164) |
+| Earlier age not before this visit, a non-positive value | 422 `invalid_input`. Wrong types, a length without its position, unknown keys: 422 `invalid_request`, `missing_field`, `unknown_field`. |
+| Preterm or corrected-age route | Not run. A warning says so (D172, I67). |
 | Degraded mode (no ML models) | Still runs. |
 
-## The reference (R19)
-`src/thanzi_screen/growth/aspen_weight_velocity.json`, weight in g per day, from the ASPEN Paediatric and Neonatal Nutrition
-Support Handbook, 3rd ed., "Reference normal growth velocity". Transcribed by hand from a screenshot Edison supplied on
-2026-11-08 and **not checked against the book**. Bands (months): 0-1, 1-2, 2-3, 3-6, 6-9, 9-12, 12-18, 18-24 (by sex), 2-<4 years
-and 4-7 years (not split by sex; only the part under 5 years is used). Girls 3 to 6 months is blank because the source reads
-21-21. Months are 30.4375 days. A test keeps an independent copy of the transcription.
+Head circumference uses the weekly WHO table to day 91 and the monthly table after, with linear interpolation (D167). The
+earlier visit's length is converted by the engine's 0.7 cm rule if it was measured the other way for that age (tested equal to the engine).
 
-Not used, and why: length and height velocity, rows for 7 years and over, and the preterm monitoring rows (D160). Not in the
-screenshot's scope here: macronutrient, protein and enteral feeding tables (point-of-care nutrition guidance, not growth
-monitoring).
+## References
+- Weight gain: `src/thanzi_screen/growth/aspen_weight_velocity.json` (R19), g per day. Bands (months): 0-1, 1-2, 2-3, 3-6, 6-9, 9-12,
+  12-18, 18-24 (by sex), 2-<4 years and 4-7 years (not split by sex; only the part under 5 years is used). Girls 3 to 6 months is
+  derived from the handbook's single value 21 (D164). Months are 30.4375 days. A test keeps an independent copy of the transcription.
+- Trends: WHO z-score tables R5 (weight-for-age), R4 (length/height-for-age), R20 (head circumference, converted CSVs in
+  `anthro/reference_tables/` with checksums in `MANIFEST.json`), and the technical guide R21.
+
+Not used, and why: length and height velocity, rows for 7 years and over, the preterm monitoring rows (D160); a separate
+"flat line" rule (D173); corrected-age trends (D172).
 
 ## Design choices that need clinical confirmation
-- The 28-day minimum interval (I60). Weights read to 0.1 kg are noisy over short gaps.
-- Averaging the range across band edges (D161). It is arithmetic on the published ranges, not a published rule.
-- What a flag should trigger (I61).
+- The 1.0 SD fall (I64) and the derived girls 3 to 6 month range (I66).
+- Head circumference plausibility limits of -5 to +5 (I65).
+- The wording of the messages (Maria, I61).
 
-## Not covered (I62)
-Change in weight-for-age z-score across visits, length or height faltering and stunting trend, head circumference, preterm
-velocity per kg. Each needs a cited definition and cut-off first.
-
-## Tests (`tests/growth/test_velocity.py`, 39; `tests/api/test_growth_monitoring.py`, 67)
-Reference file matches the transcription and is marked unverified; bands contiguous; suspect cell unused; plausibility limits
-equal the engine's; within, below, above; range ends count as inside (floating-point safe); weight loss; blend across band edges
-checked against an independent calculation; no sex split from 2 years; girls 3 to 6 months not assessed; 28-day boundary;
-implausible and out-of-range cases; 12 kinds of invalid input; 3000-case invariants; stdlib-only and isolation (only
-`api/service.py` imports it); package data. API: result and wording; absent without input; rest of the response identical with
-and without it (both views, 32 combinations); low-risk child still flagged; degraded mode; no HIV leak; 15 bad inputs with no
-echoed values; preterm and corrected-age warnings; HTTP round trip and 422s; OpenAPI.
+## Tests
+`tests/growth/test_velocity.py` (40), `tests/growth/test_trend.py` (63), `tests/anthro/test_hc_tables.py` (19),
+`tests/api/test_growth_monitoring.py` (67), `tests/api/test_growth_trends.py` (62).
+Weight gain: reference matches the transcription; derived range recomputed from its neighbours; within, below, above; range ends
+count as inside; weight loss; band blends; 28-day boundary; invalid input; 3000-case invariants.
+Trends: constants and z-scores equal the anthro engine; head z checked against the published SD columns; the rule at exact
+boundaries (-1.0, -0.99, -2.0, -2.01, -3.0); both directions for head size; the guide's Fadi case; which indicators appear;
+oedema; ages past the tables; implausible values; 14 invalid inputs; 2000-case invariants; standard library only.
+Tables: checksums, shape, published SD columns, interpolation, the weekly to monthly hand-over, end at 60 months.
+API: result and wording; the rest of the response identical with and without it (both views); degraded mode; bad input with no
+echoed values; preterm and corrected-age routes; HTTP and OpenAPI.

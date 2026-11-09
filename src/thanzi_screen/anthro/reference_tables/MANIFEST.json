@@ -1,4 +1,40 @@
 {
+  "hcfa_boys_0_13.csv": {
+    "csv_sha256": "3ae7bc2e8183c4694c505d8444487aeb0ded8f6c25043eb3d2b78c60ee60f675",
+    "data_rows": 14,
+    "indicator": "hcfa",
+    "register_id": "R20",
+    "sex": "male",
+    "source_file": "hcfa-boys-0-13-zscores.xlsx",
+    "source_sha256": "70169d624d270a089ba81f2202f3517ec91947b6a1cd6c624121dc9cdaa6f264"
+  },
+  "hcfa_boys_0_5.csv": {
+    "csv_sha256": "6c14bc7c28294edc5b8eb12c2e27d121f6f246f8eba95ffa505918203bb5fa8b",
+    "data_rows": 61,
+    "indicator": "hcfa",
+    "register_id": "R20",
+    "sex": "male",
+    "source_file": "hcfa-boys-0-5-zscores.xlsx",
+    "source_sha256": "296038a15de807ee74940627bd1ddc638e68b223b410b4ca3ccf1ff4a8b5770a"
+  },
+  "hcfa_girls_0_13.csv": {
+    "csv_sha256": "b25e6904eed53a45fe9ca16634119828d9a113bb15eb78eaa80a15bf7d4a8be2",
+    "data_rows": 14,
+    "indicator": "hcfa",
+    "register_id": "R20",
+    "sex": "female",
+    "source_file": "hcfa-girls-0-13-zscores.xlsx",
+    "source_sha256": "4e21122bad207356494111f0f01f03b318b6af0ab1971d0c6af385d000c89959"
+  },
+  "hcfa_girls_0_5.csv": {
+    "csv_sha256": "0d9bf8b4bcbe33d01783d2b8644772b176c29a312366ad739c1e2e50a04abedd",
+    "data_rows": 61,
+    "indicator": "hcfa",
+    "register_id": "R20",
+    "sex": "female",
+    "source_file": "hcfa-girls-0-5-zscores.xlsx",
+    "source_sha256": "134cd53ca39f0f55b0b3c2bc6c94278c83d9945842bc64088464f73effcd12e7"
+  },
   "lhfa_boys.csv": {
     "csv_sha256": "f348ebf08f3fcdff7da2f0d07d61823fd0a0fb5bb28e7da6acb62976f07eafd3",
     "data_rows": 1857,

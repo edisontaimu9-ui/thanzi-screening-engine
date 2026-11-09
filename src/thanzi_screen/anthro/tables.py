@@ -85,3 +85,32 @@ class LenHeiTable:
 def lenhei_table(indicator: str, sex: str) -> LenHeiTable:
     key = "Length" if indicator == "wfl" else "Height"
     return LenHeiTable(_read_verified(_filename(indicator, sex)), key)
+
+
+# ---- Head circumference-for-age (R20) ----
+# Two WHO tables per sex: weekly for 0 to 13 weeks, monthly for 0 to 60 months. L is 1 throughout, so the z-score is
+# (y / M - 1) / S. Values between rows are interpolated linearly, as the weight-for-length table is.
+HC_DAYS_PER_MONTH = 30.4375          # same constant as the engine (tested equal; engine imports this module)
+HC_WEEKLY_MAX_DAYS = 91              # 13 weeks: the weekly table is used up to and including this day
+HC_MAX_MONTHS = 60.0                 # the monthly table ends at 60 months (1826.25 days)
+
+
+@lru_cache(maxsize=None)
+def hc_table(sex: str, span: str) -> LenHeiTable:
+    """`span` is '0_13' (weeks) or '0_5' (months). Checksum-verified like every other table."""
+    if sex not in SEXES or span not in ("0_13", "0_5"):
+        raise KeyError((sex, span))
+    name = f"hcfa_{'boys' if sex == 'male' else 'girls'}_{span}.csv"
+    return LenHeiTable(_read_verified(name), "Week" if span == "0_13" else "Month")
+
+
+def hc_lms(sex: str, age_days: int) -> tuple[float, float, float] | None:
+    """Interpolated (L, M, S) for head circumference at this age, or None past 60 months (1826 days)."""
+    if age_days < 0:
+        return None
+    if age_days <= HC_WEEKLY_MAX_DAYS:
+        return hc_table(sex, "0_13").lookup(age_days / 7.0)
+    months = age_days / HC_DAYS_PER_MONTH
+    if months > HC_MAX_MONTHS:
+        return None
+    return hc_table(sex, "0_5").lookup(months)

@@ -16,16 +16,17 @@ M = V.DAYS_PER_MONTH
 
 # An independent copy of the table as read from the screenshot (weight g/day): (from, to, girls, boys).
 SCREENSHOT = [
-    (0, 1, (22, 42), (24, 48)), (1, 2, (24, 43), (30, 51)), (2, 3, (16, 23), (19, 36)), (3, 6, None, (13, 23)),
+    (0, 1, (22, 42), (24, 48)), (1, 2, (24, 43), (30, 51)), (2, 3, (16, 23), (19, 36)), (3, 6, (17, 25), (13, 23)),
     (6, 9, (6, 15), (7, 15)), (9, 12, (4, 12), (4, 12)), (12, 18, (4, 10), (4, 10)), (18, 24, (4, 10), (4, 9)),
     (24, 48, (3.5, 5), (3.5, 5)), (48, 84, (4.5, 6.5), (4.5, 6.5)),
 ]
 
 
 # ---- the reference file ----
-def test_reference_matches_the_transcription_and_is_marked_unverified():
+def test_reference_matches_the_transcription_and_is_marked_verified_with_one_derived_range():
     ref = V._reference()
-    assert ref["reference_id"] == "R19" and "NOT checked" in ref["provenance"]
+    assert ref["reference_id"] == "R19" and "Checked against the handbook" in ref["provenance"]
+    assert "NOT checked" not in ref["provenance"] and "derived" in ref["provenance"]
     got = [(b["from_months"], b["to_months"], tuple(b["girls"]) if b["girls"] else None, tuple(b["boys"])) for b in ref["bands"]]
     assert got == SCREENSHOT
 
@@ -40,9 +41,14 @@ def test_bands_are_contiguous_and_ranges_are_proper():
                 assert 0 < b[key][0] < b[key][1]
 
 
-def test_the_suspect_girls_row_is_not_used():
-    girls_3_6 = next(b for b in V._reference()["bands"] if b["from_months"] == 3)
-    assert girls_3_6["girls"] is None and "21-21" in girls_3_6["girls_note"]
+def test_girls_three_to_six_months_is_derived_from_21_with_the_neighbouring_half_widths():
+    bands = {b["from_months"]: b for b in V._reference()["bands"]}
+    g = bands[3]
+    assert g["girls_derived"] is True and "21-21" in g["girls_note"] and "boys_derived" not in g
+    half = lambda r: (r[1] - r[0]) / 2
+    expected_half = (half(bands[2]["girls"]) + half(bands[6]["girls"])) / 2          # 3.5 and 4.5 -> 4.0
+    assert expected_half == 4.0 and g["girls"] == [21 - expected_half, 21 + expected_half]
+    assert sum(1 for b in bands.values() if b.get("girls_derived") or b.get("boys_derived")) == 1
 
 
 def test_plausibility_limits_equal_the_engines():
@@ -119,11 +125,24 @@ def test_boys_and_girls_differ_where_the_source_differs():
 
 
 # ---- not assessed ----
-def test_girls_three_to_six_months_are_not_assessed_until_verified():
+def test_girls_three_to_six_months_use_the_derived_range_and_say_so():
     for start, end in ((100, 140), (80, 120), (170, 200)):       # inside, and crossing in from the 2-3 month band
         g = assess("female", start, 5.5, end, 6.2)
-        assert not g.assessed and g.reason == "reference_unverified" and g.status is None and not g.flagged
-    assert assess("male", 100, 5.5, 140, 6.2).assessed             # boys are fine
+        assert g.assessed and g.reference_derived
+    inside = assess("female", 100, 5.5, 140, 5.6)                # 100 g in 40 days = 2.5 g/day, below 17
+    assert inside.status == "below_range" and inside.flagged and (inside.reference_low, inside.reference_high) == (17.0, 25.0)
+    assert V.MESSAGES["derived_reference"] in inside.messages
+    fine = assess("female", 100, 5.5, 140, 6.3)                  # 800 g in 40 days = 20 g/day
+    assert fine.status == "within_range" and not fine.messages and fine.reference_derived
+    assert not assess("male", 100, 5.5, 140, 6.2).reference_derived and not assess("female", 200, 6.5, 240, 6.8).reference_derived
+
+
+def test_a_range_marked_unusable_is_still_not_assessed(monkeypatch):
+    ref = json.loads(json.dumps(V._reference()))
+    next(b for b in ref["bands"] if b["from_months"] == 3)["girls"] = None
+    monkeypatch.setattr(V, "_reference", lambda: ref)
+    g = assess("female", 100, 5.5, 140, 6.2)
+    assert not g.assessed and g.reason == "reference_unverified" and g.status is None and not g.flagged
 
 
 def test_minimum_interval_boundary():
@@ -174,8 +193,8 @@ def test_invariants_over_random_inputs():
         assert g.flagged == (g.status == "below_range")
         if g.assessed:
             assert g.reference_low < g.reference_high and g.weight_loss == (w2 < w1)
-            assert g.messages == ((V.MESSAGES["weight_loss"],) if g.weight_loss else
-                                  (V.MESSAGES["below_range"],) if g.flagged else ())
+            base = ((V.MESSAGES["weight_loss"],) if g.weight_loss else (V.MESSAGES["below_range"],) if g.flagged else ())
+            assert g.messages == (base + (V.MESSAGES["derived_reference"],) if base and g.reference_derived else base)
         else:
             assert g.status is None and not g.flagged and g.messages
 
