@@ -207,7 +207,7 @@ class PretermResponse(BaseModel):
     birth_context: BirthContext
     pma_weeks: float
     birth_classification: dict[str, str]
-    measurements: dict[str, Any] = Field(description="Fenton 2025 z-score and percentile per measure, or 'outside_fenton_range'.")
+    measurements: dict[str, Any] = Field(description="Fenton 2025 Preterm Growth Chart z-score and percentile per measure, or 'outside_fenton_range'.")
     growth: dict[str, Any] | None = Field(description="Change in z-score from birth. Never a diagnosis from one percentile.")
     feeding: dict[str, Any]
     kmc: str
@@ -217,7 +217,7 @@ class PretermResponse(BaseModel):
     warnings: list[str]
     rule_set_version: str
     model_version: str
-    data_attribution: str = Field(description="Fenton 2025 data, CC BY-NC-ND 4.0, attribution required, non-commercial.")
+    data_attribution: str = Field(description="Fenton 2025 Preterm Growth Chart data, CC BY-NC-ND 4.0, attribution required, non-commercial.")
     status: str
     disclaimer: str
 

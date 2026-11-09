@@ -225,7 +225,7 @@ def test_summary_shape_and_wording(models, rows):
         cls, tier = e.classification_trace.classification, e.classification_trace.tier
         if tier == "urgent":
             assert any(k in e.summary[1].lower() for k in ("urgent", "refer", "assessment"))
-            assert "Meets the CMAM criterion for severe" in e.summary[0]
+            assert "Meets the criterion for severe acute malnutrition in the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016" in e.summary[0]
         if cls == "MAM":
             assert "refer" in e.summary[1].lower()
         if tier == "recheck":
@@ -265,7 +265,7 @@ def test_determinism_and_json_round_trip(models):
     assert a == b and a.to_json(sort_keys=True) == b.to_json(sort_keys=True)
     d = json.loads(a.to_json())
     assert d["summary"] == list(a.summary)
-    assert d["classification_trace"]["rules"][0]["source"] == "R3"
+    assert d["classification_trace"]["rules"][0]["source"] == "Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016"
     assert set(d) >= {"summary", "classification_trace", "flag_trace", "review_trace", "limits"}
 
 

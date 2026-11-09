@@ -1,7 +1,7 @@
 # Thanzi Screening Engine
 
 Stateless screening service for acute malnutrition in children under five (0 to 59 months), built for use in Malawi. It
-classifies a child against the Malawi CMAM guidelines (2016), screens preterm and low-birth-weight babies, and returns
+classifies a child against the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, screens preterm and low-birth-weight babies, and returns
 advisory data-quality and growth flags.
 
 > **Decision support only. Not a diagnostic device.** A trained health worker makes every clinical decision.
@@ -12,9 +12,9 @@ advisory data-quality and growth flags.
 
 - WHO Child Growth Standards z-scores (weight-for-age, length/height-for-age, weight-for-length/height, head
   circumference-for-age) with the WHO adjusted method beyond ±3 SD.
-- CMAM 2016 classification and referral: low risk, MAM, SAM (outpatient, inpatient, assessment needed) or unable to
+- Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification and referral: low risk, MAM, SAM (outpatient, inpatient, assessment needed) or unable to
   classify. Every rule traces to a source and page.
-- Preterm and low-birth-weight screening (Fenton 2025 growth data, COIN 2017 rules) with hand-over to the under-five
+- Preterm and low-birth-weight screening (Fenton 2025 growth data, Care of the Infant and Newborn (COIN), Malawi, 2017 rules) with hand-over to the under-five
   engine on corrected age.
 - Advisory flags that never change a classification: recording-error detection (logistic and small neural network),
   a rules-based review check, and growth monitoring between two visits (weight gain and z-score trends).
@@ -71,7 +71,7 @@ Contract: [`docs/api/openapi.json`](docs/api/openapi.json). Details: [docs/modul
 ```
 src/thanzi_screen/
   anthro/     WHO z-scores and reference tables
-  rules/      CMAM 2016 classification, review check
+  rules/      Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification, review check
   preterm/    Preterm and low-birth-weight engine and routing
   growth/     Weight-gain and z-score trend monitoring
   ml/         Recording-error flags, neural network (dl), note checker (nlp)
@@ -106,7 +106,7 @@ tests/        Unit, property, robustness, API and safety tests
 
 ## Known limitations
 
-- **Not clinically validated.** The rules match the encoded CMAM 2016 text and are tested for behaviour. Clinical
+- **Not clinically validated.** The rules match the encoded Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 text and are tested for behaviour. Clinical
   review of the case pack (`docs/testing/case-pack.xlsx`) and worker wording is outstanding.
 - **Machine-learning flags are trained on synthetic data only.** Real recording errors are messier. Accuracy and
   fairness across districts, ages and sexes are untested.
@@ -121,5 +121,5 @@ tests/        Unit, property, robustness, API and safety tests
 ## Licence and data
 
 No licence has been chosen for the code. `src/thanzi_screen/preterm/fenton2025_lms.json` is Fenton 2025 data under
-CC BY-NC-ND 4.0 (attribution, non-commercial, no derivatives): do not edit it. WHO tables and the CMAM guideline have
+CC BY-NC-ND 4.0 (attribution, non-commercial, no derivatives): do not edit it. WHO tables and the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 have
 their own terms; see the [reference register](docs/references/register.md).

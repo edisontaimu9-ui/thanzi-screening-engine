@@ -56,8 +56,8 @@ class ScreenRequest(BaseModel):
     failure_to_gain_weight: bool | None = None
     previous_measurement: PreviousMeasurement | None = Field(
         default=None, description="Optional earlier visit (age_days, weight_kg). With it the response adds growth_monitoring: "
-        "weight gain per day compared with the ASPEN reference range (R19), and z-score trends for weight, length or height, and head "
-        "circumference (WHO tables). Advisory only. Under-5 route only.")
+        "weight gain per day compared with the reference range in the ASPEN Paediatric and Neonatal Nutrition Support Handbook, Third Edition, 2024, and z-score trends for weight, length or height, and head "
+        "circumference (WHO Child Growth Standards, 2006). Advisory only. Under-5 route only.")
 
     # ---- Birth context and preterm fields (all optional). Without gestational_age_weeks and birth_weight_g the
     # request is screened exactly as before. See docs/modules/preterm.md for the routing rules. ----
@@ -75,9 +75,9 @@ class ScreenRequest(BaseModel):
     consecutive_days_gaining_weight: int | None = Field(default=None, description="Preterm route: consecutive days of weight gain. If null and failure_to_gain_weight is true, 0 is used.")
     gastric_aspirate_pct: Number | None = Field(default=None, description="Preterm route: gastric aspirate as % of the last tube feed (0 to 100).")
     neonatal_danger_signs: list[NeonatalSignName] | None = Field(
-        default=None, max_length=30, description="Preterm route: signs the CMAM danger-sign list does not have. "
+        default=None, max_length=30, description="Preterm route: signs the danger-sign list of the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 does not have. "
         "null: not assessed. []: assessed, none present. Convulsions, lethargy, hypoglycaemia, severe dehydration and "
         "unable to feed are read from danger_signs, complications and too_weak_to_suckle, not asked twice.")
     hypoglycaemia_not_correcting: bool | None = Field(
         default=None, description="Preterm route: hypoglycaemia is not correcting with treatment (the urgent trigger). "
-        "The complications value hypoglycaemia is itself an urgent trigger on the preterm route (CMAM 2016 Table 5: inpatient).")
+        "The complications value hypoglycaemia is itself an urgent trigger on the preterm route (Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5: inpatient).")

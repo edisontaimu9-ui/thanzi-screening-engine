@@ -3,7 +3,15 @@
 All notable changes. Versions follow the package version in `pyproject.toml`. Unreleased changes are on `main` and not
 yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` is regenerated with each one.
 
+
 ## Unreleased
+
+- **References use full official titles.** Citations in rule traces, messages, API descriptions, the case pack, the traceability
+  report, tests and documentation now give the full title with the abbreviation and year (for example *Community-Based
+  Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016* and *Care of the Infant and Newborn (COIN), Malawi, 2017*),
+  never an abbreviation alone. New `thanzi_screen.references` holds the titles. **Contract change:** the `source` field of each
+  rule in the classification trace is now the full title (it was the register id `R3`), and the preterm `tag` for rules taken
+  from the manual is now the full title (it was `COIN`). Worker-facing classification messages name the guideline in full.
 
 ### Added
 - **Service information endpoints.** `GET /v1/about` returns service and rule-set versions, health, uptime, the route
@@ -15,7 +23,7 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
 - **Growth trends.** `thanzi_screen.growth.trend` compares WHO z-scores between two visits for weight-for-age,
   length/height-for-age and head circumference-for-age. Weight and length are flagged for a fall of 1.0 SD or more or a
   new fall below -2 or -3; head size for a change of 1.0 SD or more in either direction. Advisory only: a flag sets
-  `review_suggested` and a review note, never a CMAM finding or referral. `previous_measurement` gains optional
+  `review_suggested` and a review note, never a finding under the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 or referral. `previous_measurement` gains optional
   `length_height_cm`, `measure_position` and `hc_cm`; `growth_monitoring` gains `trends`, `review_suggested`,
   `review_note` and `reference_derived`. New WHO head circumference-for-age tables with checksums.
 - **Growth monitoring.** `thanzi_screen.growth` compares weight gain (g per day) between an earlier visit and the current
@@ -32,7 +40,7 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
   with a mock provider, concurrency limits, bounded queue, limited retries and health checks that never raise. Optional
   routes `GET /v1/llm/health` and `POST /v1/llm/generate` exist only when `THANZI_LLM_ENABLED=1`. New optional extra
   `llm`. Independent of the screening code in both directions.
-- **Preterm and low-birth-weight screening.** `thanzi_screen.preterm` (Fenton 2025 z-scores, COIN 2017 rules) with
+- **Preterm and low-birth-weight screening.** `thanzi_screen.preterm` (Fenton 2025 z-scores, Care of the Infant and Newborn (COIN), Malawi, 2017 rules) with
   automatic routing in `POST /v1/screen` by `gestational_age_weeks` and `birth_weight_g`: the preterm engine under 50
   weeks post-menstrual age, then the under-five engine on corrected age. New optional request fields and response models
   `PretermResponse`, `PretermAuditResponse` and `BirthContext`. Requests without the new fields behave as before.
@@ -102,7 +110,7 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
 
 ## 0.2.0
 
-- CMAM 2016 classification and referral (`thanzi_screen.rules`): low risk, MAM, SAM-OTP, SAM-inpatient, SAM-assess and
+- Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification and referral (`thanzi_screen.rules`): low risk, MAM, SAM-OTP, SAM-inpatient, SAM-assess and
   unable to classify.
 - Rule registry with source, page and tag per rule. Infant (under 6 months) pathway. HIV-positive MAM rule.
 - Weight under 3.0 kg at 6 months or older triggers inpatient care. `AnthropometryResult.weight_kg` added.

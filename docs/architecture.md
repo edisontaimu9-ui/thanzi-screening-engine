@@ -47,7 +47,7 @@ flowchart TD
     V --> RT{Routing}
     RT -->|born under 37 weeks or under 2500 g,<br/>under 50 weeks PMA| P[Preterm engine]
     RT -->|otherwise| AN[Anthropometry: WHO z-scores]
-    AN --> CL[CMAM 2016 classification]
+    AN --> CL[Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification]
     CL --> RV[Rules-based review check]
     CL --> ML[Advisory ML flags]
     CL --> GR[Growth monitoring]
@@ -68,8 +68,8 @@ each of them.
 | Package | Role | Dependencies |
 |---|---|---|
 | `anthro` | WHO z-scores from checksummed LMS tables | standard library |
-| `rules` | CMAM 2016 classification, review check | standard library |
-| `preterm` | Fenton 2025 z-scores, COIN 2017 rules, routing | standard library |
+| `rules` | Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification, review check | standard library |
+| `preterm` | Fenton 2025 z-scores, Care of the Infant and Newborn (COIN), Malawi, 2017 rules, routing | standard library |
 | `growth` | Weight-gain velocity and z-score trends | standard library |
 | `ml` | Logistic and tree recording-error flags; `ml.dl` neural network; `ml.nlp` note checker | standard library |
 | `explain` | Worker summary and audit trace | standard library |

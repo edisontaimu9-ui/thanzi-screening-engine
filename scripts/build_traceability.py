@@ -1,4 +1,4 @@
-"""Rule traceability: every CMAM rule, its source and page, and the tests that make it fire.
+"""Rule traceability: every rule from the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, its source and page, and the tests that make it fire.
 
     python scripts/build_traceability.py                       # run the suite, write docs/testing/traceability.md
     python scripts/build_traceability.py --check               # run the suite, fail if any rule has no test
@@ -60,7 +60,7 @@ def render(fired: dict[str, list[str]]) -> str:
         if not tests:
             missing.append(rid)
         examples = "<br>".join(f"`{t}`" for t in tests[:3]) or "**none**"
-        lines.append(f"| `{rid}` | {rule.description} | {rule.source} {rule.page} | {rule.tag} | {len(tests)} | {examples} |")
+        lines.append(f"| `{rid}` | {rule.description} | {rule.source}, {rule.page} | {rule.tag} | {len(tests)} | {examples} |")
     lines += ["", f"Rules in the registry: {len(RULES)}. Rules with no test: " + (", ".join(f"`{m}`" for m in missing) if missing else "none") + ".", ""]
     return "\n".join(lines)
 

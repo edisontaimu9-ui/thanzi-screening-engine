@@ -28,7 +28,7 @@ NAMES = {"wfa": "weight_for_age", "lhfa": "length_height_for_age", "hcfa": "head
 MESSAGES = {
     "interval_too_short": f"Too soon to judge the trend. Compare again after at least {MIN_INTERVAL_DAYS // 7} weeks.",
     "implausible_measurement": "A measurement looks implausible, so this trend was not assessed. Recheck both measurements.",
-    "outside_reference_ages": "This trend could not be assessed: the age is outside the ages the WHO table covers.",
+    "outside_reference_ages": "This trend could not be assessed: the age is outside the ages covered by the WHO Child Growth Standards, 2006.",
     "oedema_weight_unreliable": "Weight-for-age is not used when oedema is present, so this trend was not assessed.",
     "wfa_fell": ("Weight-for-age has fallen across z-score lines since the last visit. This may be a sign of growth "
                  "faltering. A health worker should check feeding, illness and the measurements."),
@@ -38,8 +38,8 @@ MESSAGES = {
                   "check the measurement and the child."),
     "hcfa_rose": ("Head circumference for age has risen across a z-score line since the last visit. A clinician should "
                   "check the measurement and the child."),
-    "below_minus2": "The latest value is newly below -2 SD on the WHO standard.",
-    "below_minus3": "The latest value is newly below -3 SD on the WHO standard.",
+    "below_minus2": "The latest value is newly below -2 SD on the WHO Child Growth Standards, 2006.",
+    "below_minus3": "The latest value is newly below -3 SD on the WHO Child Growth Standards, 2006.",
 }
 
 

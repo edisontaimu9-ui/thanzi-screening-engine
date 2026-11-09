@@ -4,11 +4,11 @@ Compares a child with their own earlier visit and says so as an **advisory** fla
 reason, review, ML flag or wording. Standard library only. Rule-based, so it also works in degraded mode.
 
 Two checks, both from one optional `previous_measurement`:
-1. **Weight gain** (`velocity.py`): average grams per day against the ASPEN reference range (R19, verified against the handbook).
+1. **Weight gain** (`velocity.py`): average grams per day against the reference range in the ASPEN Paediatric and Neonatal Nutrition Support Handbook, Third Edition, 2024 (register R19, verified against the handbook).
 2. **Trends** (`trend.py`): change in WHO z-score for weight-for-age, length/height-for-age and head
    circumference-for-age between the two visits.
 
-`flagged` means "a person should look at feeding, illness and the measurements". It is not a diagnosis and not a CMAM
+`flagged` means "a person should look at feeding, illness and the measurements". It is not a diagnosis and not a finding under the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016
 classification. Any flag also sets `review_suggested` with the note "A clinician should review this child's growth.".
 
 ## Why the caller sends the earlier visit
@@ -30,7 +30,7 @@ Response (optional, both views): `growth_monitoring`. The weight-gain keys are a
    "z_previous": -0.77, "z_current": -2.66, "z_change": -1.88, "direction": "fell", "lines_crossed": [-1, -2],
    "status_change": "below_minus2", "flagged": true,
    "messages": ["Length or height for age has fallen across z-score lines since the last visit. This may be a sign of slowing linear growth (stunting). A health worker should check feeding, illness and the measurements.",
-                "The latest value is newly below -2 SD on the WHO standard."],
+                "The latest value is newly below -2 SD on the WHO Child Growth Standards, 2006."],
    "reference": "R4", "guide": "R21"}, "weight_for_age": {"...": "same shape"}},
  "review_suggested": true, "review_note": "A clinician should review this child's growth."}
 ```

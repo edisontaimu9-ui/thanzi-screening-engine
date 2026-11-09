@@ -1,13 +1,15 @@
-"""Rule registry for Malawi CMAM 2016 (2nd Ed.). Page numbers are printed page numbers."""
+"""Rule registry for the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 (2nd Edition). Page numbers are printed page numbers."""
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ..references import CMAM_TITLE, CMAM_TITLE_EDITION
+
 RULE_SET_VERSION = "rules_v2016"
 DISCLAIMER = "Decision support only. Not a diagnosis. A trained clinician makes the final decision."
-PLACEHOLDER = "[PLACEHOLDER: official referral wording pending extraction from CMAM 2016.] "
+PLACEHOLDER = "[PLACEHOLDER: official referral wording pending extraction from Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016.] "
 
-# Thresholds (R3 Table 4 p.14, Table 5 pp.16-17; D5)
+# Thresholds (register R3, Table 4 p.14, Table 5 pp.16-17; D5)
 MUAC_SEVERE_CM = 11.5
 MUAC_MODERATE_CM = 12.5
 WFLH_SEVERE_Z = -3.0
@@ -29,7 +31,7 @@ class Rule:
     tag: str
 
 
-def _r(id, description, page, tag=DOCUMENTED, source="R3"):
+def _r(id, description, page, tag=DOCUMENTED, source=CMAM_TITLE):
     return id, Rule(id, description, source, page, tag)
 
 
@@ -48,7 +50,7 @@ RULES: dict[str, Rule] = dict([
     _r("SAM.ASSESS", "SAM with essential information missing: urgent assessment OTP vs inpatient", "Table 5 pp.16-17", RECOMMENDATION),
     _r("MAM.HIV_OTP", "HIV-positive child with MAM, appetite passed, no complications, well and alert: admit to OTP", "Table 5 p.17"),
     _r("MAM.SFP", "Moderate wasting: SFP / further assessment", "Table 5 p.17"),
-    _r("LOW.NONE", "No CMAM criterion met on valid measurements", "n/a (engine default)", RECOMMENDATION),
+    _r("LOW.NONE", "No criterion of the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 met on valid measurements", "n/a (engine default)", RECOMMENDATION),
     _r("INF.WFL", "Infant <6 months: WFL z <-3 (length >=45 cm)", "Table 5 p.16"),
     _r("INF.OEDEMA", "Infant <6 months: any bilateral pitting oedema", "Table 5 p.16"),
     _r("INF.VISIBLE_WASTING", "Infant <6 months: visible severe wasting", "Table 5 p.16"),

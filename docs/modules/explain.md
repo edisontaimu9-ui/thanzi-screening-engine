@@ -24,7 +24,7 @@ Try it: `python scripts/explain_demo.py --audit`
 2. The action (referral wording without the placeholder prefix).
 3. ML recording check and review reason, if any. Omitted otherwise.
 
-Wording is advisory: "meets the CMAM criterion for...", never "has...". HIV wording never appears here.
+Wording is advisory: "meets the criterion in the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 for...", never "has...". HIV wording never appears here.
 
 ## Audit trace
 - **Classification:** `rules` come straight from `ClassificationResult.rules_fired`. `criteria` list each value against the same cut-offs the rules use (imported from `rules_v2016`), with the nearest cut-off and the margin (value minus cut-off). A value on a cut-off counts as the less severe side.

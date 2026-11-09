@@ -86,7 +86,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     docs = cfg.dev_mode
     app = FastAPI(
         title="Thanzi screening engine API", version=__version__,
-        description="Decision support for under-five malnutrition screening (CMAM 2016). Not a diagnosis. "
+        description="Decision support for under-five malnutrition screening (Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016). Not a diagnosis. "
                     "Babies born under 37 weeks or under 2500 g are routed to the preterm engine (Fenton 2025, CC BY-NC-ND 4.0) "
                     "until 50 weeks post-menstrual age, then screened on corrected age. "
                     "Demonstration only: synthetic data, not validated on real children. Stateless. "

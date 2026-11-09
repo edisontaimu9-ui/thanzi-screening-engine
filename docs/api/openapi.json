@@ -972,7 +972,7 @@
             "$ref": "#/components/schemas/BirthContext"
           },
           "data_attribution": {
-            "description": "Fenton 2025 data, CC BY-NC-ND 4.0, attribution required, non-commercial.",
+            "description": "Fenton 2025 Preterm Growth Chart data, CC BY-NC-ND 4.0, attribution required, non-commercial.",
             "title": "Data Attribution",
             "type": "string"
           },
@@ -1021,7 +1021,7 @@
           },
           "measurements": {
             "additionalProperties": true,
-            "description": "Fenton 2025 z-score and percentile per measure, or 'outside_fenton_range'.",
+            "description": "Fenton 2025 Preterm Growth Chart z-score and percentile per measure, or 'outside_fenton_range'.",
             "title": "Measurements",
             "type": "object"
           },
@@ -1175,7 +1175,7 @@
             "$ref": "#/components/schemas/BirthContext"
           },
           "data_attribution": {
-            "description": "Fenton 2025 data, CC BY-NC-ND 4.0, attribution required, non-commercial.",
+            "description": "Fenton 2025 Preterm Growth Chart data, CC BY-NC-ND 4.0, attribution required, non-commercial.",
             "title": "Data Attribution",
             "type": "string"
           },
@@ -1218,7 +1218,7 @@
           },
           "measurements": {
             "additionalProperties": true,
-            "description": "Fenton 2025 z-score and percentile per measure, or 'outside_fenton_range'.",
+            "description": "Fenton 2025 Preterm Growth Chart z-score and percentile per measure, or 'outside_fenton_range'.",
             "title": "Measurements",
             "type": "object"
           },
@@ -1673,7 +1673,7 @@
                 "type": "null"
               }
             ],
-            "description": "Preterm route: hypoglycaemia is not correcting with treatment (the urgent trigger). The complications value hypoglycaemia is itself an urgent trigger on the preterm route (CMAM 2016 Table 5: inpatient).",
+            "description": "Preterm route: hypoglycaemia is not correcting with treatment (the urgent trigger). The complications value hypoglycaemia is itself an urgent trigger on the preterm route (Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5: inpatient).",
             "title": "Hypoglycaemia Not Correcting"
           },
           "length_height_cm": {
@@ -1737,7 +1737,7 @@
                 "type": "null"
               }
             ],
-            "description": "Preterm route: signs the CMAM danger-sign list does not have. null: not assessed. []: assessed, none present. Convulsions, lethargy, hypoglycaemia, severe dehydration and unable to feed are read from danger_signs, complications and too_weak_to_suckle, not asked twice.",
+            "description": "Preterm route: signs the danger-sign list of the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 does not have. null: not assessed. []: assessed, none present. Convulsions, lethargy, hypoglycaemia, severe dehydration and unable to feed are read from danger_signs, complications and too_weak_to_suckle, not asked twice.",
             "title": "Neonatal Danger Signs"
           },
           "oedema": {
@@ -1760,7 +1760,7 @@
                 "type": "null"
               }
             ],
-            "description": "Optional earlier visit (age_days, weight_kg). With it the response adds growth_monitoring: weight gain per day compared with the ASPEN reference range (R19), and z-score trends for weight, length or height, and head circumference (WHO tables). Advisory only. Under-5 route only."
+            "description": "Optional earlier visit (age_days, weight_kg). With it the response adds growth_monitoring: weight gain per day compared with the reference range in the ASPEN Paediatric and Neonatal Nutrition Support Handbook, Third Edition, 2024, and z-score trends for weight, length or height, and head circumference (WHO Child Growth Standards, 2006). Advisory only. Under-5 route only."
           },
           "sex": {
             "enum": [
@@ -2028,7 +2028,7 @@
     }
   },
   "info": {
-    "description": "Decision support for under-five malnutrition screening (CMAM 2016). Not a diagnosis. Babies born under 37 weeks or under 2500 g are routed to the preterm engine (Fenton 2025, CC BY-NC-ND 4.0) until 50 weeks post-menstrual age, then screened on corrected age. Demonstration only: synthetic data, not validated on real children. Stateless. Sits behind the gateway: every route except /health needs X-Gateway-Key.",
+    "description": "Decision support for under-five malnutrition screening (Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016). Not a diagnosis. Babies born under 37 weeks or under 2500 g are routed to the preterm engine (Fenton 2025, CC BY-NC-ND 4.0) until 50 weeks post-menstrual age, then screened on corrected age. Demonstration only: synthetic data, not validated on real children. Stateless. Sits behind the gateway: every route except /health needs X-Gateway-Key.",
     "title": "Thanzi screening engine API",
     "version": "0.7.0"
   },

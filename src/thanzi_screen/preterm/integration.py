@@ -77,7 +77,7 @@ def to_preterm_input(route: Route, sex: str, weight_kg: float, length_height_cm:
                         "Say hypoglycaemia_not_correcting if it is not responding to treatment.")
     if oedema != "none":
         warnings.append("Oedema reported: weight z-scores are unreliable. Oedema is an inpatient criterion in an infant "
-                        "under CMAM 2016 Table 5.")
+                        "under Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5.")
     pi = E.PretermInput(
         sex=sex, ga_weeks=route.ga_weeks, birth_weight_g=route.birth_weight_g, age_days=route.age_days,
         weight_g=round(_positive("weight_kg", weight_kg) * 1000, 3),

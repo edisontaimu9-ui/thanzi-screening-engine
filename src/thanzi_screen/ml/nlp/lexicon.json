@@ -1,7 +1,7 @@
 {
   "version": "0.1-draft",
   "status": "DRAFT. English only. Not clinically validated (I48, I49). Terms were written for this project and are not copied from any external dataset.",
-  "source_note": "Each concept maps to a finding already encoded in thanzi_screen.rules (CMAM 2016 Table 5). Nothing here adds a clinical criterion. HIV is deliberately absent (D7, D86).",
+  "source_note": "Each concept maps to a finding already encoded in thanzi_screen.rules (Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5). Nothing here adds a clinical criterion. HIV is deliberately absent (D7, D86).",
   "window_before": 5,
   "window_after": 3,
   "contrast": ["but", "however", "although", "though", "except"],

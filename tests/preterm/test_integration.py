@@ -251,7 +251,7 @@ def test_proposed_values_are_read_from_the_rules_file_not_hardcoded(monkeypatch)
 
 
 def test_the_word_failure_is_never_used_by_the_preterm_route():
-    # Scope: the preterm engine and its response. The under-5 engine's own CMAM wording ("failure to gain weight",
+    # Scope: the preterm engine and its response. The under-5 engine's own wording from the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 ("failure to gain weight",
     # the failure_to_gain_weight field) is Table 5 text and is listed as an open question, not changed here.
     for p in (payload(), payload(weight_kg=0.9), payload(neonatal_danger_signs=["cyanosis"]),
               payload(age_days=60, weight_kg=2.0, length_height_cm=45, hc_cm=30, birth_length_cm=37, birth_hc_cm=26)):
@@ -390,7 +390,7 @@ def test_urgent_trigger_rules_and_config_agree():
     rules = engine.R["urgent_triggers"]["rules"]
     fields = {f for r in rules for f in r["all_of"] + r.get("any_of", [])}
     assert fields == set(URGENT_FIELDS) and all(hasattr(PretermInput(sex="f", ga_weeks=30, birth_weight_g=1000, age_days=1), f) for f in fields)
-    assert len({r["id"] for r in rules}) == len(rules) and all(r["tag"] in ("COIN", "proposed") for r in rules)
+    assert len({r["id"] for r in rules}) == len(rules) and all(r["tag"] in ("Care of the Infant and Newborn (COIN), Malawi, 2017", "proposed") for r in rules)
     assert "any_of" not in engine.R["urgent_triggers"]            # the old hardcoded-list copy is gone
     for r in rules:                                               # each rule alone fires, and reports its own label
         kw = {f: True for f in r["all_of"]}

@@ -1,5 +1,5 @@
 {
-  "source": "COIN 2017 Participants' Manual (Malawi), Sessions 2, 12, 19 and wall charts; Fenton 2025 guidance sheet",
+  "source": "Care of the Infant and Newborn (COIN), Malawi, 2017, Participants' Manual, Sessions 2, 12, 19 and wall charts; Fenton 2025 guidance sheet",
   "birth_weight_class": [
     {
       "id": "ELBW",
@@ -35,7 +35,7 @@
     "3": 120,
     "4": 150,
     "7_lbw_sga": 180,
-    "note": "days 5-6 not stated in COIN; hold at 150"
+    "note": "days 5-6 not stated in the Care of the Infant and Newborn (COIN), Malawi, 2017; hold at 150"
   },
   "route": {
     "bw<1500_or_ga<32": {
@@ -114,7 +114,7 @@
       "mild": 0.8,
       "moderate": 1.2,
       "severe": 2.0,
-      "note": "Literature-based (weight/length: mild 0.8-1.2, moderate >1.2-2, severe >=2). Not COIN. No universal cut-off per Fenton; use as review flags, not diagnoses. Needs clinician sign-off."
+      "note": "Literature-based (weight/length: mild 0.8-1.2, moderate >1.2-2, severe >=2). Not from the Care of the Infant and Newborn (COIN), Malawi, 2017. No universal cut-off per Fenton; use as review flags, not diagnoses. Needs clinician sign-off."
     },
     "hc_decline": {
       "follow_up_above": 1.0,
@@ -124,12 +124,12 @@
   },
   "hand_over_to_under5_engine": {
     "at_pma_weeks": 50,
-    "use": "corrected age with WHO standards"
+    "use": "corrected age with the WHO Child Growth Standards, 2006"
   },
   "urgent_triggers": {
-    "note": "Danger-sign based; growth alone is never urgent. [COIN] = in manual; [proposed] = needs sign-off vs national neonatal guidelines / under-5 emergency signs.",
+    "note": "Danger-sign based; growth alone is never urgent. [Care of the Infant and Newborn (COIN), Malawi, 2017] = in the manual; [proposed] = needs sign-off vs national neonatal guidelines / under-5 emergency signs.",
     "rules": [
-      {"id": "bilious_vomiting", "all_of": ["bilious_vomiting"], "label": "bilious vomiting", "tag": "COIN"},
+      {"id": "bilious_vomiting", "all_of": ["bilious_vomiting"], "label": "bilious vomiting", "tag": "Care of the Infant and Newborn (COIN), Malawi, 2017"},
       {"id": "convulsions", "all_of": ["convulsions"], "label": "convulsions", "tag": "proposed"},
       {"id": "apnoea_now", "all_of": ["apnoea_now"], "label": "apnoea now", "tag": "proposed"},
       {"id": "cyanosis", "all_of": ["cyanosis"], "label": "cyanosis", "tag": "proposed"},

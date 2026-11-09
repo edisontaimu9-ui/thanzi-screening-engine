@@ -52,7 +52,7 @@ not targets. No pass or fail threshold exists until the expected load and server
 ## Not tested
 
 - **Not run on target servers or hardware.** Load numbers do not transfer.
-- **No clinical validation.** The engine matches the encoded CMAM 2016 rules. Whether the rules and wording are right for
+- **No clinical validation.** The engine matches the encoded Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 rules. Whether the rules and wording are right for
   practice requires clinician review of `case-pack.xlsx`.
 - **No real or Ministry data.** ML flags are trained on synthetic data. Accuracy, fairness across districts, ages and
   sexes, and real recording errors are untested.

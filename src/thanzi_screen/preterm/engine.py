@@ -1,5 +1,5 @@
 """Preterm nutrition screening & referral engine.
-Data: Fenton 2025 (CC BY-NC-ND 4.0, unmodified). Rules: COIN 2017 (Malawi) + Fenton guidance."""
+Data: Fenton 2025 (CC BY-NC-ND 4.0, unmodified). Rules: Care of the Infant and Newborn (COIN), Malawi, 2017 + Fenton guidance."""
 from __future__ import annotations
 import bisect, json, math
 from dataclasses import dataclass, field

@@ -1,4 +1,4 @@
-"""pytest plugin: record which tests make which CMAM rules fire (Phase 7, D94).
+"""pytest plugin: record which tests make which rules from the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, fire (Phase 7, D94).
 
 Used only by scripts/build_traceability.py and CI:  python -m pytest -p tests._trace_plugin
 Active only when THANZI_TRACE_OUT names a file. It observes `ClassificationResult` construction and

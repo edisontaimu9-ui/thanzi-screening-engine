@@ -367,7 +367,7 @@ _DISPLAY_WORDING = (("Failure to gain weight", "Faltering growth (not gaining we
 
 def display_wording(value):
     """Display-only wording for the worker view: 'failure to gain weight' reads as 'faltering growth'. Codes, rule ids and
-    the audit view keep the original CMAM terminology, so the audit trace still matches the clinical rule."""
+    the audit view keep the original terminology of the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, so the audit trace still matches the clinical rule."""
     if isinstance(value, str):
         for old, new in _DISPLAY_WORDING:
             value = value.replace(old, new)
@@ -419,7 +419,7 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None, de
             return out if view == "audit" else scrub_worker(display_wording(out))
         if rt.path == PATH_CORRECTED:
             msg = (f"Age corrected for prematurity: born at {rt.ga_weeks:g} weeks, {rt.age_days} days old, screened as "
-                   f"{rt.corrected_age_days} days. CMAM thresholds are applied to the corrected age. The ML recording-error "
+                   f"{rt.corrected_age_days} days. The thresholds of the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 are applied to the corrected age. The ML recording-error "
                    "flag is not run for corrected ages.")
             if rt.corrected_age_provisional:
                 msg += (f" PROVISIONAL: the corrected-age end point of {rt.corrected_age_until_months} months for this "
@@ -459,7 +459,7 @@ def about_info(models: Models | None, deep: DeepModels | None, optional_componen
     v = version_info(models, deep)
     comps = [
         {"name": "screening_engine", "state": "ok", "version": RULE_SET_VERSION,
-         "detail": "CMAM 2016 rules, preterm engine and corrected-age route. Does not depend on the ML models."},
+         "detail": "Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 rules, preterm engine and corrected-age route. Does not depend on the ML models."},
         {"name": "ml_logistic", "state": "ok" if models is not None else "degraded",
          "version": None if models is None else models.version,
          "detail": "Advisory recording-error flag, runs inside this service." if models is not None

@@ -68,7 +68,7 @@ control, and never in a browser response or shared log.
 | 403 `audit_forbidden` | Audit key wrong or audit off | Do not fall back silently to the worker view for an audit task |
 | 413 `payload_too_large` | Body over 16 KB | Bug in the caller |
 | 422 | Data is wrong. Messages never echo values | Show "check the entries". Do not retry unchanged |
-| 500 `internal_error` | Generic | Retry once. If it persists, alert and show "could not screen, use the paper CMAM chart" |
+| 500 `internal_error` | Generic | Retry once. If it persists, alert and show "could not screen, use the paper chart from the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016" |
 | Timeout or no connection | Service down | Same fallback as 500 |
 
 The app needs a manual or offline path: the API is not a safety net on its own. Measured median latency on one 2.1 GHz
@@ -92,7 +92,7 @@ data. See [operations](../operations.md) for alert thresholds.
 
 | Component | States | Notes |
 |---|---|---|
-| `screening_engine` | `ok` | CMAM rules, preterm engine, corrected-age route. Never depends on the ML models |
+| `screening_engine` | `ok` | Rules from the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, preterm engine, corrected-age route. Never depends on the ML models |
 | `ml_logistic` | `ok`, `degraded` | `degraded`: model files missing or mismatched |
 | `ml_deep` | `ok`, `off` | `off`: switched off or files missing |
 | `growth_monitoring` | `ok` | Needs `previous_measurement` |

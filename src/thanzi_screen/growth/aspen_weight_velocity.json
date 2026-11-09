@@ -1,6 +1,6 @@
 {
   "reference_id": "R19",
-  "source": "ASPEN Paediatric and Neonatal Nutrition Support Handbook, Third Edition: Growth Monitoring, term infants and paediatric patients, 'Reference normal growth velocity'",
+  "source": "ASPEN Paediatric and Neonatal Nutrition Support Handbook, Third Edition, 2024: Growth Monitoring, term infants and paediatric patients, 'Reference normal growth velocity'",
   "unit": "g per day (weight)",
   "provenance": "Transcribed by hand from a screenshot Edison supplied on 2026-11-08. Checked against the handbook by Edison (dietitian) on 2026-11-08: all values match, including 21-21 for girls 3 to 6 months (I59 closed). One range is derived, not published (girls 3 to 6 months, D164).",
   "bands_in_months": "Each band runs from from_months up to, not including, to_months. Months are 30.4375 days.",

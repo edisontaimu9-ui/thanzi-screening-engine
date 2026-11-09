@@ -42,7 +42,7 @@ jobs:
           python -m coverage report
           python -m coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
           python -m coverage xml
-      - name: Every CMAM rule has a test
+      - name: Every rule from the Community-Based Management of Acute Malnutrition Guidelines has a test
         run: python scripts/build_traceability.py --check --trace-file trace.json
       - name: OpenAPI contract is up to date
         run: python scripts/export_openapi.py --check

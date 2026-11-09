@@ -1,6 +1,6 @@
 # Module: rules
 
-CMAM 2016 classification and referral. Rules only; no ML. Rule set `rules_v2016`.
+Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification and referral. Rules only; no ML. Rule set `rules_v2016`.
 
 ## API
 ```python

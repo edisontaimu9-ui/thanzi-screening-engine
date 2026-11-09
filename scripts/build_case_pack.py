@@ -145,7 +145,7 @@ def build_cases() -> list[dict]:
             "wfa_z": None if a.wfa.z is None else round(a.wfa.z, 3),
             "classification": audit["classification"], "tier": audit["tier"], "programme": audit["programme"],
             "rules": ", ".join(fired),
-            "rule_pages": "; ".join(f"{r}: {RULES[r].source} {RULES[r].page}" for r in fired if r in RULES),
+            "rule_pages": "; ".join(f"{r}: {RULES[r].source}, {RULES[r].page}" for r in fired if r in RULES),
             "reasons": ", ".join(x["code"] if isinstance(x, dict) else str(x) for x in audit["reasons"]),
             "warnings": " | ".join(audit["warnings"]),
             "worker_summary": " ".join(worker["worker_summary"]),
@@ -204,7 +204,7 @@ def build_workbook(rows: list[dict]):
         ("", f),
         ("What this is", bold),
         ("Synthetic scenarios run through the engine. 'Engine classification' and the columns after it are what the engine returned, "
-         "with the rule and the printed page of the CMAM 2016 guideline (R3) it is based on. They are not clinically verified.", f),
+         "with the rule and the printed page of the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 (register R3) it is based on. They are not clinically verified.", f),
         ("What to fill in", bold),
         ("Only the two yellow columns at the end of the Cases sheet: 'Clinician agrees?' (Yes, No or Unsure) and "
          "'Comment or expected result if different'. Do not edit any other cell.", f),

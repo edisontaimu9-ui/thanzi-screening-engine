@@ -1,4 +1,4 @@
-"""CMAM classification and referral rules (Phase 2). Rules only; no ML."""
+"""Classification and referral rules from the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 (Phase 2). Rules only; no ML."""
 from .classify import classify
 from .models import (
     Appetite, Classification, ClassificationResult, ClinicalInputs, Complication,

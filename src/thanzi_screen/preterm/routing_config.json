@@ -50,10 +50,10 @@
       "++": "urgent_refer",
       "+++": "urgent_refer"
     },
-    "tag": "approved 2026-11-08, per CMAM 2016 Table 5 as encoded in rules_v2016.py: any bilateral pitting oedema in an infant under 6 months (INF.OEDEMA) and oedema +++ at any age (NRU.OEDEMA3) are inpatient criteria. Oedema is a clinical sign, not a growth measure. Per-grade values can be lowered here if the clinicians decide otherwise."
+    "tag": "approved 2026-11-08, per Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5 as encoded in rules_v2016.py: any bilateral pitting oedema in an infant under 6 months (INF.OEDEMA) and oedema +++ at any age (NRU.OEDEMA3) are inpatient criteria. Oedema is a clinical sign, not a growth measure. Per-grade values can be lowered here if the clinicians decide otherwise."
   },
   "hypoglycaemia": {
     "complication_means_not_correcting": true,
-    "tag": "approved 2026-11-08, per CMAM 2016 Table 5: hypoglycaemia is a listed medical complication (inpatient care), so the complications value hypoglycaemia is the urgent trigger on the preterm route. Set false to require the explicit hypoglycaemia_not_correcting field instead."
+    "tag": "approved 2026-11-08, per Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5: hypoglycaemia is a listed medical complication (inpatient care), so the complications value hypoglycaemia is the urgent trigger on the preterm route. Set false to require the explicit hypoglycaemia_not_correcting field instead."
   }
 }

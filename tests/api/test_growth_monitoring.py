@@ -17,7 +17,7 @@ from thanzi_screen.api.app import create_app  # noqa: E402
 
 GW, AU = "gateway-key-0123456789", "audit-key-0123456789ab"
 HG = {"X-Gateway-Key": GW}
-# A boy of 10 months, healthy by every CMAM measure, who gained 50 g in 31 days.
+# A boy of 10 months, healthy by every measure in the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, who gained 50 g in 31 days.
 NOW = {**LOW_BASE, "age_days": 305, "weight_kg": 8.55, "length_height_cm": 72.0}
 SLOW = {"age_days": 274, "weight_kg": 8.5}
 FINE = {"age_days": 274, "weight_kg": 8.2}

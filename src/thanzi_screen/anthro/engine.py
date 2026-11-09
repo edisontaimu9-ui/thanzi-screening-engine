@@ -61,7 +61,7 @@ class AnthropometryResult:
     lhfa: IndicatorResult
     wflh: IndicatorResult
     warnings: tuple[str, ...] = ()
-    weight_kg: float | None = None  # validated input weight, used by Phase 2 (CMAM Table 5 weight criterion)
+    weight_kg: float | None = None  # validated input weight, used by Phase 2 (Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5 weight criterion)
 
 
 def _positive(name: str, v: object) -> float:

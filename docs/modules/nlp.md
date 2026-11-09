@@ -5,7 +5,7 @@ classification, tier, referral or warning. Standard library only, offline, Engli
 validated**.
 
 ## What it does
-- **Extract (`extract_mentions`).** Finds findings the screening rules already know (CMAM 2016 Table 5 items: oedema,
+- **Extract (`extract_mentions`).** Finds findings the screening rules already know (Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5 items: oedema,
   convulsions, unconsciousness, lethargy, unable to drink or breastfeed, diarrhoea, malaria, poor or good appetite) and
   marks each *present*, *absent* or *uncertain*. "No oedema", "denies convulsions", "malaria negative" are *absent*;
   "? oedema", "possible malaria" are *uncertain*. A comma, full stop, semicolon, line break or a word such as "but" ends

@@ -144,7 +144,7 @@ def test_worker_view_matches_the_engine_exactly(sweep, models):
         out = screen(p, "worker", models)
         assert out["classification"] == result.classification.value
         assert out["tier"] == result.tier.value
-        # Worker text may use the display-only wording ("faltering growth"); codes and the audit trace keep CMAM terms.
+        # Worker text may use the display-only wording ("faltering growth"); codes and the audit trace keep the terms of the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016.
         assert out["reasons"] == [{"code": c, "message": service.display_wording(t)} for c, t in
                                   explain(*args, models).classification_trace.reasons]
         assert [r["code"] for r in out["reasons"]] == list(result.reasons)

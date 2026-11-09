@@ -5,14 +5,15 @@ Wording is a draft for clinician and health-worker review. Plain language, advis
 from __future__ import annotations
 
 from ..ml.features import FEATURES
+from ..references import CMAM_TITLE
 
 # ---- classification ----
 CLASS_PHRASE = {
-    "low_risk": "No CMAM malnutrition criterion was met on the measurements entered.",
-    "MAM": "Meets the CMAM criterion for moderate acute malnutrition.",
-    "SAM_OTP": "Meets the CMAM criterion for severe acute malnutrition.",
-    "SAM_INPATIENT": "Meets the CMAM criterion for severe acute malnutrition.",
-    "SAM_ASSESS": "Meets the CMAM criterion for severe acute malnutrition.",
+    "low_risk": f"No malnutrition criterion of the {CMAM_TITLE} was met on the measurements entered.",
+    "MAM": f"Meets the criterion for moderate acute malnutrition in the {CMAM_TITLE}.",
+    "SAM_OTP": f"Meets the criterion for severe acute malnutrition in the {CMAM_TITLE}.",
+    "SAM_INPATIENT": f"Meets the criterion for severe acute malnutrition in the {CMAM_TITLE}.",
+    "SAM_ASSESS": f"Meets the criterion for severe acute malnutrition in the {CMAM_TITLE}.",
     "UNABLE_TO_CLASSIFY": "Could not classify.",
 }
 INFANT_WFA_PHRASE = "Weight-for-age is very low for an infant under 6 months. A clinician should assess."
@@ -34,7 +35,7 @@ RULE_WORKER = {
     "SAM.ASSESS": "information needed to choose OTP or inpatient care is missing",
     "MAM.HIV_OTP": "meets the conditions for OTP admission",
     "MAM.SFP": "moderate wasting",
-    "LOW.NONE": "no CMAM criterion met",
+    "LOW.NONE": f"no criterion of the {CMAM_TITLE} met",
     "INF.WFL": "weight-for-length z-score {wflh} is below -3",
     "INF.OEDEMA": "oedema in an infant under 6 months",
     "INF.VISIBLE_WASTING": "visible severe wasting in an infant under 6 months",
@@ -64,7 +65,7 @@ REASON_TEXT = {
 REVIEW_EVIDENCE_LABEL = {
     "unable_to_classify": "The engine could not classify.",
     "missing_assessment": "A severe case is missing assessments.",
-    "implausible_value": "A z-score is outside the WHO plausible range.",
+    "implausible_value": "A z-score is outside the plausible range of the WHO Child Growth Standards, 2006.",
     "weight_under_3kg_verify": "Weight is under 3.0 kg at 6 months or older.",
     "discordant_muac_vs_wflh": "MUAC and weight-for-length/height are in different bands.",
     "near_threshold_muac": "MUAC is within the review margin of a cut-off.",

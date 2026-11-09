@@ -41,7 +41,7 @@ def main() -> None:
             print(" ", line)
         if args.audit:
             t = e.classification_trace
-            print("  [rules]", ", ".join(f"{r.id} ({r.source} {r.page}, {r.tag})" for r in t.rules))
+            print("  [rules]", ", ".join(f"{r.id} ({r.source}, {r.page}, {r.tag})" for r in t.rules))
             for c in t.criteria:
                 print("  [criterion]", c.text)
             for n in t.audit_notes:

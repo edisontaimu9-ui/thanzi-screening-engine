@@ -19,7 +19,7 @@ class Appetite(str, Enum):
 
 
 class DangerSign(str, Enum):
-    """CMAM 2016 Table 5, p.16."""
+    """Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5, p.16."""
     ANOREXIA = "anorexia"
     INTRACTABLE_VOMITING = "intractable_vomiting"
     CONVULSIONS = "convulsions"
@@ -30,7 +30,7 @@ class DangerSign(str, Enum):
 
 
 class Complication(str, Enum):
-    """CMAM 2016 Table 5, p.16."""
+    """Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5, p.16."""
     HYPOGLYCAEMIA = "hypoglycaemia"
     HYPOTHERMIA = "hypothermia"  # <35 C axillary or <35.5 C rectal
     INFECTIONS = "infections"
@@ -73,7 +73,7 @@ class ClinicalInputs:
     complications: frozenset[Complication] | None = None
     clinically_well_and_alert: bool | None = None
     hiv_positive: bool | None = None  # optional, sensitive (D7)
-    # Infants under 6 months (CMAM 2016 Table 5 column B)
+    # Infants under 6 months (Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5 column B)
     visible_severe_wasting: bool | None = None
     too_weak_to_suckle: bool | None = None
     failure_to_gain_weight: bool | None = None

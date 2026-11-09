@@ -1,4 +1,4 @@
-"""CMAM 2016 classification. Rules decide; nothing here uses ML (D9)."""
+"""Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification. Rules decide; nothing here uses ML (D9)."""
 from __future__ import annotations
 
 from ..anthro import AnthropometryResult, InputError
@@ -42,7 +42,7 @@ def classify(anthro: AnthropometryResult, clinical: ClinicalInputs) -> Classific
         warnings.append("Oedema entered but WFL/H was computed; WFL/H ignored (D14).")
     if (anthro.wfa.status == "ok" and IMPLAUSIBLE in anthro.wfa.flags) or (
             anthro.lhfa.status == "ok" and IMPLAUSIBLE in anthro.lhfa.flags):
-        warnings.append("WFA or LHFA flagged implausible; recheck measurements (not a CMAM criterion).")
+        warnings.append("WFA or LHFA flagged implausible; recheck measurements (not a criterion of the Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016).")
 
     infant = anthro.age_months < R.CHILD_PATHWAY_MIN_MONTHS
     if infant:

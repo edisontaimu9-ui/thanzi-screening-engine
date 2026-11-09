@@ -184,7 +184,7 @@ def build_trace(anthro, clinical, result) -> ClassificationTrace:
     notes: list[str] = []
     if "MAM.HIV_OTP" in result.rules_fired:
         notes.append("The optional HIV-positive input was used: rule MAM.HIV_OTP admits to OTP when appetite passed, "
-                     "no complications and well and alert (CMAM 2016 Table 5 p.17).")
+                     "no complications and well and alert (Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5 p.17).")
     elif clinical.hiv_positive and result.classification.value == "MAM":
         notes.append("The optional HIV-positive input was entered. OTP admission conditions were not all confirmed.")
     return ClassificationTrace(
