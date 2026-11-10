@@ -18,6 +18,8 @@ advisory data-quality and growth flags.
   engine on corrected age.
 - Advisory flags that never change a classification: recording-error detection (logistic and small neural network),
   a rules-based review check, and growth monitoring between two visits (weight gain and z-score trends).
+- Area-level hotspot surveillance (add-on): districts with SAM+MAM prevalence above a reference rate, from counts the
+  caller has already grouped. Advisory only. See [docs/modules/surveillance.md](docs/modules/surveillance.md).
 - Plain-language worker summary and a full audit trace.
 - Optional local language-model client (disabled by default) and a free-text note checker (library only).
 
@@ -62,6 +64,7 @@ The service refuses to start without `THANZI_GATEWAY_KEY`.
 | `GET /v1/metrics` | gateway | Request counts and `/v1/screen` latency |
 | `POST /v1/screen?view=worker` | gateway | Screen one child (default view) |
 | `POST /v1/screen?view=audit` | gateway + audit | Full detail, may contain HIV information |
+| `POST /v1/surveillance/hotspots` | gateway | District hotspot assessment from grouped counts (advisory) |
 | `GET /v1/llm/health`, `POST /v1/llm/generate` | gateway | Only when `THANZI_LLM_ENABLED=1` |
 
 Contract: [`docs/api/openapi.json`](docs/api/openapi.json). Details: [docs/modules/api.md](docs/modules/api.md).
@@ -74,6 +77,7 @@ src/thanzi_screen/
   rules/      Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification, review check
   preterm/    Preterm and low-birth-weight engine and routing
   growth/     Weight-gain and z-score trend monitoring
+  surveillance/ District hotspot assessment from grouped counts
   ml/         Recording-error flags, neural network (dl), note checker (nlp)
   explain/    Worker summary and audit trace
   api/        FastAPI service, security, metrics
@@ -100,7 +104,7 @@ tests/        Unit, property, robustness, API and safety tests
 | Monitoring and maintenance | [docs/operations.md](docs/operations.md) |
 | Testing and rule traceability | [docs/testing/test-report.md](docs/testing/test-report.md), [docs/testing/traceability.md](docs/testing/traceability.md) |
 | References and licences | [docs/references/register.md](docs/references/register.md) |
-| Modules | `docs/modules/`: anthro, rules, preterm, growth, ml, dl, nlp, explain, data, llm |
+| Modules | `docs/modules/`: anthro, rules, preterm, growth, surveillance, ml, dl, nlp, explain, data, llm |
 | Model cards | [models/MODEL_CARD.md](models/MODEL_CARD.md), [models/DL_MODEL_CARD.md](models/DL_MODEL_CARD.md) |
 | Changes | [CHANGELOG.md](CHANGELOG.md) |
 

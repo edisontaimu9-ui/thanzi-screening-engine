@@ -81,3 +81,25 @@ class ScreenRequest(BaseModel):
     hypoglycaemia_not_correcting: bool | None = Field(
         default=None, description="Preterm route: hypoglycaemia is not correcting with treatment (the urgent trigger). "
         "The complications value hypoglycaemia is itself an urgent trigger on the preterm route (Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016, Table 5: inpatient).")
+
+
+class HotspotRow(BaseModel):
+    """Counts for one district in one month, already grouped by the caller. No child-level data."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    district: str = Field(description="District name only. No facility, community, village or coordinates.")
+    period: str = Field(description="Month, YYYY-MM.")
+    screened: int = Field(ge=0, description="Children under five screened in that month.")
+    sam: int = Field(ge=0, description="Of those, classified SAM (SAM_OTP, SAM_INPATIENT or SAM_ASSESS).")
+    mam: int = Field(ge=0, description="Of those, classified MAM.")
+    unable: int = Field(default=0, ge=0, description="Of those, UNABLE_TO_CLASSIFY. Used for a data-quality flag.")
+
+
+class HotspotRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    rows: list[HotspotRow] = Field(min_length=1, max_length=1000,
+                                   description="One row per district and month. The latest month is assessed; earlier months give the trend.")
+    reference_rate: Number | None = Field(
+        default=None, description="Optional fixed reference rate of SAM+MAM (0 to 1), for example a national survey figure. "
+                                  "Default: the rate of all the other districts in the same batch.")

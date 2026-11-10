@@ -18,7 +18,7 @@ from .. import __version__
 from ..ml.dl import DeepModels, load_deep_models
 from ..ml.flags import Models, load_models
 from ..schemas import (
-    AboutResponse, AuditResponse, ErrorBody, HealthResponse, MetricsResponse, PretermAuditResponse, PretermResponse,
+    AboutResponse, AuditResponse, ErrorBody, HealthResponse, HotspotRequest, HotspotResponse, MetricsResponse, PretermAuditResponse, PretermResponse,
     ScreenRequest, VersionResponse, WorkerResponse,
 )
 from ..llm import LLMClient
@@ -27,8 +27,11 @@ from .metrics import Metrics
 
 log = logging.getLogger("thanzi.api")
 MAX_BODY_BYTES = 16_384
+HOTSPOT_PATH = "/v1/surveillance/hotspots"
+MAX_HOTSPOT_BODY_BYTES = 262_144      # up to 1,000 grouped rows; still no child-level data
 HEALTH_PATH = "/health"
-_KNOWN_FIELDS = frozenset(service.ALLOWED) | {"view"}
+_KNOWN_FIELDS = frozenset(service.ALLOWED) | {"view", "rows", "reference_rate", "district", "period", "screened", "sam", "mam",
+                                              "unable"}
 
 
 def _error(status: int, code: str, message: str, **extra) -> JSONResponse:
@@ -103,7 +106,8 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
             if not security.gateway_ok(cfg, request.headers.get(security.GATEWAY_HEADER)):
                 return _error(401, "unauthorised", "Unauthorised.")
             length = request.headers.get("content-length")
-            if length and length.isdigit() and int(length) > MAX_BODY_BYTES:
+            limit = MAX_HOTSPOT_BODY_BYTES if request.url.path == HOTSPOT_PATH else MAX_BODY_BYTES
+            if length and length.isdigit() and int(length) > limit:
                 return _error(413, "payload_too_large", "Request body is too large.")
         return await call_next(request)
 
@@ -182,6 +186,13 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         if view == "audit" and not security.audit_ok(cfg, x_audit_key):
             return _error(403, "audit_forbidden", "The audit view is not available.")
         return JSONResponse(service.screen(body.model_dump(), view, app.state.models, app.state.deep))
+
+    @app.post(HOTSPOT_PATH, response_model=HotspotResponse, tags=["surveillance"], responses={
+        401: {"model": ErrorBody}, 413: {"model": ErrorBody}, 422: {"model": ErrorBody}})
+    def hotspots(body: HotspotRequest):
+        """Flag districts with higher SAM+MAM prevalence among screened children. Takes counts already grouped by the
+        caller (no child records, no fine geography). Advisory only: never changes an individual classification."""
+        return JSONResponse(service.hotspots(body.model_dump()))
 
     if llm_client is not None:
         llm_routes.install(app, llm_client)

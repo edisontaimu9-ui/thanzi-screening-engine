@@ -1,0 +1,11 @@
+{
+  "version": "hotspots-0.1",
+  "status": "PLACEHOLDER thresholds. Not from a Malawi source. The Ministry of Health and Sanitation nutrition unit must confirm every value before real use.",
+  "min_screened": 30,
+  "min_prevalence_for_hotspot": 0.05,
+  "confidence_z": 1.96,
+  "trend_z": 1.96,
+  "suppress_cells_below": 5,
+  "unable_share_review": 0.2,
+  "max_rows": 1000
+}

@@ -35,6 +35,7 @@ Environment variables: see [configuration](../configuration.md).
 | `GET /v1/metrics` | gateway | Request counts by route and status, 5xx count, `/v1/screen` latency (p50, p95, max, mean). Counts and durations only, in memory, reset on restart, per worker process |
 | `POST /v1/screen?view=worker` | gateway | Default view. One child per call |
 | `POST /v1/screen?view=audit` | gateway + `X-Audit-Key` | Full detail. May contain HIV information |
+| `POST /v1/surveillance/hotspots` | gateway | Grouped district counts in, hotspot assessment out. No child data. Body limit 256 KB. See [surveillance](surveillance.md) |
 | `GET /v1/llm/health`, `POST /v1/llm/generate` | gateway | Only when `THANZI_LLM_ENABLED=1`. See [llm](llm.md) |
 
 The gateway key goes in `X-Gateway-Key` and the audit key in `X-Audit-Key`. A missing or wrong gateway key gives a
@@ -118,7 +119,7 @@ monitoring still work. Missing or mismatched deep-model files leave `deep_record
 
 ## Not provided, by design
 
-No database, no stored requests, no request-body logging, no batch endpoint, no child identifiers.
+No database, no stored requests, no request-body logging, no per-child batch endpoint, no child identifiers. The hotspot route takes grouped counts only.
 
 ## Optional language-model routes
 

@@ -29,6 +29,9 @@ where = ["src"]
 # Growth velocity reference (R19): transcribed from the ASPEN handbook and verified against it.
 "thanzi_screen.growth" = ["aspen_weight_velocity.json"]
 
+# Hotspot surveillance thresholds (placeholders until the Ministry confirms them).
+"thanzi_screen.surveillance" = ["hotspot_config.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]

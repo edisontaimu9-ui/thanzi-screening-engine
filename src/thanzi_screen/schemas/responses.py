@@ -230,3 +230,31 @@ class PretermAuditResponse(PretermResponse):
 
 for _m in (WorkerResponse, AuditResponse):
     _m.model_rebuild()
+
+
+class HotspotArea(BaseModel):
+    district: str
+    status: str = Field(description="hotspot, watch, not_flagged, insufficient_data or no_data.")
+    screened: int | None
+    sam: int | None = Field(description="null when counts_suppressed.")
+    mam: int | None = Field(description="null when counts_suppressed.")
+    gam_cases: int | None = Field(description="SAM plus MAM. null when counts_suppressed.")
+    prevalence: float | None
+    ci_low: float | None = Field(description="Lower bound of the Wilson 95% interval.")
+    ci_high: float | None
+    reference_rate: float | None
+    reference_kind: str | None = Field(description="supplied or batch_leave_one_out.")
+    trend: str = Field(description="rising, falling, steady or not_assessed, against the previous month in the batch.")
+    previous_prevalence: float | None
+    data_quality_review: bool = Field(description="true when many screened children were UNABLE_TO_CLASSIFY.")
+    counts_suppressed: bool
+    reasons: list[str]
+
+
+class HotspotResponse(BaseModel):
+    period: str
+    config_version: str
+    areas: list[HotspotArea]
+    summary: dict[str, int]
+    min_screened: int
+    advisory: str

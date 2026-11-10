@@ -14,6 +14,12 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
   from the manual is now the full title (it was `COIN`). Worker-facing classification messages name the guideline in full.
 
 ### Added
+- **Hotspot surveillance.** `POST /v1/surveillance/hotspots` and `thanzi_screen.surveillance`. Takes counts per district and
+  month (grouped by the caller, no child-level data), returns per-district prevalence with a Wilson interval, a trend and a
+  status (`hotspot`, `watch`, `not_flagged`, `insufficient_data`, `no_data`). Small counts are suppressed, districts under 30
+  screened are never read as low risk, and nothing changes any individual classification. Thresholds are placeholders in
+  `hotspot_config.json`. The `/v1/screen` body limit is unchanged; this route allows 256 KB. Storage and grouping stay
+  with the backend. See `docs/modules/surveillance.md`.
 - **Service information endpoints.** `GET /v1/about` returns service and rule-set versions, health, uptime, the route
   list and the state of each component (`screening_engine`, `ml_logistic`, `ml_deep`, `growth_monitoring`,
   `llm_service`). It never calls the language-model server and never returns its address. `GET /v1/metrics` returns

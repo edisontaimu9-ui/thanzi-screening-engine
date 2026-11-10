@@ -23,6 +23,7 @@ from ..ml.features import features_from_inputs
 from ..ml.flags import Models, flag_record
 from ..preterm import integration as preterm_integration
 from ..preterm.routing import PATH_CORRECTED, PATH_PRETERM, route as route_birth
+from ..surveillance import Row, SurveillanceInputError, assess as assess_hotspots
 from ..rules import (
     Appetite, ClinicalInputs, Complication, DangerSign, OedemaGrade, RULE_SET_VERSION,
 )
@@ -476,3 +477,12 @@ def about_info(models: Models | None, deep: DeepModels | None, optional_componen
             "rule_set_version": v["rule_set_version"], "status": v["status"], "disclaimer": v["disclaimer"],
             "health": "ok" if models is not None else "degraded", "uptime_seconds": round(uptime_seconds, 1),
             "components": comps, "routes": routes}
+
+
+def hotspots(payload: dict) -> dict:
+    """Area-level hotspot assessment from grouped counts. Advisory, stateless, no child data (see surveillance/)."""
+    rows = [Row(**r) for r in payload["rows"]]
+    try:
+        return assess_hotspots(rows, payload.get("reference_rate"))
+    except SurveillanceInputError as exc:
+        raise ApiError(422, exc.code, exc.message) from None

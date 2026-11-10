@@ -648,6 +648,301 @@
         "title": "HealthResponse",
         "type": "object"
       },
+      "HotspotArea": {
+        "properties": {
+          "ci_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci High"
+          },
+          "ci_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Lower bound of the Wilson 95% interval.",
+            "title": "Ci Low"
+          },
+          "counts_suppressed": {
+            "title": "Counts Suppressed",
+            "type": "boolean"
+          },
+          "data_quality_review": {
+            "description": "true when many screened children were UNABLE_TO_CLASSIFY.",
+            "title": "Data Quality Review",
+            "type": "boolean"
+          },
+          "district": {
+            "title": "District",
+            "type": "string"
+          },
+          "gam_cases": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "SAM plus MAM. null when counts_suppressed.",
+            "title": "Gam Cases"
+          },
+          "mam": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null when counts_suppressed.",
+            "title": "Mam"
+          },
+          "prevalence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prevalence"
+          },
+          "previous_prevalence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Prevalence"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "reference_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "supplied or batch_leave_one_out.",
+            "title": "Reference Kind"
+          },
+          "reference_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Rate"
+          },
+          "sam": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null when counts_suppressed.",
+            "title": "Sam"
+          },
+          "screened": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screened"
+          },
+          "status": {
+            "description": "hotspot, watch, not_flagged, insufficient_data or no_data.",
+            "title": "Status",
+            "type": "string"
+          },
+          "trend": {
+            "description": "rising, falling, steady or not_assessed, against the previous month in the batch.",
+            "title": "Trend",
+            "type": "string"
+          }
+        },
+        "required": [
+          "district",
+          "status",
+          "screened",
+          "sam",
+          "mam",
+          "gam_cases",
+          "prevalence",
+          "ci_low",
+          "ci_high",
+          "reference_rate",
+          "reference_kind",
+          "trend",
+          "previous_prevalence",
+          "data_quality_review",
+          "counts_suppressed",
+          "reasons"
+        ],
+        "title": "HotspotArea",
+        "type": "object"
+      },
+      "HotspotRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "reference_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional fixed reference rate of SAM+MAM (0 to 1), for example a national survey figure. Default: the rate of all the other districts in the same batch.",
+            "title": "Reference Rate"
+          },
+          "rows": {
+            "description": "One row per district and month. The latest month is assessed; earlier months give the trend.",
+            "items": {
+              "$ref": "#/components/schemas/HotspotRow"
+            },
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "title": "HotspotRequest",
+        "type": "object"
+      },
+      "HotspotResponse": {
+        "properties": {
+          "advisory": {
+            "title": "Advisory",
+            "type": "string"
+          },
+          "areas": {
+            "items": {
+              "$ref": "#/components/schemas/HotspotArea"
+            },
+            "title": "Areas",
+            "type": "array"
+          },
+          "config_version": {
+            "title": "Config Version",
+            "type": "string"
+          },
+          "min_screened": {
+            "title": "Min Screened",
+            "type": "integer"
+          },
+          "period": {
+            "title": "Period",
+            "type": "string"
+          },
+          "summary": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Summary",
+            "type": "object"
+          }
+        },
+        "required": [
+          "period",
+          "config_version",
+          "areas",
+          "summary",
+          "min_screened",
+          "advisory"
+        ],
+        "title": "HotspotResponse",
+        "type": "object"
+      },
+      "HotspotRow": {
+        "additionalProperties": false,
+        "description": "Counts for one district in one month, already grouped by the caller. No child-level data.",
+        "properties": {
+          "district": {
+            "description": "District name only. No facility, community, village or coordinates.",
+            "title": "District",
+            "type": "string"
+          },
+          "mam": {
+            "description": "Of those, classified MAM.",
+            "minimum": 0.0,
+            "title": "Mam",
+            "type": "integer"
+          },
+          "period": {
+            "description": "Month, YYYY-MM.",
+            "title": "Period",
+            "type": "string"
+          },
+          "sam": {
+            "description": "Of those, classified SAM (SAM_OTP, SAM_INPATIENT or SAM_ASSESS).",
+            "minimum": 0.0,
+            "title": "Sam",
+            "type": "integer"
+          },
+          "screened": {
+            "description": "Children under five screened in that month.",
+            "minimum": 0.0,
+            "title": "Screened",
+            "type": "integer"
+          },
+          "unable": {
+            "default": 0,
+            "description": "Of those, UNABLE_TO_CLASSIFY. Used for a data-quality flag.",
+            "minimum": 0.0,
+            "title": "Unable",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "district",
+          "period",
+          "screened",
+          "sam",
+          "mam"
+        ],
+        "title": "HotspotRow",
+        "type": "object"
+      },
       "IndicatorTrendOut": {
         "properties": {
           "assessed": {
@@ -2230,6 +2525,73 @@
         "summary": "Screen",
         "tags": [
           "screen"
+        ]
+      }
+    },
+    "/v1/surveillance/hotspots": {
+      "post": {
+        "description": "Flag districts with higher SAM+MAM prevalence among screened children. Takes counts already grouped by the\ncaller (no child records, no fine geography). Advisory only: never changes an individual classification.",
+        "operationId": "hotspots_v1_surveillance_hotspots_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HotspotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotspotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "GatewayKey": []
+          }
+        ],
+        "summary": "Hotspots",
+        "tags": [
+          "surveillance"
         ]
       }
     },
