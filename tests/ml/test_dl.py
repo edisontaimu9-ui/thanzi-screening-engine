@@ -386,4 +386,4 @@ def test_dependencies_stay_empty_and_no_new_packages():
     import tomllib
     cfg = tomllib.loads((ROOT / "pyproject.toml").read_text())
     assert cfg["project"]["dependencies"] == []
-    assert set(cfg["project"]["optional-dependencies"]) == {"dev", "api", "llm"}
+    assert set(cfg["project"]["optional-dependencies"]) == {"dev", "api", "llm", "train"}

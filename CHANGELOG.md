@@ -14,6 +14,12 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
   from the manual is now the full title (it was `COIN`). Worker-facing classification messages name the guideline in full.
 
 ### Added
+- **Under-five screening module, Phase 1 (library only).** `thanzi_screen.factors` (shared factor-group schema: visits,
+  demographic, clinical, feeding, maternal, socioeconomic), `thanzi_screen.under5` (WAZ, HAZ, WHZ status, MUAC category,
+  oedema finding, multi-visit weight velocity and growth faltering with configurable thresholds, factor completeness) and
+  `thanzi_screen.report` (unified report with separate screening and prediction blocks). Rules only, no ML imports (tested).
+  MUAC-for-age z-scores are not computed because the WHO tables are not in the repository. Faltering thresholds are
+  engineering choices, not clinical guidance. See `docs/modules/under5-screening.md` and `docs/roadmap-under5-prediction.md`.
 - **Advisory clinical risk model (pipeline, simulated outcomes only).** `thanzi_screen.ml.risk` adds a second, data-driven opinion
   beside the rules: logistic regression, random forest and XGBoost candidates, Platt calibration, exact explanations (logistic
   contributions and exact TreeSHAP in plain Python), and a JSON model file the service evaluates without scikit-learn or XGBoost.

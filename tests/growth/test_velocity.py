@@ -235,7 +235,8 @@ def test_only_the_api_service_imports_growth():
         for level, module in _imports(path):
             if module.split(".")[0] == "growth" and level >= 1 or module.startswith("thanzi_screen.growth"):
                 offenders.append(str(path.relative_to(SRC)))
-    assert set(offenders) == {"api/service.py"}, offenders
+    # under5/longitudinal.py reuses the ASPEN velocity check for multi-visit analysis (under-five module, Phase 1)
+    assert set(offenders) == {"api/service.py", "under5/longitudinal.py"}, offenders
 
 
 def test_reference_file_ships_with_the_package():
