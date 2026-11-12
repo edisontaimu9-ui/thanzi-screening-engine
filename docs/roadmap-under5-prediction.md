@@ -5,7 +5,7 @@ Two independent modules, one reporting interface. Each phase ends with passing t
 | Phase | Content | Status |
 |---|---|---|
 | 1 | Factor schema, deterministic indicators, MUAC, oedema, multi-visit velocity and faltering, report interface | done (this change) |
-| 2 | Longitudinal dataset schema and simulator, preprocessing, feature engineering (all six factor groups), leak checks | planned |
+| 2 | Longitudinal dataset schema and simulator, preprocessing, feature engineering (all six factor groups), leak checks | done |
 | 3 | Targets (future wasting, future SAM, future growth faltering), Logistic Regression, Random Forest and XGBoost, child-level splits, comparison with paired bootstrap, calibration | planned |
 | 4 | Explainability (exact contributions and TreeSHAP, reuse `ml/risk`), risk strata, safety safeguards, model card | planned |
 | 5 | API route, report wiring, OpenAPI, release notes | planned |

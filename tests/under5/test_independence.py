@@ -24,3 +24,17 @@ def test_report_imports_neither_module():
 def test_factors_import_no_screening_or_ml():
     mods = _modules_after_import("import thanzi_screen.factors")
     assert not any(m.startswith(("thanzi_screen.ml", "thanzi_screen.prediction", "thanzi_screen.under5")) for m in mods), mods
+
+
+def test_prediction_imports_no_screening_report_ml_or_growth():
+    mods = _modules_after_import("import thanzi_screen.prediction")
+    banned = ("thanzi_screen.under5", "thanzi_screen.report", "thanzi_screen.ml", "thanzi_screen.growth")
+    assert not any(m.startswith(banned) for m in mods), mods
+
+
+def test_prediction_never_calls_the_rules_classifier():
+    import ast
+    for path in (SRC / "thanzi_screen" / "prediction").glob("*.py"):
+        tree = ast.parse(path.read_text())
+        names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)} | {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)}
+        assert "classify" not in names, path.name

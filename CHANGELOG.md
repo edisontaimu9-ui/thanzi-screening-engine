@@ -14,6 +14,15 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
   from the manual is now the full title (it was `COIN`). Worker-facing classification messages name the guideline in full.
 
 ### Added
+- **Prediction module, Phase 2 (library and simulator, no model yet).** `thanzi_screen.prediction`: longitudinal records,
+  a one-row-per-visit CSV dataset with manifest and governance checks, labels for future wasting, future SAM and future
+  growth faltering built from later visits (missing follow-up is censored, never negative; incident prediction excludes
+  children already at the outcome), 63 leak-free features in seven groups (anthropometric, longitudinal growth,
+  demographic, clinical, feeding, maternal, socioeconomic), child-level splits and a training-only preprocessor with
+  missing-value indicators, and a clearly marked simulator (`scripts/simulate_longitudinal.py`). Independent of the
+  screening module and the rules classifier (tested). All simulated associations are assumptions. See
+  `docs/modules/prediction-data.md`. A feature that is missing at prediction time but was never missing in training is
+  refused (`UnseenMissingError`) rather than imputed with the median.
 - **Under-five screening module, Phase 1 (library only).** `thanzi_screen.factors` (shared factor-group schema: visits,
   demographic, clinical, feeding, maternal, socioeconomic), `thanzi_screen.under5` (WAZ, HAZ, WHZ status, MUAC category,
   oedema finding, multi-visit weight velocity and growth faltering with configurable thresholds, factor completeness) and
