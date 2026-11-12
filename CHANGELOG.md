@@ -14,6 +14,19 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
   from the manual is now the full title (it was `COIN`). Worker-facing classification messages name the guideline in full.
 
 ### Added
+- **Prediction module, Phase 4 (exported model, risk strata, explanations, model card).** The selected model of each trained target is
+  exported as one plain JSON file (`thanzi-prediction-model/1`) holding the preprocessor, the model (logistic coefficients or trees), Platt
+  calibration, strata cut-offs, eligibility range, missing-input limit, target definition and provenance, and runs in the service without
+  numpy, scikit-learn or XGBoost. `thanzi_screen.prediction.model` loads it and fails closed: a simulated model is refused unless
+  allowed and can never be clinical; a real-data model needs ethics, data-agreement and clinical sign-off references and acceptance
+  thresholds that were set in advance and passed. `predict.assess_child` adds concern only (two strata, `elevated` and `high`, never a
+  "low risk" label), says nothing when there is no extra concern, never raises, and returns a stable "not scored" code for age outside the
+  range, too many missing inputs or a gap never seen in training. `explain` gives exact contributions (logistic and exact TreeSHAP) and up
+  to three plain-language drivers that raise the estimate. `scripts/export_prediction.py` checks every file against the training library
+  (parity limit 1e-5) before writing it, and writes `MODEL_CARD.md`. The test report gains a strata table. `trees.py` is a tested copy of
+  the `ml/risk` tree code because the prediction module never imports `thanzi_screen.ml`. **Fix:** a preprocessor loaded from a JSON file
+  written with sorted keys had its columns in the wrong order; columns now follow the canonical feature order (tested). No API route yet
+  (Phase 5). See `docs/modules/prediction-export.md`.
 - **Prediction module, Phase 3 (model comparison and calibration, no exported model).** `thanzi_screen.prediction.evaluate`
   (standard library: AUROC, AUPRC, Brier, Platt calibration, calibration slope and intercept, calibration deciles, operating
   points, net benefit, subgroup tables, child-level bootstrap), `candidates` (logistic regression, random forest, XGBoost with

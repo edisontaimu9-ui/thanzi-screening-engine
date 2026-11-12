@@ -1,7 +1,7 @@
 # Prediction module: model comparison and calibration
 
-**Status: Phase 3. Compares and calibrates three model families. Exports no model. Not clinically validated, not for
-clinical use.** On simulated data the numbers only show that the pipeline works.
+**Status: Phase 3. Compares and calibrates three model families. Export, strata, explanations and the model card are Phase 4: see
+`prediction-export.md`. Not clinically validated, not for clinical use.** On simulated data the numbers only show that the pipeline works.
 
 Code: `thanzi_screen.prediction.evaluate` (standard library), `candidates`, `compare`; runner `scripts/train_prediction.py`.
 Training needs the `train` extra (numpy, scikit-learn, XGBoost), on the development machine only. The service never imports
@@ -73,10 +73,16 @@ What to take from it:
 
 ## Limits
 
-- No model file is exported yet, and no acceptance thresholds or clinical sign-off exist. Tree export, explanations, risk strata
-  and the model card are Phase 4. Results are marked `clinical_use: false`.
+- This step exports no model file. Export, risk strata, explanations and the model card are Phase 4 (`prediction-export.md`). No
+  acceptance thresholds or clinical sign-off exist. Results are marked `clinical_use: false`.
 - Fixed settings were not tuned. A tuning step needs its own nested validation, to be agreed before real data.
 - Platt scaling on a small validation set is noisy (future SAM has 38 validation events). Slope and intercept before and after are
   both reported so this is visible.
 - Subgroup fairness numbers are descriptive. Small subgroups are flagged, not corrected.
 - The 28 to 180 day horizon and the faltering definition are still engineering choices for clinical reviewers.
+
+## Added in Phase 4
+
+The test report now carries a `strata` block for the selected model (cut-offs fixed on validation children at the 10% and 20% alert rates,
+observed event rate per stratum on test children). It is report-only and changes no choice. `compare.run_target_with_state` returns the fitted
+state for the export step; `run_target` is unchanged for callers.

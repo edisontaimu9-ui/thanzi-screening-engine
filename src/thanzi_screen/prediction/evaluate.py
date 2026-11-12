@@ -226,3 +226,18 @@ def subgroup_table(groups, probs, labels, threshold: float, min_n: int = 50, min
         rows.append({"group": g, "n": len(y), "events": sum(y), "auroc": auroc(p, y), "sensitivity": t["sensitivity"],
                      "ppv": t["ppv"], "alert_rate": t["alert_rate"], "small": len(y) < min_n or sum(y) < min_events})
     return rows
+
+
+def strata_table(probs, labels, cutoffs: dict) -> list[dict]:
+    """Observed event rate per risk stratum. `cutoffs` maps 'elevated' and 'high' to calibrated-probability thresholds. The
+    lowest group is called 'not flagged': it is the children the model has no extra concern about, not a 'low risk' group."""
+    def name(p):
+        return "high" if p >= cutoffs["high"] else "elevated" if p >= cutoffs["elevated"] else "not flagged"
+    by = {k: [0, 0] for k in ("high", "elevated", "not flagged")}
+    for p, y in zip(probs, labels):
+        by[name(p)][0] += 1
+        by[name(p)][1] += int(y)
+    n, events = len(labels), sum(labels)
+    return [{"stratum": k, "n": c[0], "share_of_children": c[0] / n if n else NAN, "events": c[1],
+             "event_rate": c[1] / c[0] if c[0] else NAN, "share_of_all_events": c[1] / events if events else NAN}
+            for k, c in by.items()]

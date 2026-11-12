@@ -35,6 +35,7 @@ class Fitted:
     name: str
     params: dict
     _predict: object = field(repr=False, default=None)
+    estimator: object = field(repr=False, default=None)      # the fitted library object, for export only
 
     def predict_proba(self, X) -> list[float]:
         return [float(p) for p in self._predict(X)]
@@ -85,7 +86,7 @@ def fit_candidate(name: str, X, y, columns, seed: int = 0) -> Fitted:
         params = {k: v for k, v in PARAMS["xgb"].items() if k != "monotone_constraints"}
         m = xgb.XGBClassifier(monotone_constraints=monotone_for(columns), tree_method="hist", random_state=seed, n_jobs=1,
                               **params).fit(Xa, ya)
-    return Fitted(name, dict(PARAMS[name]), lambda Z, m=m: m.predict_proba(np.asarray(Z, dtype=float))[:, 1])
+    return Fitted(name, dict(PARAMS[name]), lambda Z, m=m: m.predict_proba(np.asarray(Z, dtype=float))[:, 1], m)
 
 
 def fit_baseline(X, y, columns) -> Fitted:

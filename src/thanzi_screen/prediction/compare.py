@@ -177,8 +177,14 @@ def test_stage(prep: Prepared, state: dict, cfg: CompareConfig) -> dict:
                        ("sex", lambda e: "male" if e.features["sex_male"] == 1.0 else "female"),
                        ("district", lambda e: e.district or "unknown")):
         sub[label] = ev.subgroup_table([key(e) for e in rows], cal[sel], y, t, cfg.min_subgroup_n, cfg.min_subgroup_events)
-    return {"n": len(y), "events": sum(y), "prevalence": sum(y) / len(y), "models": res,
-            "subgroups": {"model": sel, "alert_rate": rate, "tables": sub}}
+    out = {"n": len(y), "events": sum(y), "prevalence": sum(y) / len(y), "models": res,
+           "subgroups": {"model": sel, "alert_rate": rate, "tables": sub}}
+    if len(cfg.alert_rates) >= 2:           # strata for the selected model: cut-offs fixed on validation, observed rates on test
+        hi_rate, el_rate = sorted(cfg.alert_rates)[:2]
+        cuts = {"high": state["thresholds"][hi_rate][sel], "elevated": state["thresholds"][el_rate][sel]}
+        out["strata"] = {"model": sel, "alert_rates": {"high": hi_rate, "elevated": el_rate}, "cutoffs": cuts,
+                         "table": ev.strata_table(cal[sel], y, cuts)}
+    return out
 
 
 def followup_balance(examples: list[Example], target: str,
@@ -204,7 +210,9 @@ def followup_balance(examples: list[Example], target: str,
     return out
 
 
-def run_target(examples: list[Example], target: str, cfg: CompareConfig | None = None) -> dict:
+def run_target_with_state(examples: list[Example], target: str, cfg: CompareConfig | None = None):
+    """(result, prep, state). `prep` and `state` are None for a target that is not trained. The export step needs the fitted
+    models, so it calls this instead of run_target; the test split is still read exactly once, inside test_stage."""
     cfg = cfg or CompareConfig()
     counts = split_counts(examples, target)
     out = {"target": target, "splits": counts, "followup_balance": followup_balance(examples, target)}
@@ -212,7 +220,7 @@ def run_target(examples: list[Example], target: str, cfg: CompareConfig | None =
     if short:
         out.update(status="not_trained", reason=f"fewer than {cfg.min_events} events in " + ", ".join(short)
                    + ": too few to train or to judge a model")
-        return _clean(out)
+        return _clean(out), None, None
     prep = prepare(examples, target)
     state = fit_stage(prep, cfg)
     out.update(status="trained", skipped_unseen_missing=prep.skipped, n_columns=len(prep.pre.columns),
@@ -221,7 +229,11 @@ def run_target(examples: list[Example], target: str, cfg: CompareConfig | None =
                selection=state["selection"], validation_auroc=state["val_auroc"],
                thresholds={str(r): t for r, t in state["thresholds"].items()},
                test=test_stage(prep, state, cfg))
-    return _clean(out)
+    return _clean(out), prep, state
+
+
+def run_target(examples: list[Example], target: str, cfg: CompareConfig | None = None) -> dict:
+    return run_target_with_state(examples, target, cfg)[0]
 
 
 def run_all(examples: list[Example], cfg: CompareConfig | None = None, targets=TARGETS) -> dict:

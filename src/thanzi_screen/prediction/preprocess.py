@@ -47,7 +47,8 @@ def _quantile(sorted_vals: list[float], q: float) -> float:
 class Preprocessor:
     def __init__(self, spec: dict):
         self.spec = spec
-        self.names = tuple(spec["features"])
+        # Canonical order, never the order the keys happen to have: a JSON file written with sorted keys must give the same columns.
+        self.names = tuple(n for n in FEATURE_NAMES if n in spec["features"])
         self.columns = tuple(self.names) + tuple(f"{n}_missing" for n in self.names if spec["features"][n]["indicator"])
 
     @classmethod
