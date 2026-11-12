@@ -14,6 +14,17 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
   from the manual is now the full title (it was `COIN`). Worker-facing classification messages name the guideline in full.
 
 ### Added
+- **Prediction module, Phase 3 (model comparison and calibration, no exported model).** `thanzi_screen.prediction.evaluate`
+  (standard library: AUROC, AUPRC, Brier, Platt calibration, calibration slope and intercept, calibration deciles, operating
+  points, net benefit, subgroup tables, child-level bootstrap), `candidates` (logistic regression, random forest, XGBoost with
+  the monotone constraints from the feature registry, and a best-single-feature baseline) and `compare` (one target at a time).
+  Fixed order: preprocessor and models fitted on training children only, Platt calibration and the alert thresholds fitted on
+  validation children, a challenger replaces logistic regression only if its validation AUROC gain is at least 0.01 and the paired
+  child-level bootstrap interval excludes zero, and the test children are read once, to report. Intervals resample children, not
+  rows. A target with fewer than 30 events in any split is reported as not trained. `scripts/train_prediction.py` writes
+  `results.json` and `REPORT.md` (`models/prediction_sim/` by default, git-ignored). Training libraries are imported only inside
+  the functions that need them (`train` extra, development machine only); importing the package loads none (tested). Nothing is
+  marked for clinical use and no model file is exported yet. See `docs/modules/prediction-models.md`.
 - **Prediction module, Phase 2 (library and simulator, no model yet).** `thanzi_screen.prediction`: longitudinal records,
   a one-row-per-visit CSV dataset with manifest and governance checks, labels for future wasting, future SAM and future
   growth faltering built from later visits (missing follow-up is censored, never negative; incident prediction excludes

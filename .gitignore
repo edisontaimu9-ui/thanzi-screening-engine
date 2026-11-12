@@ -16,3 +16,5 @@ coverage.xml
 trace.json
 container.log
 sbom-env/
+# Prediction comparison output (simulated numbers). Regenerate with scripts/train_prediction.py
+models/prediction_sim/

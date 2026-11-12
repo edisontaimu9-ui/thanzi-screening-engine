@@ -1,6 +1,6 @@
 # Prediction module: data, labels, features, preprocessing
 
-**Status: Phase 2. Library and a simulator only. No model is trained yet. Not clinically validated.**
+**Status: Phase 2 (data, labels, features, preprocessing, simulator). Models are compared in Phase 3: see `prediction-models.md`. Not clinically validated.**
 
 `thanzi_screen.prediction` is independent of the screening module. It never imports `thanzi_screen.under5`,
 `thanzi_screen.report`, `thanzi_screen.ml` or `thanzi_screen.growth`, never calls the rules classifier, and never uses a
