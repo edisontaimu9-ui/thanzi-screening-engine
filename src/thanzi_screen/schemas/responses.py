@@ -31,6 +31,36 @@ class MlFlagsOut(BaseModel):
                                   "Present only when the deep models are loaded. Same meaning, same limits.")
 
 
+class RiskDriver(BaseModel):
+    feature: str
+    text: str = Field(description="Plain-language statement of the finding that raised the estimate.")
+    direction: str = Field(description="Always raises: only findings that raise the estimate are shown.")
+
+
+class RiskOut(BaseModel):
+    """Advisory clinical risk estimate. It can only add a concern: it never changes the classification, tier or referral,
+    and the absence of a concern (`elevated` false, no message) must never be shown to a worker as reassurance."""
+    available: bool
+    scored: bool = Field(description="false when the child could not be scored: see not_scored_reason.")
+    not_scored_reason: str | None = Field(description="age_outside_model_range, muac_missing, measurement_not_assessable, "
+                                                      "possible_recording_error, data_quality_check_unavailable, invalid_input or model_error.")
+    not_scored_message: str | None
+    elevated: bool | None = Field(description="true: the model sees a higher than usual chance. false: no extra concern (not reassurance). null: not scored.")
+    message: str | None = Field(description="Present only when elevated.")
+    drivers: list[RiskDriver] = Field(description="Up to 3 findings that raised the estimate. Only when elevated.")
+    target: str
+    horizon_weeks: int
+    model_version: str
+    non_clinical: bool = Field(description="true for a model trained on simulated outcomes. Never use such a result for care.")
+    advisory: str
+    probability: float | None = Field(default=None, description="Calibrated probability. Audit view only.")
+    raw_probability: float | None = Field(default=None, description="Before calibration. Audit view only.")
+    threshold: float | None = Field(default=None, description="Audit view only.")
+    model_kind: str | None = Field(default=None, description="logistic, gbm_logit or rf_prob. Audit view only.")
+    provenance: str | None = Field(default=None, description="simulated or real. Audit view only.")
+    explanation: dict[str, Any] | None = Field(default=None, description="Exact per-feature contributions. Audit view only.")
+
+
 class IndicatorTrendOut(BaseModel):
     indicator: str = Field(description="weight_for_age, length_height_for_age or head_circumference_for_age.")
     assessed: bool
@@ -98,6 +128,9 @@ class WorkerResponse(BaseModel):
     growth_monitoring: GrowthMonitoring | None = Field(
         default=None, description="Only when previous_measurement was given and the baby is screened on the under-5 route. "
                                   "Advisory: never changes the classification.")
+    ml_risk: RiskOut | None = Field(
+        default=None, description="Only when the risk model is switched on (THANZI_RISK_ENABLED=1) and the baby is screened on the plain "
+                                  "under-5 route. Advisory, escalate only: never changes the classification.")
     clinical_assessment: "ClinicalAssessment | None" = Field(
         default=None, description="Only when a baby under 2500 g has no gestational age: flagged for clinical assessment.")
 
@@ -126,6 +159,7 @@ class VersionResponse(BaseModel):
     rule_set_version: str
     model_version: str
     deep_model_version: str | None = Field(default=None, description="null when the deep models are not loaded.")
+    risk_model_version: str | None = Field(default=None, description="null when the risk model is off or not loaded.")
     status: str
     disclaimer: str
 
@@ -169,7 +203,7 @@ class AboutResponse(BaseModel):
     health: str = Field(description="ok, or degraded when the ML models are missing or mismatched. Same as /health.")
     uptime_seconds: float
     components: list[ComponentInfo] = Field(
-        description="screening_engine, ml_logistic, ml_deep, growth_monitoring and llm_service, in that order.")
+        description="screening_engine, ml_logistic, ml_deep, ml_risk, growth_monitoring and llm_service, in that order.")
     routes: list[str]
 
 

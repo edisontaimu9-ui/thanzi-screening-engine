@@ -20,6 +20,7 @@ from ..growth import REVIEW_NOTE, PreviousVisit, assess_trends, assess_weight_ve
 from ..ml.dl import DeepModels
 from ..ml.dl.predict import flag_from_features
 from ..ml.features import features_from_inputs
+from ..ml.risk import RiskModel, assess_risk
 from ..ml.flags import Models, flag_record
 from ..preterm import integration as preterm_integration
 from ..preterm.routing import PATH_CORRECTED, PATH_PRETERM, route as route_birth
@@ -338,7 +339,8 @@ def build_audit_view(result: ClassificationResult, expl: Explanation, flags, dee
 
 
 def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[str] = (), context: dict | None = None,
-            assessment: dict | None = None, deep: DeepModels | None = None, growth: dict | None = None) -> dict:
+            assessment: dict | None = None, deep: DeepModels | None = None, growth: dict | None = None,
+            risk: RiskModel | None = None, previous: PreviousVisit | None = None) -> dict:
     """The existing under-5 flow. `context` (birth context) is added only when a route other than plain under5 ran."""
     clinical = args[-1]
     features, anthro, result = features_from_inputs(*args)
@@ -357,6 +359,9 @@ def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[
         out = {**out, "clinical_assessment": assessment}
     if growth is not None:
         out = {**out, "growth_monitoring": growth}
+    if risk is not None:             # advisory risk block (escalate only): added last, never read back by the rules
+        recording = None if flags is None else bool(flags.recording_error.flagged or (deep_flag is not None and deep_flag.flagged))
+        out = {**out, "ml_risk": assess_risk(risk, *args, previous, recording, audit=view == "audit")}
     if extra_warnings:
         out["warnings"] = [*out["warnings"], *extra_warnings]
     return out if view == "audit" else scrub_worker(display_wording(out))
@@ -392,9 +397,11 @@ def _preterm_hint(payload) -> bool:
         return False
 
 
-def screen(payload: dict, view: str = "worker", models: Models | None = None, deep: DeepModels | None = None) -> dict:
+def screen(payload: dict, view: str = "worker", models: Models | None = None, deep: DeepModels | None = None,
+           risk: RiskModel | None = None) -> dict:
     """Screen one child. `models=None` is degraded mode: rules result, summary and review check, no ML flag.
     `deep` adds the second advisory flag (D153); without it the response is exactly as before.
+    `risk` adds the advisory `ml_risk` block on the plain under-5 route only; without it the response is exactly as before.
 
     Routing (docs/modules/preterm.md): with gestational_age_weeks and/or birth_weight_g, a baby born under 37 weeks
     or under 2500 g goes to the preterm engine until 50 weeks post-menstrual age, then to the under-5 engine on
@@ -439,25 +446,28 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None, de
         ignored = {k: v for k, v in extra.items() if not (k == "hc_cm" and hc_used)}
         if ignored:
             warns.append("Preterm-only fields were given but this baby is not screened by the preterm engine: they were ignored.")
-        return _under5(args, view, models, warns, ctx, assessment, deep, _growth(args, previous, extra.get("hc_cm") if hc_used else None))
+        return _under5(args, view, models, warns, ctx, assessment, deep, _growth(args, previous, extra.get("hc_cm") if hc_used else None),
+                       risk=risk, previous=previous)
     except InputError as exc:
         raise ApiError(422, "invalid_input", _engine_message(exc)) from None
 
 
-def version_info(models: Models | None, deep: DeepModels | None = None) -> dict:
+def version_info(models: Models | None, deep: DeepModels | None = None, risk: RiskModel | None = None) -> dict:
     out = {"api_version": wording.API_VERSION, "engine_version": __version__, "rule_set_version": RULE_SET_VERSION,
            "model_version": "none" if models is None else models.version, "status": wording.STATUS,
            "disclaimer": "Decision support only. Not a diagnosis. A trained clinician makes the final decision."}
     if deep is not None:
         out["deep_model_version"] = deep.version
+    if risk is not None:
+        out["risk_model_version"] = risk.version
     return out
 
 
 def about_info(models: Models | None, deep: DeepModels | None, optional_components: list[dict], uptime_seconds: float,
-               routes: list[str]) -> dict:
+               routes: list[str], risk: RiskModel | None = None, risk_state: str = "off") -> dict:
     """What is running inside this service (D176). No child data, no address, no key. Calls no other server.
     `optional_components` are reported after the built-in ones; the app supplies them."""
-    v = version_info(models, deep)
+    v = version_info(models, deep, risk)
     comps = [
         {"name": "screening_engine", "state": "ok", "version": RULE_SET_VERSION,
          "detail": "Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 rules, preterm engine and corrected-age route. Does not depend on the ML models."},
@@ -469,6 +479,9 @@ def about_info(models: Models | None, deep: DeepModels | None, optional_componen
          "version": None if deep is None else deep.version,
          "detail": "Second advisory flag, runs inside this service." if deep is not None
          else "Switched off (THANZI_DEEP_ENABLED=0) or its files are missing. Screening is unaffected."},
+        {"name": "ml_risk", "state": risk_state, "version": None if risk is None else risk.version,
+         "detail": ("Advisory clinical risk estimate (escalate only), runs inside this service." + (" SIMULATED, NON-CLINICAL model." if risk is not None and risk.simulated else ""))
+         if risk is not None else "Switched off (THANZI_RISK_ENABLED is not 1) or the model was refused. Screening is unaffected."},
         {"name": "growth_monitoring", "state": "ok", "version": None,
          "detail": "Advisory weight-gain and z-score trends. Needs previous_measurement. Under-5 route only."},
         *optional_components,

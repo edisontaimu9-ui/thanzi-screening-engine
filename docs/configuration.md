@@ -10,6 +10,9 @@ content.
 | `THANZI_GATEWAY_KEY` | yes | none | Shared secret the gateway sends as `X-Gateway-Key`. At least 16 characters (use 48 hex). The service refuses to start without it. |
 | `THANZI_AUDIT_KEY` | no | unset | Second secret for `?view=audit`, sent as `X-Audit-Key` together with the gateway key. At least 16 characters and different from the gateway key. If unset the audit view is off (403). |
 | `THANZI_MODELS_DIR` | no | `models/` in the repository (`/app/models` in the image) | Directory with the trained model files. Missing or mismatched files start the service in degraded mode. |
+| `THANZI_RISK_ENABLED` | no | off | Set `1` to switch on the advisory clinical risk block (`ml_risk`). Off by default. Screening is unchanged whether it is on or off. |
+| `THANZI_RISK_MODEL_DIR` | no | `<models dir>/risk` | Folder holding `risk_model.json`. |
+| `THANZI_RISK_ALLOW_SIMULATED` | no | off | Set `1` to allow a model trained on simulated outcomes. Demonstration only: such a result is marked `non_clinical` and must never be used for care. |
 | `THANZI_DEEP_ENABLED` | no | on | Set `0`, `false`, `no` or `off` to disable the neural-network recording-error flag. Screening and the logistic flag are unchanged. |
 | `PORT` | no | `8080` | Listening port in the container image. |
 | `THANZI_DEV_MODE` | no | off | `1` exposes the documentation routes and allows a missing key. **Local development only. Never set in production.** |

@@ -14,6 +14,17 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
   from the manual is now the full title (it was `COIN`). Worker-facing classification messages name the guideline in full.
 
 ### Added
+- **Advisory clinical risk model (pipeline, simulated outcomes only).** `thanzi_screen.ml.risk` adds a second, data-driven opinion
+  beside the rules: logistic regression, random forest and XGBoost candidates, Platt calibration, exact explanations (logistic
+  contributions and exact TreeSHAP in plain Python), and a JSON model file the service evaluates without scikit-learn or XGBoost.
+  `POST /v1/screen` adds an optional `ml_risk` block on the plain under-5 route when `THANZI_RISK_ENABLED=1` (off by default). It can only
+  add a concern: classification, tier, referral and warnings are identical with it on or off (property-tested), it never reports a
+  child as low risk, and it is not run for children under 6 months, with MUAC missing, with a suspected recording error, or on the
+  preterm and corrected-age routes. A model trained on simulated outcomes is marked `non_clinical` and refused unless
+  `THANZI_RISK_ALLOW_SIMULATED=1`; a model trained on real data is refused without ethics, data agreement and clinical sign-off
+  references and a passed, pre-set acceptance check. New scripts `simulate_risk_outcomes.py` and `train_risk.py`, a simulated demo model in
+  `models/risk_sim/` with its model card, `GET /v1/about` component `ml_risk` and `GET /version` field `risk_model_version`. No real data has
+  been used: the numbers in the card only show the code works. See `docs/modules/ml-risk.md`.
 - **Hotspot surveillance.** `POST /v1/surveillance/hotspots` and `thanzi_screen.surveillance`. Takes counts per district and
   month (grouped by the caller, no child-level data), returns per-district prevalence with a Wilson interval, a trend and a
   status (`hotspot`, `watch`, `not_flagged`, `insufficient_data`, `no_data`). Small counts are suppressed, districts under 30

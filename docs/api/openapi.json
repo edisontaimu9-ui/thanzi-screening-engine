@@ -9,7 +9,7 @@
             "type": "string"
           },
           "components": {
-            "description": "screening_engine, ml_logistic, ml_deep, growth_monitoring and llm_service, in that order.",
+            "description": "screening_engine, ml_logistic, ml_deep, ml_risk, growth_monitoring and llm_service, in that order.",
             "items": {
               "$ref": "#/components/schemas/ComponentInfo"
             },
@@ -118,6 +118,17 @@
           },
           "ml_flags": {
             "$ref": "#/components/schemas/MlFlagsOut"
+          },
+          "ml_risk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RiskOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when the risk model is switched on (THANZI_RISK_ENABLED=1) and the baby is screened on the plain under-5 route. Advisory, escalate only: never changes the classification."
           },
           "model_version": {
             "title": "Model Version",
@@ -1757,6 +1768,210 @@
         "title": "Review",
         "type": "object"
       },
+      "RiskDriver": {
+        "properties": {
+          "direction": {
+            "description": "Always raises: only findings that raise the estimate are shown.",
+            "title": "Direction",
+            "type": "string"
+          },
+          "feature": {
+            "title": "Feature",
+            "type": "string"
+          },
+          "text": {
+            "description": "Plain-language statement of the finding that raised the estimate.",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "feature",
+          "text",
+          "direction"
+        ],
+        "title": "RiskDriver",
+        "type": "object"
+      },
+      "RiskOut": {
+        "description": "Advisory clinical risk estimate. It can only add a concern: it never changes the classification, tier or referral,\nand the absence of a concern (`elevated` false, no message) must never be shown to a worker as reassurance.",
+        "properties": {
+          "advisory": {
+            "title": "Advisory",
+            "type": "string"
+          },
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "drivers": {
+            "description": "Up to 3 findings that raised the estimate. Only when elevated.",
+            "items": {
+              "$ref": "#/components/schemas/RiskDriver"
+            },
+            "title": "Drivers",
+            "type": "array"
+          },
+          "elevated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "true: the model sees a higher than usual chance. false: no extra concern (not reassurance). null: not scored.",
+            "title": "Elevated"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Exact per-feature contributions. Audit view only.",
+            "title": "Explanation"
+          },
+          "horizon_weeks": {
+            "title": "Horizon Weeks",
+            "type": "integer"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only when elevated.",
+            "title": "Message"
+          },
+          "model_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "logistic, gbm_logit or rf_prob. Audit view only.",
+            "title": "Model Kind"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "non_clinical": {
+            "description": "true for a model trained on simulated outcomes. Never use such a result for care.",
+            "title": "Non Clinical",
+            "type": "boolean"
+          },
+          "not_scored_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Not Scored Message"
+          },
+          "not_scored_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "age_outside_model_range, muac_missing, measurement_not_assessable, possible_recording_error, data_quality_check_unavailable, invalid_input or model_error.",
+            "title": "Not Scored Reason"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Calibrated probability. Audit view only.",
+            "title": "Probability"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "simulated or real. Audit view only.",
+            "title": "Provenance"
+          },
+          "raw_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Before calibration. Audit view only.",
+            "title": "Raw Probability"
+          },
+          "scored": {
+            "description": "false when the child could not be scored: see not_scored_reason.",
+            "title": "Scored",
+            "type": "boolean"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Audit view only.",
+            "title": "Threshold"
+          }
+        },
+        "required": [
+          "available",
+          "scored",
+          "not_scored_reason",
+          "not_scored_message",
+          "elevated",
+          "message",
+          "drivers",
+          "target",
+          "horizon_weeks",
+          "model_version",
+          "non_clinical",
+          "advisory"
+        ],
+        "title": "RiskOut",
+        "type": "object"
+      },
       "ScreenRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2155,6 +2370,18 @@
             "title": "Model Version",
             "type": "string"
           },
+          "risk_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null when the risk model is off or not loaded.",
+            "title": "Risk Model Version"
+          },
           "rule_set_version": {
             "title": "Rule Set Version",
             "type": "string"
@@ -2219,6 +2446,17 @@
           },
           "ml_flags": {
             "$ref": "#/components/schemas/MlFlagsOut"
+          },
+          "ml_risk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RiskOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when the risk model is switched on (THANZI_RISK_ENABLED=1) and the baby is screened on the plain under-5 route. Advisory, escalate only: never changes the classification."
           },
           "model_version": {
             "title": "Model Version",
