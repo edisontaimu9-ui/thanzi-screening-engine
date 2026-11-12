@@ -18,6 +18,9 @@ advisory data-quality and growth flags.
   engine on corrected age.
 - Advisory flags that never change a classification: recording-error detection (logistic and small neural network),
   a rules-based review check, and growth monitoring between two visits (weight gain and z-score trends).
+- Advisory clinical risk model (off by default, simulated outcomes only so far): a data-driven second opinion (logistic
+  regression, random forest or XGBoost) that can only add a concern and never changes a classification, tier or referral.
+  See [docs/modules/ml-risk.md](docs/modules/ml-risk.md).
 - Area-level hotspot surveillance (add-on): districts with SAM+MAM prevalence above a reference rate, from counts the
   caller has already grouped. Advisory only. See [docs/modules/surveillance.md](docs/modules/surveillance.md).
 - Plain-language worker summary and a full audit trace.
@@ -78,7 +81,7 @@ src/thanzi_screen/
   preterm/    Preterm and low-birth-weight engine and routing
   growth/     Weight-gain and z-score trend monitoring
   surveillance/ District hotspot assessment from grouped counts
-  ml/         Recording-error flags, neural network (dl), note checker (nlp)
+  ml/         Recording-error flags, neural network (dl), note checker (nlp), advisory risk model (risk)
   explain/    Worker summary and audit trace
   api/        FastAPI service, security, metrics
   schemas/    Request and response models (the API contract)
@@ -104,7 +107,7 @@ tests/        Unit, property, robustness, API and safety tests
 | Monitoring and maintenance | [docs/operations.md](docs/operations.md) |
 | Testing and rule traceability | [docs/testing/test-report.md](docs/testing/test-report.md), [docs/testing/traceability.md](docs/testing/traceability.md) |
 | References and licences | [docs/references/register.md](docs/references/register.md) |
-| Modules | `docs/modules/`: anthro, rules, preterm, growth, surveillance, ml, dl, nlp, explain, data, llm |
+| Modules | `docs/modules/`: anthro, rules, preterm, growth, surveillance, ml, ml-risk, dl, nlp, explain, data, llm |
 | Model cards | [models/MODEL_CARD.md](models/MODEL_CARD.md), [models/DL_MODEL_CARD.md](models/DL_MODEL_CARD.md) |
 | Changes | [CHANGELOG.md](CHANGELOG.md) |
 
@@ -114,6 +117,10 @@ tests/        Unit, property, robustness, API and safety tests
   review of the case pack (`docs/testing/case-pack.xlsx`) and worker wording is outstanding.
 - **Machine-learning flags are trained on synthetic data only.** Real recording errors are messier. Accuracy and
   fairness across districts, ages and sexes are untested.
+- **The clinical risk model has no real-data validation.** The pipeline is built and tested on simulated outcomes only, the demo
+  model in `models/risk_sim/` is marked non-clinical, and the service refuses it unless `THANZI_RISK_ALLOW_SIMULATED=1`. It is
+  off unless `THANZI_RISK_ENABLED=1`. Real use needs the government dataset, ethics approval, acceptance thresholds set in
+  advance, and clinical sign-off.
 - **No cross-check against WHO Anthro software output** on real sample records.
 - **Not load tested on target hardware.** Measurements come from a single-vCPU build host.
 - **Network isolation, TLS, rate limiting and audit logging are deployment responsibilities.** The service speaks plain
