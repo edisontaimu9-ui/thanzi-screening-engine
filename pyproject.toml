@@ -16,6 +16,9 @@ api = ["fastapi~=0.162.2", "pydantic~=2.14.3", "uvicorn~=0.54.0"]
 # Optional local LLM client: the HTTP transport for Ollama and llama.cpp servers. Off by default and not in
 # the release image. The package imports without it, and the mock provider needs nothing.
 llm = ["httpx~=0.28.1"]
+# Training the optional random forest and XGBoost risk-model candidates (scripts/train_risk.py). Development machine only:
+# never in the release image or the API environment, and not covered by constraints.txt. The service never imports them.
+train = ["numpy>=2.0", "scikit-learn~=1.9.1", "xgboost~=3.4.1"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

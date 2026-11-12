@@ -60,8 +60,9 @@ python scripts/train_risk.py --data <real>/risk_dataset.csv --out models/risk \
     --clinical-signoff REF --min-auroc-lower X --min-sensitivity Y --slope-range LOW HIGH
 ```
 
-Random forest and XGBoost training needs scikit-learn and XGBoost on the development machine only. Logistic regression trains in
-plain Python. Same dataset and seed give identical files. The model card reports the split, selection, operating point, test
+Random forest and XGBoost training needs scikit-learn and XGBoost on the development machine only: `pip install -e ".[train]"`.
+They are never installed in the release image or the API environment, and the service never imports them. Logistic regression
+trains in plain Python with no extra install. Same dataset and seed give identical files. The model card reports the split, selection, operating point, test
 metrics with intervals, comparison with the rules alone, calibration, decision curve, subgroups and leave-one-district-out results.
 
 ## Before any real use

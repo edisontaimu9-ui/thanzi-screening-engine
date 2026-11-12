@@ -25,6 +25,8 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
   references and a passed, pre-set acceptance check. New scripts `simulate_risk_outcomes.py` and `train_risk.py`, a simulated demo model in
   `models/risk_sim/` with its model card, `GET /v1/about` component `ml_risk` and `GET /version` field `risk_model_version`. No real data has
   been used: the numbers in the card only show the code works. See `docs/modules/ml-risk.md`.
+- **Optional `train` extra.** `pip install -e ".[train]"` installs NumPy, scikit-learn and XGBoost for training the random forest and
+  XGBoost risk-model candidates. Development machine only: not in the release image, not in `constraints.txt`, never imported by the service.
 - **Hotspot surveillance.** `POST /v1/surveillance/hotspots` and `thanzi_screen.surveillance`. Takes counts per district and
   month (grouped by the caller, no child-level data), returns per-district prevalence with a Wilson interval, a trend and a
   status (`hotspot`, `watch`, `not_flagged`, `insufficient_data`, `no_data`). Small counts are suppressed, districts under 30
