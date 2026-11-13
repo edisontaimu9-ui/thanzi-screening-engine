@@ -47,7 +47,7 @@ flowchart TD
     V --> RT{Routing}
     RT -->|born under 37 weeks or under 2500 g,<br/>under 50 weeks PMA| P[Preterm engine]
     RT -->|otherwise| AN[Anthropometry: WHO z-scores]
-    AN --> CL[Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification]
+    AN --> CL["Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification"]
     CL --> RV[Rules-based review check]
     CL --> ML[Advisory ML flags]
     CL --> GR[Growth monitoring]
