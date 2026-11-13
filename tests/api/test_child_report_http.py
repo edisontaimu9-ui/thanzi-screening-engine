@@ -43,7 +43,7 @@ def test_environment_switch(monkeypatch):
 def test_needs_the_gateway_key_and_refuses_unknown_fields():
     c = _on()
     assert c.post("/v1/report", json=LOW_BASE).status_code == 401
-    assert c.post("/v1/report", json=LOW_BASE, headers={"X-Gateway-Key": "wrong-key-0123456789"}).status_code == 401
+    assert c.post("/v1/report", json=LOW_BASE, headers={"X-Gateway-Key": GW[::-1]}).status_code == 401
     bad = c.post("/v1/report", json={**LOW_BASE, "child_name": "x"}, headers=HG)
     assert bad.status_code == 422 and bad.json()["code"] == "unknown_field"
     assert c.post("/v1/report", json={"sex": "male"}, headers=HG).status_code == 422
