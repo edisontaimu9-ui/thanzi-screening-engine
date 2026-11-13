@@ -95,3 +95,15 @@ def test_an_earlier_visit_that_is_not_comparable_is_unavailable_not_used(model):
 def test_missing_history_and_feeding_never_invalidate_the_anthropometric_result(model):
     b = _post(_client(prediction_model=model), LOW_BASE).json()["ml_prediction"]
     assert b["not_scored_reason"] != "essential_input_unavailable" and "clinical" in b["inputs"]["not_assessed"]
+
+
+def test_an_anthropometric_pathway_model_scores_with_history_and_feeding_empty(pre):  # noqa: F811
+    from tests.prediction.test_pathways import _spec, examples  # noqa: F401
+    from thanzi_screen.prediction import SimConfig, TargetConfig, build_examples, simulate_children
+    from thanzi_screen.prediction.model import SCHEMA
+    ex = build_examples(simulate_children(SimConfig(n_children=300, seed=21)), TargetConfig())
+    spec = _spec(ex)
+    spec["schema"] = SCHEMA
+    m = PredictionModel(json.loads(json.dumps(spec, sort_keys=True)))
+    b = _post(_client(prediction_model=m), LOW_BASE).json()["ml_prediction"]
+    assert b["scored"] is True and b["pathway"] == "anthropometric" and "clinical" in b["inputs"]["not_assessed"]

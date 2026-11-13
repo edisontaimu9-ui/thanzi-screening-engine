@@ -30,6 +30,7 @@ from thanzi_screen.prediction import compare, export  # noqa: E402
 from thanzi_screen.prediction.card import render_model_card  # noqa: E402
 from thanzi_screen.prediction.errors import PredictionModelError  # noqa: E402
 from thanzi_screen.prediction.model import SCHEMA, PredictionModel  # noqa: E402
+from thanzi_screen.prediction.pathways import PATHWAYS, apply_pathway, HISTORY_WITHHELD_PCT  # noqa: E402
 from thanzi_screen.prediction.targets import TARGETS  # noqa: E402
 
 AGE_RANGE = (6.0, 60.0)
@@ -41,7 +42,7 @@ DEFINITION = {
 }
 
 
-def build_spec(target: str, r: dict, prep, state, manifest: dict, tcfg: TargetConfig, seed: int, signoff, acceptance) -> tuple[dict, float]:
+def build_spec(target: str, r: dict, prep, state, manifest: dict, tcfg: TargetConfig, seed: int, signoff, acceptance, pathway: str = "full") -> tuple[dict, float]:
     sel = r["selection"]["selected"]
     fitted = state["models"][sel]
     columns = list(prep.pre.columns)
@@ -54,7 +55,7 @@ def build_spec(target: str, r: dict, prep, state, manifest: dict, tcfg: TargetCo
     simulated = manifest["provenance"] == "simulated"
     max_missing = max(sum(1 for v in e.features.values() if v is None) for e in prep.rows["train"])
     spec = {
-        "schema": SCHEMA, "version": f"{target}-{'sim' if simulated else 'real'}-0.1.0", "kind": kind,
+        "schema": SCHEMA, "version": f"{target}-{'' if pathway == 'full' else pathway + '-'}{'sim' if simulated else 'real'}-0.1.0", "kind": kind,
         "provenance": manifest["provenance"], "clinical_use": not simulated,
         "target": {"name": target, "plain": PLAIN[target], "definition": DEFINITION[target],
                    "horizon_min_days": tcfg.horizon_min_days, "horizon_max_days": tcfg.horizon_max_days},
@@ -62,6 +63,8 @@ def build_spec(target: str, r: dict, prep, state, manifest: dict, tcfg: TargetCo
         "strata": {"cutoffs": cuts, "alert_rates": {"high": rates[0], "elevated": rates[1]}, "basis": "validation children"},
         "eligibility": {"age_months_min": AGE_RANGE[0], "age_months_max": AGE_RANGE[1]},
         "safeguards": {"max_missing_features": max_missing},
+        "pathway": {"name": pathway, "groups": list(PATHWAYS[pathway]["groups"]), "required_features": list(PATHWAYS[pathway]["required"]),
+                    "history_withheld_pct": HISTORY_WITHHELD_PCT if pathway != "full" else 0},
         "dataset_sha256": manifest["sha256"], "seed": seed, "selected_candidate": sel,
         "metrics": {"test_auroc": r["test"]["models"][sel]["auroc"], "test_events": r["test"]["events"]},
         "acceptance": {"set": False, "passed": None, "checks": []},
@@ -88,6 +91,7 @@ def main() -> int:
     ap.add_argument("--candidates", default="lr,rf,xgb")
     ap.add_argument("--targets", default=",".join(TARGETS))
     ap.add_argument("--min-events", type=int, default=30)
+    ap.add_argument("--pathway", default="full", choices=sorted(PATHWAYS), help="full, or anthropometric (measurements only: runs without history or feeding answers)")
     ap.add_argument("--allow-simulated", action="store_true")
     ap.add_argument("--clinical-signoff", default="", help="real data only: the sign-off reference")
     ap.add_argument("--acceptance", default="", help="real data only: JSON with set, passed and checks")
@@ -117,7 +121,7 @@ def main() -> int:
     cfg = compare.CompareConfig(seed=args.seed, n_boot=args.n_boot, alert_rates=tuple(args.alert_rates), min_events=args.min_events,
                                 candidates=wanted)
     tcfg = TargetConfig()
-    examples = build_examples(children, tcfg, seed=args.seed)
+    examples = apply_pathway(build_examples(children, tcfg, seed=args.seed), args.pathway)
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -131,9 +135,20 @@ def main() -> int:
         if r["status"] != "trained":
             print(f"{t}: not trained, not exported ({r['reason']})")
             continue
-        spec, diff = build_spec(t, r, prep, state, manifest, tcfg, args.seed, args.clinical_signoff.strip(), acceptance)
-        (out / f"{t}.json").write_text(json.dumps(spec, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+        spec, diff = build_spec(t, r, prep, state, manifest, tcfg, args.seed, args.clinical_signoff.strip(), acceptance, args.pathway)
+        (out / (f"{t}.json" if args.pathway == "full" else f"{t}.{args.pathway}.json")).write_text(json.dumps(spec, indent=1, sort_keys=True) + "\n", encoding="utf-8")
         specs[t], parities[t] = spec, diff
+        if args.pathway != "full":      # test AUROC with and without earlier visits: a pathway must work for a first visit too
+            from sklearn.metrics import roc_auc_score
+            p = state["models"][spec["selected_candidate"]].predict_proba(prep.X["test"])
+            first = [e.features["n_prior_visits"] == 0.0 for e in prep.rows["test"]]
+            check = {}
+            for name, flag in (("no_earlier_visit", True), ("earlier_visit", False)):
+                idx = [i for i, f in enumerate(first) if f == flag]
+                ys = [prep.y["test"][i] for i in idx]
+                check[name] = {"n": len(idx), "events": sum(ys), "auroc": round(float(roc_auc_score(ys, [p[i] for i in idx])), 4) if 0 < sum(ys) < len(ys) else None}
+            results.setdefault("pathway_check", {})[t] = check
+            print(f"{t}: test AUROC {check['no_earlier_visit']['auroc']} with no earlier visit, {check['earlier_visit']['auroc']} with one")
         print(f"{t}: exported {spec['selected_candidate']} ({spec['kind']}), version {spec['version']}, parity {diff:.1e}")
     results["dataset"] = {"sha256": manifest["sha256"], "rows": manifest["rows"], "children": manifest["children"],
                           "provenance": manifest["provenance"]}

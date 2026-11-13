@@ -6,6 +6,8 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
 
 ## Unreleased
 
+- **Anthropometric pathway (Phase 7).** `export_prediction.py --pathway anthropometric` builds a measurements-only model that scores without
+  history, feeding, birth, maternal or household answers, and without an earlier visit. Model files may use a subset of inputs. No API change.
 - **Pathway minimums and input states (Phase 6).** `ml_prediction` is `not scored` for missing inputs only when they are essential to the model's
   pathway (`essential_input_unavailable`, replacing `too_many_missing_inputs`). The block gains `pathway` and `inputs` (not_assessed,
   not_applicable, unavailable, by group). An earlier visit is used only when valid and comparable. Additive except that reason code.

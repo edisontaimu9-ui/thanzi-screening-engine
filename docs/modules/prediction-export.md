@@ -30,7 +30,7 @@ One file per target holds everything needed to score a child and to refuse to:
 | `strata` | Calibrated-probability cut-offs for `elevated` and `high`, fixed on validation children at the 20% and 10% alert rates. |
 | `eligibility` | Age range, 6 to under 60 months. |
 | `safeguards` | `max_missing_features`: the most inputs ever missing in a training row. A record only: it no longer stops a score. |
-| `pathway` | Optional. `name` and `required_features`. |
+| `pathway` | Optional. `name`, `groups`, `required_features` (must be inputs of the model) and `history_withheld_pct`. |
 | `target`, `provenance`, `clinical_use`, `dataset_sha256`, `seed`, `metrics`, `governance`, `acceptance` | What it predicts, where the data came from and what was approved. |
 
 The loader fails closed. It refuses a file with a missing or malformed part, non-finite numbers, columns that do not match the
@@ -114,9 +114,13 @@ strata, loss-to-follow-up check, subgroup tables (age band, sex, district) and t
 - The request carries no clinical history or feeding questions, so those inputs are reported `not_assessed` in the block's `inputs`, never filled
   in. Empty inputs that cannot exist (no earlier visit, deworming under 12 months, a first birth) are `not_applicable`. An earlier visit that
   is not valid and comparable (no length or height with its position, or under 14 days earlier) is not used and its inputs are `unavailable`.
-- **Interim gap (closed in Phase 7):** a model trained on rows where those inputs were always recorded still returns `gap_never_seen_in_training`
-  for a request that leaves them empty. That refusal is the no-silent-imputation rule working. Phase 7 trains the anthropometric pathway model so
-  that it can score without them.
+- **Pathways (Phase 7).** `scripts/export_prediction.py --pathway anthropometric` trains and exports a model from measurements only (this visit and
+  earlier visits). Clinical history, feeding, birth, maternal and household inputs are not part of it, so a request that leaves them empty is
+  scored and they are reported `not_assessed`, never filled in. A fixed, repeatable 30% of rows have earlier visits withheld in training, so a
+  first visit is scored from what the model learned about "no earlier visit". The run reports test AUROC with and without an earlier visit
+  (`pathway_check` in `results.json`, and the model card). Files are named `<target>.anthropometric.json`. A model file without a `pathway`
+  part is the `full` pathway and still needs every input it always saw in training (`gap_never_seen_in_training`).
+- The loss-to-follow-up check cannot compare household inputs for a pathway that does not use them.
 - The report package does not show the block yet. That wiring needs a clinical decision on wording and is not part of Phase 5.
 - The strata are defined by alert rate on validation children. They are relative, not absolute, and must be monitored after rollout.
 - Fixed settings were not tuned. Tuning would need its own nested validation, agreed before real data.

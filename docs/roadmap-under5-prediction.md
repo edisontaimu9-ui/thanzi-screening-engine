@@ -10,7 +10,7 @@ Two independent modules, one reporting interface. Each phase ends with passing t
 | 4 | Model export (the service runs without scikit-learn or XGBoost), explainability (exact contributions and TreeSHAP, a tested copy of the `ml/risk` tree code), risk strata, safety safeguards, model card | done |
 | 5 | API block on `/v1/screen`, OpenAPI, release notes (report wiring is not done: see the limits in `docs/modules/prediction-export.md`) | done |
 | 6 | Pathway-specific minimum inputs, three empty-input states (not assessed, not applicable, unavailable), comparable-earlier-visit rules, `inputs` in the API block | done (this change) |
-| 7 | Pathway training and export: an anthropometric pathway model trained and tested with clinical, feeding, maternal and household inputs empty, so they never stop a score and are never filled in | planned |
+| 7 | Pathway training and export: an anthropometric pathway model trained and tested with clinical, feeding, maternal and household inputs empty, so they never stop a score and are never filled in | done (this change) |
 | 8 | Several one-target models run together and consolidated into one `screening_summary` for the worker. Escalate only. Rules stay authoritative (tested) | planned |
 | 9 | Individual child report: clinically reviewed wording, screening is not diagnosis | planned |
 | 10 | Aggregated surveillance reports (facility, district, national) with DHIS2 export (data value sets, mapping file, org unit codes) | planned |

@@ -83,6 +83,15 @@ def render_model_card(results: dict, specs: dict, parities: dict | None = None, 
     else:
         lines += ["Trained on real data. Not for clinical use until the acceptance checks have passed and clinical sign-off is recorded "
                   "in the model file. The service refuses a model without them.", ""]
+    paths = {(sp.get("pathway") or {}).get("name", "full") for sp in specs.values()}
+    if paths - {"full"}:
+        lines += ["**Pathway: " + ", ".join(sorted(paths)) + ".** Built from measurements only (this visit and earlier visits). Clinical history, feeding, "
+                  "birth, maternal and household answers are not inputs, so leaving them empty never stops a score and they are never filled in. "
+                  "A share of training rows had earlier visits withheld, so a first visit can be scored.", ""]
+        for t, c in sorted((results.get("pathway_check") or {}).items()):
+            lines.append(f"- {t}: test AUROC {c['no_earlier_visit']['auroc']} with no earlier visit ({c['no_earlier_visit']['n']} rows), "
+                         f"{c['earlier_visit']['auroc']} with one ({c['earlier_visit']['n']} rows).")
+        lines.append("")
     ds = results.get("dataset", {})
     lines += [f"Dataset SHA-256 `{str(ds.get('sha256', ''))[:16]}...`, {ds.get('rows', '?')} visits, {ds.get('children', '?')} children. "
               f"Same data and seed give identical files.", "",

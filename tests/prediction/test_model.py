@@ -108,7 +108,7 @@ def test_real_data_needs_governance_and_acceptance(pre):
     (lambda s: s["model"]["names"].reverse(), "do not match the preprocessor"),
     (lambda s: s["model"].update(bias=float("inf")), "logistic model is invalid"),
     (lambda s: s["safeguards"].update(max_missing_features=-1), "max_missing_features"),
-    (lambda s: s["preprocessor"]["features"].pop("whz"), "preprocessor part is invalid"),
+    (lambda s: s["preprocessor"]["features"].pop("whz"), "required input is not one of the model's inputs"),
 ])
 def test_a_bad_model_file_is_refused(pre, mutate, message):
     spec = _spec(pre)

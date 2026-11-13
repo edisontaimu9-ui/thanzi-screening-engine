@@ -56,7 +56,7 @@ class Preprocessor:
         if not rows:
             raise PreprocessError("no training rows")
         feats = {}
-        for n in FEATURE_NAMES:
+        for n in (n for n in FEATURE_NAMES if n in rows[0]):        # a pathway fits only its own inputs
             kind = FEATURES[n].kind
             vals = sorted(r[n] for r in rows if r[n] is not None)
             if not all(math.isfinite(v) for v in vals):
@@ -100,6 +100,6 @@ class Preprocessor:
 
     @classmethod
     def from_dict(cls, spec: dict) -> "Preprocessor":
-        if spec.get("version") != 1 or set(spec.get("features", {})) != set(FEATURE_NAMES):
+        if spec.get("version") != 1 or not spec.get("features") or not set(spec["features"]) <= set(FEATURE_NAMES):
             raise PreprocessError("unsupported preprocessor file")
         return cls(spec)

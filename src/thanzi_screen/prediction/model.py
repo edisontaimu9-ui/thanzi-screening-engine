@@ -100,6 +100,8 @@ class PredictionModel:
         except (PreprocessError, KeyError, TypeError):
             raise PredictionModelError("preprocessor part is invalid") from None
         self.columns = list(self.pre.columns)
+        if any(n not in self.pre.names for n in self.required_features):
+            raise PredictionModelError("a required input is not one of the model's inputs")
         if not isinstance(model_spec, dict):
             raise PredictionModelError("model part is invalid")
         if self.kind == "logistic":
@@ -166,7 +168,7 @@ class PredictionModel:
 
     def vectorise(self, features: dict) -> list[float]:
         """Preprocessed columns for one row. Raises UnseenMissingError for a gap never seen in training."""
-        return self.pre.transform(features, strict_missing=True)
+        return self.pre.transform({n: features[n] for n in self.pre.names}, strict_missing=True)     # a pathway uses only its own inputs
 
     def contributions(self, x) -> tuple[float, list[float], str]:
         """(baseline, per-column contribution, unit). baseline + sum(contributions) equals raw_output(x) exactly, for the

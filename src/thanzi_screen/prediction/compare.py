@@ -196,8 +196,8 @@ def followup_balance(examples: list[Example], target: str,
     lost = [e for e in examples if e.reasons[target] == "no_followup_in_window"]
     out = {"labelled": len(kept), "lost_to_followup": len(lost), "features": {}}
     for f in features:
-        a = [e.features[f] for e in kept if e.features[f] is not None]
-        b = [e.features[f] for e in lost if e.features[f] is not None]
+        a = [e.features.get(f) for e in kept if e.features.get(f) is not None]
+        b = [e.features.get(f) for e in lost if e.features.get(f) is not None]
         if len(a) < 2 or len(b) < 2:
             out["features"][f] = None
             continue
