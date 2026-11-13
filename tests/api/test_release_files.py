@@ -53,9 +53,13 @@ def test_ci_smoke_uses_generated_keys_not_literals():
     assert "openssl rand -hex 24" in ci and "ci-gateway-key" not in ci and "ci-audit-key" not in ci
 
 
-def test_gitleaks_allowlist_is_only_the_two_historical_test_keys():
+def test_gitleaks_allowlist_is_only_the_known_throwaway_test_keys():
     text = (ROOT / ".gitleaks.toml").read_text(encoding="utf-8")
-    assert re.findall(r"'''([^']+)'''", text) == ["ci-gateway-key-0123456789", "ci-audit-key-0123456789ab"]
+    assert re.findall(r"'''([^']+)'''", text) == [
+        "ci-gateway-key-0123456789",    # historical Phase 6 CI smoke keys (D99)
+        "ci-audit-key-0123456789ab",
+        "wrong-key-0123456789",         # deliberately wrong key that tests send to prove a bad key is refused
+    ]
 
 
 def test_constraints_pin_everything_and_match_what_is_installed():
