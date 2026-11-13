@@ -4,7 +4,7 @@
 and the facility counts as a DHIS2 data value set. **Advisory only.** Nothing here changes a child's classification, referral or wording.
 Standard library only, stateless: no database, no stored records, no child identifiers, and nothing is sent to DHIS2.
 
-**Off by default.** `THANZI_SURVEILLANCE_REPORTS_ENABLED=1` switches on both routes. Until then they answer `404 surveillance_reports_off`.
+**Off by default.** `THANZI_SURVEILLANCE_REPORTS_ENABLED=1` switches on both routes, but from Phase 11 only together with a valid sign-off from the Ministry nutrition unit and a DHIS2 administrator in `THANZI_REVIEW_SIGNOFF_DIR`, and only once the settings no longer say `PLACEHOLDER` (`docs/modules/review-pack.md`). Until then they answer `404 surveillance_reports_off`.
 Facility-level output, the placeholder thresholds and the question of exporting small counts need Ministry sign-off first (see
 [Decisions for the Ministry](#decisions-for-the-ministry)). The existing hotspot route is unchanged and stays district only.
 

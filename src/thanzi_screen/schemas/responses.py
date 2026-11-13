@@ -259,7 +259,7 @@ class MetricsResponse(BaseModel):
 
 class ComponentInfo(BaseModel):
     name: str
-    state: str = Field(description="ok, degraded, off or not_run. For the LLM service see its own /v1/llm/health.")
+    state: str = Field(description="ok, degraded, off, blocked or not_run. blocked: switched on but the Phase 11 review gate is shut (see detail). For the LLM service see its own /v1/llm/health.")
     version: str | None = None
     detail: str
 

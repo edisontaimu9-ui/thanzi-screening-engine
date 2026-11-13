@@ -33,11 +33,18 @@ def test_off_by_default():
     assert r.status_code == 404 and r.json()["code"] == "report_off"
 
 
-def test_environment_switch(monkeypatch):
+def test_environment_switch_needs_a_valid_signoff_too(monkeypatch, tmp_path):
+    """Phase 11: the switch alone is not enough. See tests/api/test_review_gate_http.py for the gate in full."""
+    from tests.review.test_gate import CHILD, signed
+    from thanzi_screen.review import SUBJECTS
+    monkeypatch.delenv("THANZI_REVIEW_SIGNOFF_DIR", raising=False)
     monkeypatch.setenv("THANZI_CHILD_REPORT_ENABLED", "1")
-    assert _client().post("/v1/report", json=LOW_BASE, headers=HG).status_code == 200
+    assert _client().post("/v1/report", json=LOW_BASE, headers=HG).status_code == 404          # switch without sign-off
+    (tmp_path / SUBJECTS[CHILD].filename).write_text(json.dumps(signed()), encoding="utf-8")
+    monkeypatch.setenv("THANZI_REVIEW_SIGNOFF_DIR", str(tmp_path))
+    assert _client().post("/v1/report", json=LOW_BASE, headers=HG).status_code == 200         # switch and sign-off
     monkeypatch.setenv("THANZI_CHILD_REPORT_ENABLED", "0")
-    assert _client().post("/v1/report", json=LOW_BASE, headers=HG).status_code == 404
+    assert _client().post("/v1/report", json=LOW_BASE, headers=HG).status_code == 404         # sign-off without switch
 
 
 def test_needs_the_gateway_key_and_refuses_unknown_fields():

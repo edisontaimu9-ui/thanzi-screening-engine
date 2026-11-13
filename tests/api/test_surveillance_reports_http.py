@@ -34,8 +34,19 @@ def test_off_by_default_and_switched_on_by_the_environment(monkeypatch):
     for url, body in ((REPORT, BODY), (DHIS2, {**BODY, "mapping": MAPPING})):
         r = off.post(url, json=body, headers=HG)
         assert r.status_code == 404 and r.json()["code"] == "surveillance_reports_off"
-    monkeypatch.setenv("THANZI_SURVEILLANCE_REPORTS_ENABLED", "1")
-    assert TestClient(create_app(gateway_key=GW, models=None)).post(REPORT, json=BODY, headers=HG).status_code == 200
+    monkeypatch.setenv("THANZI_SURVEILLANCE_REPORTS_ENABLED", "1")          # Phase 11: the switch alone is not enough
+    monkeypatch.delenv("THANZI_REVIEW_SIGNOFF_DIR", raising=False)
+    assert TestClient(create_app(gateway_key=GW, models=None)).post(REPORT, json=BODY, headers=HG).status_code == 404
+    from tests.review.test_gate import SURV, signed
+    from thanzi_screen.review import SUBJECTS, pack
+    import json as _json
+    import pathlib, tempfile
+    with tempfile.TemporaryDirectory() as d:
+        (pathlib.Path(d) / SUBJECTS[SURV].filename).write_text(_json.dumps(signed(SURV)), encoding="utf-8")
+        monkeypatch.setenv("THANZI_REVIEW_SIGNOFF_DIR", d)
+        assert TestClient(create_app(gateway_key=GW, models=None)).post(REPORT, json=BODY, headers=HG).status_code == 404   # still PLACEHOLDER settings
+        monkeypatch.setattr(pack, "_surv_placeholder", lambda: False)                                                        # Ministry values are in
+        assert TestClient(create_app(gateway_key=GW, models=None)).post(REPORT, json=BODY, headers=HG).status_code == 200
 
 
 def test_both_routes_need_the_gateway_key(on):

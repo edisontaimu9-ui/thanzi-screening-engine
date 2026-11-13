@@ -20,6 +20,7 @@ from ..ml.flags import Models, load_models
 from ..ml.risk import RiskModel, load_risk_model
 from ..prediction import PredictionModel
 from ..prediction.model import load_prediction_models
+from ..review import SUBJECTS, check_subject, signoff_dir
 from ..schemas import (
     AboutResponse, AuditResponse, ChildReportResponse, Dhis2ExportRequest, Dhis2Response, ErrorBody, HealthResponse, HotspotRequest, HotspotResponse,
     MetricsResponse, PretermAuditResponse, PretermResponse, ScreenRequest, SurveillanceReportRequest, SurveillanceReportResponse, VersionResponse,
@@ -109,15 +110,26 @@ def _load_prediction(model) -> tuple[tuple | None, str]:
     return tuple(models), "degraded" if refused else "ok"
 
 
-def _child_report_enabled(explicit: bool | None) -> bool:
-    """Child report route (Phase 9). Off unless THANZI_CHILD_REPORT_ENABLED=1: its wording is a draft until clinicians sign it off."""
-    return explicit if explicit is not None else _flag("THANZI_CHILD_REPORT_ENABLED")
+def _gated(subject: str, flag: str, explicit: bool | None) -> tuple[bool, str, tuple[str, ...]]:
+    """Phase 11 gate for a feature that is off by default. Returns (on, state, reasons), state off, ok or blocked.
+    An explicit argument (tests, embedding code) decides alone. From the environment the feature needs its switch at 1 AND a valid
+    clinical sign-off for the current version in THANZI_REVIEW_SIGNOFF_DIR. A blocked feature behaves exactly like an off one (404)."""
+    if explicit is not None:
+        return explicit, "ok" if explicit else "off", ()
+    if not _flag(flag):
+        return False, "off", ()
+    result = check_subject(subject, signoff_dir())
+    if result.ok:
+        return True, "ok", ()
+    log.warning("%s is switched on (%s=1) but blocked by the review gate: %s", subject, flag, ", ".join(result.reasons))
+    return False, "blocked", result.reasons
 
 
-def _surveillance_reports_enabled(explicit: bool | None) -> bool:
-    """Aggregated reports and DHIS2 export (Phase 10). Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1: facility-level output and
-    its placeholder thresholds need Ministry sign-off first."""
-    return explicit if explicit is not None else _flag("THANZI_SURVEILLANCE_REPORTS_ENABLED")
+def _gate_component(name: str, version: str | None, state: str, reasons: tuple[str, ...], what: str, flag: str) -> dict:
+    detail = {"ok": f"On: {flag}=1 and the sign-off for this version is valid. {what}",
+              "off": f"Off by default ({flag} is not 1). {what}",
+              "blocked": f"Switched on but blocked by the review gate, so the routes answer as if off: {', '.join(reasons)}. See docs/modules/review-pack.md."}[state]
+    return {"name": name, "state": state, "version": version, "detail": detail}
 
 
 @contextlib.asynccontextmanager
@@ -156,8 +168,9 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     app.state.models, app.state.config, app.state.deep = loaded, cfg, loaded_deep
     app.state.risk, app.state.risk_state = loaded_risk, risk_state
     app.state.prediction, app.state.prediction_state = loaded_pred, pred_state
-    app.state.child_report = _child_report_enabled(child_report)
-    app.state.surveillance_reports = _surveillance_reports_enabled(surveillance_reports)
+    app.state.child_report, app.state.child_report_state, child_why = _gated("child_report_wording", "THANZI_CHILD_REPORT_ENABLED", child_report)
+    app.state.surveillance_reports, app.state.surveillance_state, surv_why = _gated(
+        "surveillance_reports", "THANZI_SURVEILLANCE_REPORTS_ENABLED", surveillance_reports)
     app.state.metrics = metrics = Metrics()
 
     # ---- access control: before routing and before body validation, so nothing leaks to unauthenticated callers ----
@@ -229,7 +242,11 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     def about():
         """What is running: versions and state of the engine, the ML models, growth monitoring and the optional LLM service."""
         paths = sorted(p for p in app.openapi()["paths"] if p.startswith(("/v1/", "/health", "/version")))
-        optional = [llm_routes.about_component(getattr(app.state, "llm", None))]
+        optional = [llm_routes.about_component(getattr(app.state, "llm", None)),
+                    _gate_component("child_report", SUBJECTS["child_report_wording"].version(), app.state.child_report_state, child_why,
+                                    "Individual child report, draft wording, worker view only.", "THANZI_CHILD_REPORT_ENABLED"),
+                    _gate_component("surveillance_reports", SUBJECTS["surveillance_reports"].version(), app.state.surveillance_state, surv_why,
+                                    "Facility, district and national reports and DHIS2 export.", "THANZI_SURVEILLANCE_REPORTS_ENABLED")]
         return service.about_info(app.state.models, app.state.deep, optional, metrics.uptime_seconds(), paths,
                                   app.state.risk, app.state.risk_state, app.state.prediction, app.state.prediction_state)
 
@@ -255,7 +272,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     def report(body: ScreenRequest):
         """Individual child screening report from the same request as /v1/screen. Built from the worker view only: no HIV information, no audit key.
         Screening is not diagnosis. Wording is a DRAFT pending clinical review. Escalate only: it never changes the classification, tier or referral.
-        Off unless THANZI_CHILD_REPORT_ENABLED=1 (404 report_off)."""
+        Off unless THANZI_CHILD_REPORT_ENABLED=1 and the clinical sign-off for this wording version is valid (404 report_off)."""
         if not app.state.child_report:
             return _error(404, "report_off", "The child report is switched off.")
         return JSONResponse(service.child_report(body.model_dump(), app.state.models, app.state.deep, app.state.risk, app.state.prediction))
@@ -272,7 +289,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     def surveillance_report(body: SurveillanceReportRequest):
         """Facility, district and national report for one month from counts already grouped by the caller (no child records).
         Shows reporting completeness, district hotspot status and small-cell suppression. Advisory only.
-        Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1 (404 surveillance_reports_off)."""
+        Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1 and the Ministry sign-off for these settings is valid (404 surveillance_reports_off)."""
         if not app.state.surveillance_reports:
             return _error(404, "surveillance_reports_off", "The aggregated surveillance reports are switched off.")
         return JSONResponse(service.surveillance_report(body.model_dump()))
@@ -281,7 +298,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         401: {"model": ErrorBody}, 404: {"model": ErrorBody}, 413: {"model": ErrorBody}, 422: {"model": ErrorBody}})
     def dhis2_export(body: Dhis2ExportRequest):
         """The facility counts of one month as a DHIS2 data value set, using the mapping in the request. Nothing is sent to DHIS2:
-        the caller imports it, with dryRun=true first. Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1."""
+        the caller imports it, with dryRun=true first. Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1 and the sign-off is valid."""
         if not app.state.surveillance_reports:
             return _error(404, "surveillance_reports_off", "The aggregated surveillance reports are switched off.")
         return JSONResponse(service.dhis2_export(body.model_dump()))

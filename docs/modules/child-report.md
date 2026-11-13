@@ -14,9 +14,9 @@ report adds of its own). The route is in `api/app.py`, the glue in `api/service.
 | Setting | Effect |
 |---|---|
 | `THANZI_CHILD_REPORT_ENABLED` unset or not `1` | `POST /v1/report` returns `404` with code `report_off`. Nothing else changes. |
-| `THANZI_CHILD_REPORT_ENABLED=1` | The route works. Every report carries `wording.status = draft_pending_clinical_review` and a draft notice. |
+| `THANZI_CHILD_REPORT_ENABLED=1` and a valid sign-off (Phase 11) | The route works. Every report carries `wording.status = draft_pending_clinical_review` and a draft notice. |
 
-It stays off until the wording is reviewed (see below). The sign-off file and the deployment gate that checks it are Phase 11.
+It stays off until the wording is reviewed (see below). From Phase 11 the switch alone is not enough: the service also needs a valid sign-off file for this wording version in `THANZI_REVIEW_SIGNOFF_DIR` (`docs/modules/review-pack.md`), otherwise `/v1/about` shows `child_report` as `blocked` and the route answers 404 `report_off`.
 
 ## What the report holds
 

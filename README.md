@@ -71,8 +71,8 @@ The service refuses to start without `THANZI_GATEWAY_KEY`.
 | `GET /v1/metrics` | gateway | Request counts and `/v1/screen` latency |
 | `POST /v1/screen?view=worker` | gateway | Screen one child (default view) |
 | `POST /v1/screen?view=audit` | gateway + audit | Full detail, may contain HIV information |
-| `POST /v1/report` | gateway | Individual child report (off unless `THANZI_CHILD_REPORT_ENABLED=1`, draft wording) |
-| `POST /v1/surveillance/report` | gateway | Facility, district and national report from grouped counts (off unless `THANZI_SURVEILLANCE_REPORTS_ENABLED=1`) |
+| `POST /v1/report` | gateway | Individual child report (off unless `THANZI_CHILD_REPORT_ENABLED=1` and a valid clinical sign-off is present, draft wording) |
+| `POST /v1/surveillance/report` | gateway | Facility, district and national report from grouped counts (off unless `THANZI_SURVEILLANCE_REPORTS_ENABLED=1` and a valid Ministry sign-off is present) |
 | `POST /v1/surveillance/dhis2` | gateway | The facility counts as a DHIS2 data value set (same switch) |
 | `POST /v1/surveillance/hotspots` | gateway | District hotspot assessment from grouped counts (advisory) |
 | `GET /v1/llm/health`, `POST /v1/llm/generate` | gateway | Only when `THANZI_LLM_ENABLED=1` |

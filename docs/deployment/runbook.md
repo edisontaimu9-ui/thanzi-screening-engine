@@ -38,6 +38,9 @@ OpenAPI contract and test evidence.
 See [configuration](../configuration.md). Minimum: `THANZI_GATEWAY_KEY`. Add `THANZI_AUDIT_KEY` only if the audit view is
 needed. Never set `THANZI_DEV_MODE` in production.
 
+The child report and the surveillance reports also need a signed review file each in `THANZI_REVIEW_SIGNOFF_DIR` (mount the folder read-only). Run
+`python scripts/review_pack.py gate --all --dir <folder>` before switching either on. See [review pack](../modules/review-pack.md).
+
 Rotate keys by starting a new container with new keys, switching the gateway, and stopping the old container.
 
 ## Run
@@ -95,3 +98,4 @@ targets from the expected load.
 7. Alerts on `degraded` and on repeated 5xx.
 8. Worker wording and the case pack reviewed by a qualified clinician.
 9. Load tested on the target servers.
+10. For each optional feature switched on (child report, surveillance reports): its sign-off file is in place, `scripts/review_pack.py gate` passes, and `/v1/about` shows it as `ok`, not `blocked`.

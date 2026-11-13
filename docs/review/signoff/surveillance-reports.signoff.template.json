@@ -1,0 +1,33 @@
+{
+  "schema": "thanzi-signoff-1",
+  "subject": "surveillance_reports",
+  "version": "surveillance-report-0.1+hotspots-0.1",
+  "content_sha256": "42574ed36b45cf4ae2d59e0c8ec43ab40e5d6df95bf56db1e3c20181f05dd2b8",
+  "outcome": "",
+  "changes_summary": "",
+  "approval_reference": "",
+  "reviewers": [
+    {
+      "name": "",
+      "role_code": "moh_nutrition_unit",
+      "title": "",
+      "date": ""
+    },
+    {
+      "name": "",
+      "role_code": "dhis2_administrator",
+      "title": "",
+      "date": ""
+    }
+  ],
+  "checklist": {
+    "thresholds.confirmed": "",
+    "small_cells.suppression": "",
+    "small_cells.dhis2_export": "",
+    "dhis2.ids": "",
+    "dhis2.dry_run": "",
+    "data.agreement": "",
+    "scope.limits_accepted": ""
+  },
+  "notes": ""
+}

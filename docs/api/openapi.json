@@ -492,7 +492,7 @@
             "type": "string"
           },
           "state": {
-            "description": "ok, degraded, off or not_run. For the LLM service see its own /v1/llm/health.",
+            "description": "ok, degraded, off, blocked or not_run. blocked: switched on but the Phase 11 review gate is shut (see detail). For the LLM service see its own /v1/llm/health.",
             "title": "State",
             "type": "string"
           },
@@ -4293,7 +4293,7 @@
     },
     "/v1/report": {
       "post": {
-        "description": "Individual child screening report from the same request as /v1/screen. Built from the worker view only: no HIV information, no audit key.\nScreening is not diagnosis. Wording is a DRAFT pending clinical review. Escalate only: it never changes the classification, tier or referral.\nOff unless THANZI_CHILD_REPORT_ENABLED=1 (404 report_off).",
+        "description": "Individual child screening report from the same request as /v1/screen. Built from the worker view only: no HIV information, no audit key.\nScreening is not diagnosis. Wording is a DRAFT pending clinical review. Escalate only: it never changes the classification, tier or referral.\nOff unless THANZI_CHILD_REPORT_ENABLED=1 and the clinical sign-off for this wording version is valid (404 report_off).",
         "operationId": "report_v1_report_post",
         "requestBody": {
           "content": {
@@ -4493,7 +4493,7 @@
     },
     "/v1/surveillance/dhis2": {
       "post": {
-        "description": "The facility counts of one month as a DHIS2 data value set, using the mapping in the request. Nothing is sent to DHIS2:\nthe caller imports it, with dryRun=true first. Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1.",
+        "description": "The facility counts of one month as a DHIS2 data value set, using the mapping in the request. Nothing is sent to DHIS2:\nthe caller imports it, with dryRun=true first. Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1 and the sign-off is valid.",
         "operationId": "dhis2_export_v1_surveillance_dhis2_post",
         "requestBody": {
           "content": {
@@ -4637,7 +4637,7 @@
     },
     "/v1/surveillance/report": {
       "post": {
-        "description": "Facility, district and national report for one month from counts already grouped by the caller (no child records).\nShows reporting completeness, district hotspot status and small-cell suppression. Advisory only.\nOff unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1 (404 surveillance_reports_off).",
+        "description": "Facility, district and national report for one month from counts already grouped by the caller (no child records).\nShows reporting completeness, district hotspot status and small-cell suppression. Advisory only.\nOff unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1 and the Ministry sign-off for these settings is valid (404 surveillance_reports_off).",
         "operationId": "surveillance_report_v1_surveillance_report_post",
         "requestBody": {
           "content": {

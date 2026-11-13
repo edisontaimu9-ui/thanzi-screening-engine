@@ -6,6 +6,14 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
 
 ## Unreleased
 
+- **Clinical review pack and deployment gates (Phase 11).** The child report (Phase 9) and the aggregated surveillance reports with DHIS2 export (Phase 10) now need
+  more than their switch. With `THANZI_CHILD_REPORT_ENABLED=1` or `THANZI_SURVEILLANCE_REPORTS_ENABLED=1` the routes open only when a valid sign-off file for the current
+  wording or settings is in `THANZI_REVIEW_SIGNOFF_DIR`. A sign-off names a fingerprint of exactly what was reviewed, so any later change to the wording or the settings needs a new
+  review; the required roles are a clinician (child report) and the Ministry nutrition unit plus a DHIS2 administrator (surveillance, which also stays shut while its
+  settings say `PLACEHOLDER`). Without one the routes answer as if off (same 404 codes), the service still starts, a warning with reason codes is logged, and `/v1/about`
+  gains the components `child_report` and `surveillance_reports` (state `ok`, `off` or `blocked`). **Contract change:** switching either feature on by environment variable alone no longer
+  opens it. `create_app(child_report=..., surveillance_reports=...)` is unchanged. New `thanzi_screen.review` (standard library), `scripts/review_pack.py` (`write`, `check`, `gate`),
+  `docs/review/reviewer-checklist.md` and unsigned templates in `docs/review/signoff/`. No sign-off is shipped. `openapi.json` regenerated (route text, `blocked` state). See `docs/modules/review-pack.md`.
 - **Aggregated surveillance reports and DHIS2 export (Phase 10).** `POST /v1/surveillance/report` takes counts already grouped per facility and month plus the org unit
   list (national, districts, facilities) and returns a facility, district and national report: sums that always agree, reporting completeness (a facility that did not
   report is `not_reported`, never zero), district hotspot status from the existing hotspot rule, `data_status` (`insufficient_data` shows counts but no rate), and small-cell

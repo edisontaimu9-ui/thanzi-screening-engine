@@ -1,0 +1,28 @@
+{
+  "schema": "thanzi-signoff-1",
+  "subject": "child_report_wording",
+  "version": "child_report_wording_0.1",
+  "content_sha256": "b8fce6be4a1eac1ec897bf7d311d654977061179e9d51a23c62fa2a2f9e0524b",
+  "outcome": "",
+  "changes_summary": "",
+  "approval_reference": "",
+  "reviewers": [
+    {
+      "name": "",
+      "role_code": "clinician",
+      "title": "",
+      "date": ""
+    }
+  ],
+  "checklist": {
+    "wording.no_diagnosis": "",
+    "wording.no_reassurance": "",
+    "wording.empty_not_reassurance": "",
+    "wording.plain_language": "",
+    "wording.prediction_order": "",
+    "scope.worker_view_only": "",
+    "scope.language": "",
+    "scope.limits_accepted": ""
+  },
+  "notes": ""
+}

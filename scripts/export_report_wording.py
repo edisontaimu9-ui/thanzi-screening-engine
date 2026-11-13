@@ -16,13 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 OUT = ROOT / "docs" / "review" / "child-report-wording.md"
 
-# Phase 8 wording that lives inline in prediction/consolidate.py. tests/childreport/test_wording.py checks each of these is still there.
-PHASE8_PHRASES = (
-    ("high stratum clause", "one of the highest chances of"),
-    ("elevated stratum clause", "a higher than usual chance of"),
-    ("opening", "The prediction models estimate"),
-    ("closing", "Consider closer follow-up and a clinician review."),
-)
+from thanzi_screen.review.pack import PHASE8_PHRASES  # noqa: E402  (shared with the Phase 11 fingerprint, so the sign-off covers these too)
 
 
 def _cell(text: str) -> str:
@@ -84,8 +78,10 @@ def render() -> str:
         "",
         "Reviewer name and role: ______  Date: ______  Outcome (approved, approved with changes, not approved): ______",
         "",
-        "Until this is signed, `/v1/report` stays off (`THANZI_CHILD_REPORT_ENABLED` is not `1`). The sign-off file and the deployment "
-        "gate that checks it are Phase 11.",
+        "Record the decisions above, then record the result in the sign-off file `child-report-wording.signoff.json` "
+        "(start from `docs/review/signoff/child-report-wording.signoff.template.json`; checklist in `docs/review/reviewer-checklist.md`). "
+        "Until a valid sign-off for this wording version is in the folder named by `THANZI_REVIEW_SIGNOFF_DIR`, `/v1/report` stays off "
+        "even with `THANZI_CHILD_REPORT_ENABLED=1`. A later change to the wording needs a new review.",
         "",
     ]
     return "\n".join(lines)

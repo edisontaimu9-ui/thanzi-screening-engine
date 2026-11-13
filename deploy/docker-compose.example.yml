@@ -27,6 +27,9 @@ services:
     environment:
       THANZI_GATEWAY_KEY: ${THANZI_GATEWAY_KEY:?set THANZI_GATEWAY_KEY}
       THANZI_AUDIT_KEY: ${THANZI_AUDIT_KEY:-}
+      # Optional features stay off until reviewed (docs/modules/review-pack.md). To switch one on, set its switch AND mount the signed files:
+      #   THANZI_CHILD_REPORT_ENABLED: "1"
+      #   THANZI_REVIEW_SIGNOFF_DIR: /signoff        with   volumes: ["./signoff:/signoff:ro"]
     networks:
       - thanzi_private
 networks:
