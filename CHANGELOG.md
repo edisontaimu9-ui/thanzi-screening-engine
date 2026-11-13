@@ -6,6 +6,9 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
 
 ## Unreleased
 
+- **Pathway minimums and input states (Phase 6).** `ml_prediction` is `not scored` for missing inputs only when they are essential to the model's
+  pathway (`essential_input_unavailable`, replacing `too_many_missing_inputs`). The block gains `pathway` and `inputs` (not_assessed,
+  not_applicable, unavailable, by group). An earlier visit is used only when valid and comparable. Additive except that reason code.
 - **Prediction block in the API (Phase 5).** With `THANZI_PREDICTION_ENABLED=1` and `THANZI_PREDICTION_MODEL`, `/v1/screen` adds an
   advisory `ml_prediction` block (plain under-5 route). Additive: off by default, fail-safe, never changes the rules. `/version`
   gains `prediction_model_version` and `/v1/about` gains the `ml_prediction` component (after `ml_risk`). `openapi.json` regenerated.

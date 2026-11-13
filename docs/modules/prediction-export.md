@@ -29,7 +29,8 @@ One file per target holds everything needed to score a child and to refuse to:
 | `calibration` | Platt slope and intercept, fitted on validation children. A slope that is not positive is refused. |
 | `strata` | Calibrated-probability cut-offs for `elevated` and `high`, fixed on validation children at the 20% and 10% alert rates. |
 | `eligibility` | Age range, 6 to under 60 months. |
-| `safeguards` | `max_missing_features`: the most inputs ever missing in a training row. |
+| `safeguards` | `max_missing_features`: the most inputs ever missing in a training row. A record only: it no longer stops a score. |
+| `pathway` | Optional. `name` and `required_features`. |
 | `target`, `provenance`, `clinical_use`, `dataset_sha256`, `seed`, `metrics`, `governance`, `acceptance` | What it predicts, where the data came from and what was approved. |
 
 The loader fails closed. It refuses a file with a missing or malformed part, non-finite numbers, columns that do not match the
@@ -73,7 +74,7 @@ Each ends in a stable "not scored" code (`NOT_SCORED`), never a guess, and the f
 never its message or the child's data.
 
 1. Age outside the model's range: `age_outside_model_range`.
-2. More inputs missing than any training row had: `too_many_missing_inputs`.
+2. An input essential to the model's pathway is missing: `essential_input_unavailable`. The pathway minimum is `pathway.required_features` in the file (default: age, sex, weight-, height- and weight-for-height z-scores, oedema). Other empty inputs do not stop a score.
 3. A gap never seen in training: `gap_never_seen_in_training` (the median is not used as a stand-in for "typical").
 4. A record that cannot be turned into inputs: `invalid_input`. Any other failure: `model_error`.
 
@@ -110,9 +111,12 @@ strata, loss-to-follow-up check, subgroup tables (age band, sex, district) and t
   block to `/v1/screen` on the plain under-5 route. It never changes the classification, tier or referral, and it is off by default.
   A refused or missing file gives no block and `degraded` in `/v1/about`. One file means one target: run one service per target
   until a clinical reviewer chooses which target a worker should see.
-- The request carries no clinical history or feeding questions, so those inputs count as not assessed. The model then often returns
-  `too_many_missing_inputs` or `gap_never_seen_in_training`. That is the safe result, not a bug. An earlier visit is used only when
-  `previous_measurement` has `length_height_cm` and `measure_position`.
+- The request carries no clinical history or feeding questions, so those inputs are reported `not_assessed` in the block's `inputs`, never filled
+  in. Empty inputs that cannot exist (no earlier visit, deworming under 12 months, a first birth) are `not_applicable`. An earlier visit that
+  is not valid and comparable (no length or height with its position, or under 14 days earlier) is not used and its inputs are `unavailable`.
+- **Interim gap (closed in Phase 7):** a model trained on rows where those inputs were always recorded still returns `gap_never_seen_in_training`
+  for a request that leaves them empty. That refusal is the no-silent-imputation rule working. Phase 7 trains the anthropometric pathway model so
+  that it can score without them.
 - The report package does not show the block yet. That wiring needs a clinical decision on wording and is not part of Phase 5.
 - The strata are defined by alert rate on validation children. They are relative, not absolute, and must be monitored after rollout.
 - Fixed settings were not tuned. Tuning would need its own nested validation, agreed before real data.

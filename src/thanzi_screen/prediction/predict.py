@@ -19,6 +19,7 @@ from .explain import explain
 from .features import build_features
 from .model import NOT_SCORED, PredictionModel, UnseenMissingError
 from .records import Child
+from .status import HISTORY_NONE, input_status
 
 log = logging.getLogger("thanzi.api")
 ADVISORY = ("Advisory only. It does not change the classification or the referral. No concern from the model does not mean the "
@@ -35,7 +36,7 @@ def _base(model: PredictionModel) -> dict:
     return {"available": True, "scored": False, "not_scored_reason": None, "not_scored_message": None, "stratum": None,
             "elevated": None, "message": None, "drivers": [], "target": model.target["name"],
             "horizon_days": [model.target["horizon_min_days"], model.target["horizon_max_days"]],
-            "model_version": model.version, "non_clinical": not model.clinical_use, "advisory": ADVISORY}
+            "model_version": model.version, "pathway": model.pathway, "inputs": None, "non_clinical": not model.clinical_use, "advisory": ADVISORY}
 
 
 def _not_scored(model: PredictionModel, reason: str) -> dict:
@@ -44,20 +45,21 @@ def _not_scored(model: PredictionModel, reason: str) -> dict:
     return out
 
 
-def assess_features(model: PredictionModel, features: dict, audit: bool = False) -> dict:
+def assess_features(model: PredictionModel, features: dict, audit: bool = False, history: str = HISTORY_NONE) -> dict:
     """Score a feature row built by `build_features` (or an equivalent dict with every feature name present)."""
     try:
+        status = input_status(features, history)
         reason = model.check_inputs(features)
         if reason:
-            return _not_scored(model, reason)
+            return {**_not_scored(model, reason), "inputs": status}
         try:
             x = model.vectorise(features)
         except UnseenMissingError:
-            return _not_scored(model, "gap_never_seen_in_training")
+            return {**_not_scored(model, "gap_never_seen_in_training"), "inputs": status}
         raw, p = model.probability(x)
         stratum = model.stratum(p)
         out = _base(model)
-        out.update(scored=True, stratum=stratum, elevated=stratum is not None)
+        out.update(scored=True, stratum=stratum, elevated=stratum is not None, inputs=status)
         drivers, audit_part = explain(model, x, features)
         if stratum:
             out["drivers"] = drivers
@@ -73,11 +75,11 @@ def assess_features(model: PredictionModel, features: dict, audit: bool = False)
         return _not_scored(model, "model_error")
 
 
-def assess_child(model: PredictionModel, child: Child, index: int, audit: bool = False) -> dict:
+def assess_child(model: PredictionModel, child: Child, index: int, audit: bool = False, history: str = HISTORY_NONE) -> dict:
     """Score the child at observation `index`, using that visit and earlier ones only."""
     try:
         features = build_features(child, index)
     except Exception as exc:
         log.warning("Prediction inputs failed (%s). Screening continues without it.", type(exc).__name__)
         return _not_scored(model, "invalid_input")
-    return assess_features(model, features, audit)
+    return assess_features(model, features, audit, history)

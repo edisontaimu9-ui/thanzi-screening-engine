@@ -23,7 +23,9 @@ from ..ml.features import features_from_inputs
 from ..ml.risk import RiskModel, assess_risk
 from ..prediction import PredictionModel, assess_child
 from ..prediction.predict import _not_scored as _pred_not_scored
+from ..prediction.features import MIN_PREV_GAP_DAYS
 from ..prediction.records import Child, Observation
+from ..prediction.status import HISTORY_NONE, HISTORY_OK, HISTORY_UNAVAILABLE
 from ..factors import Clinical, Feeding, Visit
 from ..ml.flags import Models, flag_record
 from ..preterm import integration as preterm_integration
@@ -375,17 +377,25 @@ def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[
 
 
 def _prediction_block(model: PredictionModel, args: tuple, previous: PreviousVisit | None, audit: bool) -> dict:
-    """Score the child at this visit. The earlier visit is used only when it has a length or height (the model needs both).
+    """Score the child at this visit. The earlier visit is used only when valid and comparable (length or height with its position, at least 14 days earlier); otherwise longitudinal inputs are reported unavailable.
     Clinical history and feeding are not asked by this API, so they count as not assessed. Never raises."""
     try:
         sex, age, weight, length, position, clinical = args
-        obs = []
-        if previous is not None and previous.length_height_cm is not None and previous.measure_position is not None:
-            obs.append(Observation(Visit(previous.age_days, previous.weight_kg, previous.length_height_cm, previous.measure_position, hc_cm=previous.hc_cm)))
+        obs, history = [], HISTORY_NONE
+        if previous is not None:        # used only when valid and comparable: earlier, long enough ago, measured the same way
+            ok = (previous.length_height_cm is not None and previous.measure_position is not None
+                  and age - previous.age_days >= MIN_PREV_GAP_DAYS)
+            try:
+                if not ok:
+                    raise ValueError
+                obs.append(Observation(Visit(previous.age_days, previous.weight_kg, previous.length_height_cm, previous.measure_position, hc_cm=previous.hc_cm)))
+                history = HISTORY_OK
+            except Exception:
+                history = HISTORY_UNAVAILABLE
         obs.append(Observation(Visit(age, weight, length, position, clinical.muac_cm, clinical.oedema, clinical.appetite, clinical.danger_signs,
                                      clinical.complications, clinical.clinically_well_and_alert), Clinical(), Feeding()))
         child = Child("request", sex, tuple(obs))
-        return assess_child(model, child, len(child.observations) - 1, audit)
+        return assess_child(model, child, len(child.observations) - 1, audit, history)
     except Exception as exc:        # type only: never the message or the input
         log.warning("Prediction inputs failed (%s). Screening continues without it.", type(exc).__name__)
         return _pred_not_scored(model, "invalid_input")

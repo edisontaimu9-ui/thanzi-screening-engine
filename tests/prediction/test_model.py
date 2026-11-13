@@ -16,6 +16,9 @@ from thanzi_screen.prediction import explain as ex
 from thanzi_screen.prediction.errors import PredictionModelError
 from thanzi_screen.prediction.model import SCHEMA, PredictionModel, load_prediction_model
 from thanzi_screen.prediction.predict import ADVISORY, assess_child, assess_features
+from thanzi_screen.prediction.features import FEATURES
+from thanzi_screen.prediction.model import DEFAULT_REQUIRED
+from thanzi_screen.prediction.status import input_status
 from thanzi_screen.prediction.trees import TreeEnsemble
 
 SRC = Path(__file__).resolve().parents[2] / "src"
@@ -179,17 +182,40 @@ def test_a_child_outside_the_age_range_is_not_scored(children, pre, age):
     assert out["scored"] is False and out["not_scored_reason"] == "age_outside_model_range" and out["message"] is None
 
 
-def test_too_many_missing_inputs_are_refused_not_imputed(children, pre):
-    m = _model(pre, safeguards={"max_missing_features": 2})
-    f = _features(children, pre)
-    for n in [k for k in FEATURE_NAMES if k not in ("age_months", "sex_male")][:6]:
+def test_a_missing_essential_input_is_not_scored_and_not_imputed(children, pre):
+    for n in ("whz", "oedema_present"):
+        f = _features(children, pre)
         f[n] = None
-    out = assess_features(m, f)
-    assert out["not_scored_reason"] == "too_many_missing_inputs" and out["scored"] is False
+        out = assess_features(_model(pre), f)
+        assert out["not_scored_reason"] == "essential_input_unavailable" and out["scored"] is False
+
+
+def test_missing_non_essential_inputs_do_not_stop_the_check_and_are_reported(children, pre):
+    m = _model(pre)
+    f = _features(children, pre)
+    for n in FEATURE_NAMES:
+        if n not in m.required_features and FEATURES[n].group in ("clinical", "feeding", "maternal", "socioeconomic"):
+            f[n] = None
+    assert m.check_inputs(f) is None
+    st = assess_features(m, f)["inputs"]
+    assert "clinical" in st["not_assessed"] and set(st) == {"not_assessed", "not_applicable", "unavailable"}
+
+
+def test_input_states_are_kept_apart():
+    f = dict.fromkeys(FEATURE_NAMES)
+    f.update(age_months=8.0, birth_order=1)
+    none_, bad = input_status(f), input_status(f, "unavailable")
+    assert "longitudinal" in none_["not_applicable"] and "longitudinal" in bad["unavailable"]
+    assert "demographic" in none_["not_assessed"] and "feeding" in none_["not_assessed"]
+
+
+def test_pathway_required_features_must_be_known(pre):
+    with pytest.raises(PredictionModelError, match="required_features"):
+        _model(pre, pathway={"name": "x", "required_features": ["nope"]})
 
 
 def test_a_gap_never_seen_in_training_is_refused(children, pre):
-    never = next(n for n in FEATURE_NAMES if not pre.spec["features"][n]["indicator"] and n != "age_months")      # age has its own check
+    never = next(n for n in FEATURE_NAMES if not pre.spec["features"][n]["indicator"] and n not in DEFAULT_REQUIRED)      # essential inputs have their own check
     out = assess_features(_model(pre), _features(children, pre, **{never: None}))
     assert out["not_scored_reason"] == "gap_never_seen_in_training" and out["scored"] is False
 
@@ -197,7 +223,7 @@ def test_a_gap_never_seen_in_training_is_refused(children, pre):
 def test_the_assessment_never_raises_and_logs_no_data(children, pre, caplog):
     m = _model(pre)
     f = _features(children, pre)
-    del f["whz"]                                    # malformed row
+    f["whz"] = "abc"                                # malformed row
     out = assess_features(m, f)
     assert out["scored"] is False and out["not_scored_reason"] == "model_error"
     assert "whz" not in caplog.text and str(f["age_months"]) not in caplog.text

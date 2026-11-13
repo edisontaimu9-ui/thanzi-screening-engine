@@ -43,12 +43,15 @@ class PredictionOut(BaseModel):
     could not score (`scored` false) has no estimate at all."""
     available: bool
     scored: bool = Field(description="false when the child could not be scored: see not_scored_reason.")
-    not_scored_reason: str | None = Field(description="age_outside_model_range, too_many_missing_inputs, gap_never_seen_in_training, invalid_input or model_error.")
+    not_scored_reason: str | None = Field(description="age_outside_model_range, essential_input_unavailable, gap_never_seen_in_training, invalid_input or model_error.")
     not_scored_message: str | None
     stratum: str | None = Field(description="elevated or high. null: no extra concern, or not scored. There is no low-risk label.")
     elevated: bool | None = Field(description="true: higher than usual chance. false: no extra concern (not reassurance). null: not scored.")
     message: str | None = Field(description="Present only when elevated.")
     drivers: list[Any] = Field(description="Up to 3 plain-language findings that raised the estimate. Only when elevated.")
+    pathway: str = Field(description="The input pathway the model was built for, for example anthropometric.")
+    inputs: dict[str, list[str]] | None = Field(description="Input groups with an empty input, by reason: not_assessed (not asked), not_applicable (cannot exist for this child), "
+                                                           "unavailable (given but not usable). Empty inputs never stop a score unless essential for the pathway. null when not checked.")
     target: str
     horizon_days: list[int]
     model_version: str

@@ -80,3 +80,18 @@ def test_missing_file_means_degraded_never_a_failed_start(monkeypatch):
 def test_no_hiv_content_reaches_the_worker_view(model):
     body = {**LOW_BASE, "hiv_positive": True}
     assert "hiv" not in json.dumps(_post(_client(prediction_model=model), body).json()).lower()
+
+
+def test_an_earlier_visit_that_is_not_comparable_is_unavailable_not_used(model):
+    same_day = {**PREV, "age_days": LOW_BASE["age_days"] - 3}
+    no_length = {"age_days": 400, "weight_kg": 9.0}
+    c = _client(prediction_model=model)
+    for prev in (same_day, no_length):
+        b = _post(c, {**LOW_BASE, "previous_measurement": prev}).json()["ml_prediction"]
+        assert "longitudinal" in b["inputs"]["unavailable"]
+    assert "longitudinal" in _post(c, LOW_BASE).json()["ml_prediction"]["inputs"]["not_applicable"]
+
+
+def test_missing_history_and_feeding_never_invalidate_the_anthropometric_result(model):
+    b = _post(_client(prediction_model=model), LOW_BASE).json()["ml_prediction"]
+    assert b["not_scored_reason"] != "essential_input_unavailable" and "clinical" in b["inputs"]["not_assessed"]

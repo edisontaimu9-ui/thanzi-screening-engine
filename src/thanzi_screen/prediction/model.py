@@ -26,11 +26,14 @@ MAX_FILE_BYTES = 50_000_000
 # Codes for "not scored". Stable: integrators may translate them.
 NOT_SCORED = {
     "age_outside_model_range": "The child's age is outside the range the prediction model was built for.",
+    "essential_input_unavailable": "An input that is essential for this prediction pathway was not available.",
     "too_many_missing_inputs": "Too many inputs were not recorded for the prediction model to be used.",
     "gap_never_seen_in_training": "An input is missing that was always recorded in the data the model learned from.",
     "invalid_input": "The record could not be turned into valid inputs.",
     "model_error": "The prediction model could not run. Screening is not affected.",
 }
+
+DEFAULT_REQUIRED = ("age_months", "sex_male", "waz", "haz", "whz", "oedema_present")   # anthropometric pathway minimum
 
 
 def _finite(v) -> bool:
@@ -51,7 +54,10 @@ class PredictionModel:
             self.platt_a, self.platt_b = cal["a"], cal["b"]
             self.cutoffs = {k: spec["strata"]["cutoffs"][k] for k in STRATA}
             self.age_months_range = (float(spec["eligibility"]["age_months_min"]), float(spec["eligibility"]["age_months_max"]))
-            self.max_missing_features = spec["safeguards"]["max_missing_features"]
+            self.max_missing_features = spec["safeguards"]["max_missing_features"]     # what training saw: a record, no longer a gate
+            pathway = spec.get("pathway") or {}
+            self.pathway = str(pathway.get("name", "full"))
+            self.required_features = tuple(pathway.get("required_features", DEFAULT_REQUIRED))
             pre_spec, model_spec = spec["preprocessor"], spec["model"]
         except (KeyError, TypeError, ValueError):
             raise PredictionModelError("prediction model file is missing a required part") from None
@@ -87,6 +93,8 @@ class PredictionModel:
         if not isinstance(self.max_missing_features, int) or isinstance(self.max_missing_features, bool) \
                 or not (0 <= self.max_missing_features < len(FEATURE_NAMES)):
             raise PredictionModelError("max_missing_features is invalid")
+        if not self.required_features or any(n not in FEATURE_NAMES for n in self.required_features):
+            raise PredictionModelError("pathway required_features must name known features")
         try:
             self.pre = Preprocessor.from_dict(pre_spec)
         except (PreprocessError, KeyError, TypeError):
@@ -152,8 +160,8 @@ class PredictionModel:
         age = features.get("age_months")
         if age is None or not (self.age_months_range[0] <= age < self.age_months_range[1]):
             return "age_outside_model_range"
-        if sum(1 for n in FEATURE_NAMES if features.get(n) is None) > self.max_missing_features:
-            return "too_many_missing_inputs"
+        if any(features.get(n) is None for n in self.required_features):
+            return "essential_input_unavailable"
         return None
 
     def vectorise(self, features: dict) -> list[float]:

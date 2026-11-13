@@ -1333,6 +1333,24 @@
             "title": "Horizon Days",
             "type": "array"
           },
+          "inputs": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Input groups with an empty input, by reason: not_assessed (not asked), not_applicable (cannot exist for this child), unavailable (given but not usable). Empty inputs never stop a score unless essential for the pathway. null when not checked.",
+            "title": "Inputs"
+          },
           "message": {
             "anyOf": [
               {
@@ -1398,8 +1416,13 @@
                 "type": "null"
               }
             ],
-            "description": "age_outside_model_range, too_many_missing_inputs, gap_never_seen_in_training, invalid_input or model_error.",
+            "description": "age_outside_model_range, essential_input_unavailable, gap_never_seen_in_training, invalid_input or model_error.",
             "title": "Not Scored Reason"
+          },
+          "pathway": {
+            "description": "The input pathway the model was built for, for example anthropometric.",
+            "title": "Pathway",
+            "type": "string"
           },
           "probability": {
             "anyOf": [
@@ -1468,6 +1491,8 @@
           "elevated",
           "message",
           "drivers",
+          "pathway",
+          "inputs",
           "target",
           "horizon_days",
           "model_version",
