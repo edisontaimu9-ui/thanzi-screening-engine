@@ -22,6 +22,7 @@ from ..ml.dl.predict import flag_from_features
 from ..ml.features import features_from_inputs
 from ..ml.risk import RiskModel, assess_risk
 from ..prediction import PredictionModel, assess_child
+from ..prediction.consolidate import consolidate
 from ..prediction.predict import _not_scored as _pred_not_scored
 from ..prediction.features import MIN_PREV_GAP_DAYS
 from ..prediction.records import Child, Observation
@@ -347,7 +348,7 @@ def build_audit_view(result: ClassificationResult, expl: Explanation, flags, dee
 def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[str] = (), context: dict | None = None,
             assessment: dict | None = None, deep: DeepModels | None = None, growth: dict | None = None,
             risk: RiskModel | None = None, previous: PreviousVisit | None = None,
-            prediction: PredictionModel | None = None) -> dict:
+            prediction: tuple | None = None) -> dict:
     """The existing under-5 flow. `context` (birth context) is added only when a route other than plain under5 ran."""
     clinical = args[-1]
     features, anthro, result = features_from_inputs(*args)
@@ -376,8 +377,8 @@ def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[
     return out if view == "audit" else scrub_worker(display_wording(out))
 
 
-def _prediction_block(model: PredictionModel, args: tuple, previous: PreviousVisit | None, audit: bool) -> dict:
-    """Score the child at this visit. The earlier visit is used only when valid and comparable (length or height with its position, at least 14 days earlier); otherwise longitudinal inputs are reported unavailable.
+def _prediction_block(models: tuple, args: tuple, previous: PreviousVisit | None, audit: bool) -> dict:
+    """Score the child at this visit with every loaded model and consolidate the results into one summary. The earlier visit is used only when valid and comparable (length or height with its position, at least 14 days earlier); otherwise longitudinal inputs are reported unavailable.
     Clinical history and feeding are not asked by this API, so they count as not assessed. Never raises."""
     try:
         sex, age, weight, length, position, clinical = args
@@ -395,10 +396,10 @@ def _prediction_block(model: PredictionModel, args: tuple, previous: PreviousVis
         obs.append(Observation(Visit(age, weight, length, position, clinical.muac_cm, clinical.oedema, clinical.appetite, clinical.danger_signs,
                                      clinical.complications, clinical.clinically_well_and_alert), Clinical(), Feeding()))
         child = Child("request", sex, tuple(obs))
-        return assess_child(model, child, len(child.observations) - 1, audit, history)
+        return consolidate([assess_child(m, child, len(child.observations) - 1, audit, history) for m in models], audit)
     except Exception as exc:        # type only: never the message or the input
         log.warning("Prediction inputs failed (%s). Screening continues without it.", type(exc).__name__)
-        return _pred_not_scored(model, "invalid_input")
+        return consolidate([_pred_not_scored(m, "invalid_input") for m in models], audit)
 
 
 _DISPLAY_WORDING = (("Failure to gain weight", "Faltering growth (not gaining weight)"),
@@ -432,7 +433,7 @@ def _preterm_hint(payload) -> bool:
 
 
 def screen(payload: dict, view: str = "worker", models: Models | None = None, deep: DeepModels | None = None,
-           risk: RiskModel | None = None, prediction: PredictionModel | None = None) -> dict:
+           risk: RiskModel | None = None, prediction: tuple | None = None) -> dict:
     """Screen one child. `models=None` is degraded mode: rules result, summary and review check, no ML flag.
     `deep` adds the second advisory flag (D153); without it the response is exactly as before.
     `risk` adds the advisory `ml_risk` block on the plain under-5 route only; without it the response is exactly as before.
@@ -487,7 +488,7 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None, de
 
 
 def version_info(models: Models | None, deep: DeepModels | None = None, risk: RiskModel | None = None,
-                 prediction: PredictionModel | None = None) -> dict:
+                 prediction: tuple | None = None) -> dict:
     out = {"api_version": wording.API_VERSION, "engine_version": __version__, "rule_set_version": RULE_SET_VERSION,
            "model_version": "none" if models is None else models.version, "status": wording.STATUS,
            "disclaimer": "Decision support only. Not a diagnosis. A trained clinician makes the final decision."}
@@ -496,13 +497,13 @@ def version_info(models: Models | None, deep: DeepModels | None = None, risk: Ri
     if risk is not None:
         out["risk_model_version"] = risk.version
     if prediction is not None:
-        out["prediction_model_version"] = prediction.version
+        out["prediction_model_version"] = ", ".join(m.version for m in prediction)
     return out
 
 
 def about_info(models: Models | None, deep: DeepModels | None, optional_components: list[dict], uptime_seconds: float,
                routes: list[str], risk: RiskModel | None = None, risk_state: str = "off",
-               prediction: PredictionModel | None = None, prediction_state: str = "off") -> dict:
+               prediction: tuple | None = None, prediction_state: str = "off") -> dict:
     """What is running inside this service (D176). No child data, no address, no key. Calls no other server.
     `optional_components` are reported after the built-in ones; the app supplies them."""
     v = version_info(models, deep, risk, prediction)
@@ -520,8 +521,8 @@ def about_info(models: Models | None, deep: DeepModels | None, optional_componen
         {"name": "ml_risk", "state": risk_state, "version": None if risk is None else risk.version,
          "detail": ("Advisory clinical risk estimate (escalate only), runs inside this service." + (" SIMULATED, NON-CLINICAL model." if risk is not None and risk.simulated else ""))
          if risk is not None else "Switched off (THANZI_RISK_ENABLED is not 1) or the model was refused. Screening is unaffected."},
-        {"name": "ml_prediction", "state": prediction_state, "version": None if prediction is None else prediction.version,
-         "detail": ("Advisory longitudinal prediction (escalate only), runs inside this service." + (" SIMULATED, NON-CLINICAL model." if not prediction.clinical_use else ""))
+        {"name": "ml_prediction", "state": prediction_state, "version": None if prediction is None else ", ".join(m.version for m in prediction),
+         "detail": ("Advisory longitudinal prediction (escalate only), one model per target, consolidated into one summary, runs inside this service." + (" SIMULATED, NON-CLINICAL model." if any(not m.clinical_use for m in prediction) else ""))
          if prediction is not None else "Switched off (THANZI_PREDICTION_ENABLED is not 1) or the model file was refused. Screening is unaffected."},
         {"name": "growth_monitoring", "state": "ok", "version": None,
          "detail": "Advisory weight-gain and z-score trends. Needs previous_measurement. Under-5 route only."},

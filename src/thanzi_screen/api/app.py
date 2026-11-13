@@ -18,7 +18,8 @@ from .. import __version__
 from ..ml.dl import DeepModels, load_deep_models
 from ..ml.flags import Models, load_models
 from ..ml.risk import RiskModel, load_risk_model
-from ..prediction import PredictionModel, load_prediction_model
+from ..prediction import PredictionModel
+from ..prediction.model import load_prediction_models
 from ..schemas import (
     AboutResponse, AuditResponse, ErrorBody, HealthResponse, HotspotRequest, HotspotResponse, MetricsResponse, PretermAuditResponse, PretermResponse,
     ScreenRequest, VersionResponse, WorkerResponse,
@@ -87,18 +88,19 @@ def _load_risk(risk: RiskModel | None, models_dir) -> tuple[RiskModel | None, st
         return None, "degraded"
 
 
-def _load_prediction(model: PredictionModel | None) -> tuple[PredictionModel | None, str]:
-    """Advisory prediction model. Off unless THANZI_PREDICTION_ENABLED=1; needs THANZI_PREDICTION_MODEL (one exported JSON file).
-    A refused or missing file means no ml_prediction block, never a failed start. Simulated files need THANZI_PREDICTION_ALLOW_SIMULATED=1."""
+def _load_prediction(model) -> tuple[tuple | None, str]:
+    """Advisory prediction models, one per target and pathway. Off unless THANZI_PREDICTION_ENABLED=1; THANZI_PREDICTION_MODEL is one
+    exported file, a folder of them, or a comma-separated list. A refused file is skipped; none usable means no block, never a failed
+    start. Simulated files need THANZI_PREDICTION_ALLOW_SIMULATED=1. State: ok (all loaded), degraded (some or all refused), off."""
     if model is not None:
-        return model, "ok"
+        return (tuple(model) if isinstance(model, (list, tuple)) else (model,)), "ok"
     if not _flag("THANZI_PREDICTION_ENABLED"):
         return None, "off"
-    try:
-        return load_prediction_model(os.environ.get("THANZI_PREDICTION_MODEL"), allow_simulated=_flag("THANZI_PREDICTION_ALLOW_SIMULATED")), "ok"
-    except Exception as exc:        # type only: never the message
-        log.warning("Prediction model unavailable (%s). The prediction block is off.", type(exc).__name__)
+    models, refused = load_prediction_models(os.environ.get("THANZI_PREDICTION_MODEL"), _flag("THANZI_PREDICTION_ALLOW_SIMULATED"))
+    if not models:
+        log.warning("No prediction model could be loaded. The prediction block is off.")
         return None, "degraded"
+    return tuple(models), "degraded" if refused else "ok"
 
 
 @contextlib.asynccontextmanager
@@ -111,7 +113,7 @@ async def _lifespan(app: FastAPI):
 
 def create_app(models: Models | None = None, gateway_key: str | None = None, audit_key: str | None = None,
                dev_mode: bool = False, models_dir=None, llm: LLMClient | None = None,
-               deep_models: DeepModels | None = None, risk_model: RiskModel | None = None, prediction_model: PredictionModel | None = None) -> FastAPI:
+               deep_models: DeepModels | None = None, risk_model: RiskModel | None = None, prediction_model: "PredictionModel | list | tuple | None" = None) -> FastAPI:
     """Build the app. Raises security.ConfigError if no gateway key is configured (unless dev mode).
 
     The local LLM routes exist only when `llm` is given or THANZI_LLM_ENABLED=1 (an invalid LLM configuration

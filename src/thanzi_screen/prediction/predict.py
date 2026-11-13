@@ -36,7 +36,7 @@ def _base(model: PredictionModel) -> dict:
     return {"available": True, "scored": False, "not_scored_reason": None, "not_scored_message": None, "stratum": None,
             "elevated": None, "message": None, "drivers": [], "target": model.target["name"],
             "horizon_days": [model.target["horizon_min_days"], model.target["horizon_max_days"]],
-            "model_version": model.version, "pathway": model.pathway, "inputs": None, "non_clinical": not model.clinical_use, "advisory": ADVISORY}
+            "model_version": model.version, "pathway": model.pathway, "inputs": None, "target_plain": model.target["plain"], "non_clinical": not model.clinical_use, "advisory": ADVISORY}
 
 
 def _not_scored(model: PredictionModel, reason: str) -> dict:

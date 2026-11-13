@@ -1269,7 +1269,44 @@
         "title": "MlFlagsOut",
         "type": "object"
       },
-      "PredictionOut": {
+      "PredictionConcern": {
+        "properties": {
+          "horizon_days": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Horizon Days",
+            "type": "array"
+          },
+          "pathway": {
+            "title": "Pathway",
+            "type": "string"
+          },
+          "plain": {
+            "title": "Plain",
+            "type": "string"
+          },
+          "stratum": {
+            "description": "elevated or high.",
+            "title": "Stratum",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "plain",
+          "stratum",
+          "horizon_days",
+          "pathway"
+        ],
+        "title": "PredictionConcern",
+        "type": "object"
+      },
+      "PredictionModelOut": {
         "description": "Advisory longitudinal prediction (under-five, 28 to 180 days ahead). It can only add a concern: it never changes the\nclassification, tier or referral. No concern (`elevated` false, no message) is NOT reassurance, and a child the model\ncould not score (`scored` false) has no estimate at all.",
         "properties": {
           "advisory": {
@@ -1480,6 +1517,10 @@
           "target": {
             "title": "Target",
             "type": "string"
+          },
+          "target_plain": {
+            "title": "Target Plain",
+            "type": "string"
           }
         },
         "required": [
@@ -1494,10 +1535,190 @@
           "pathway",
           "inputs",
           "target",
+          "target_plain",
           "horizon_days",
           "model_version",
           "non_clinical",
           "advisory"
+        ],
+        "title": "PredictionModelOut",
+        "type": "object"
+      },
+      "PredictionNotScored": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "pathway": {
+            "title": "Pathway",
+            "type": "string"
+          },
+          "reason": {
+            "description": "age_outside_model_range, essential_input_unavailable, gap_never_seen_in_training, invalid_input or model_error.",
+            "title": "Reason",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "pathway",
+          "reason",
+          "message"
+        ],
+        "title": "PredictionNotScored",
+        "type": "object"
+      },
+      "PredictionOut": {
+        "description": "One advisory summary from the one-target prediction models (under-five, 28 to 180 days ahead). It can only add a concern: it never\nchanges the classification, tier or referral, which the deterministic rules decide. No concern (`elevated` false, no message) is NOT\nreassurance, and a target the models could not score has no estimate at all (see not_scored).",
+        "properties": {
+          "advisory": {
+            "title": "Advisory",
+            "type": "string"
+          },
+          "authority": {
+            "title": "Authority",
+            "type": "string"
+          },
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "concerns": {
+            "description": "Each target with a concern, most severe stratum first.",
+            "items": {
+              "$ref": "#/components/schemas/PredictionConcern"
+            },
+            "title": "Concerns",
+            "type": "array"
+          },
+          "drivers": {
+            "description": "Up to 3 plain-language findings that raised the estimates. Only when elevated.",
+            "items": {},
+            "title": "Drivers",
+            "type": "array"
+          },
+          "elevated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "true: a concern was found. false: none found (not reassurance). null: nothing scored.",
+            "title": "Elevated"
+          },
+          "inputs": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Input groups with an empty input, by reason: not_assessed (not asked), not_applicable (cannot exist for this child), unavailable (given but not usable). Empty inputs never stop a score unless essential for the pathway.",
+            "title": "Inputs"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "One consolidated sentence. Present only when elevated.",
+            "title": "Message"
+          },
+          "model_versions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Model Versions",
+            "type": "array"
+          },
+          "models": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PredictionModelOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Audit view only: the result of each model.",
+            "title": "Models"
+          },
+          "non_clinical": {
+            "description": "true if any model was trained on simulated outcomes. Never use such a result for care.",
+            "title": "Non Clinical",
+            "type": "boolean"
+          },
+          "not_scored": {
+            "description": "Each target that could not be scored, with the reason. Never dropped.",
+            "items": {
+              "$ref": "#/components/schemas/PredictionNotScored"
+            },
+            "title": "Not Scored",
+            "type": "array"
+          },
+          "scored": {
+            "description": "true when at least one target could be scored.",
+            "title": "Scored",
+            "type": "boolean"
+          },
+          "stratum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The highest stratum among the concerns: elevated or high. There is no low-risk label.",
+            "title": "Stratum"
+          },
+          "targets_scored": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Targets Scored",
+            "type": "array"
+          }
+        },
+        "required": [
+          "available",
+          "scored",
+          "elevated",
+          "stratum",
+          "message",
+          "drivers",
+          "concerns",
+          "not_scored",
+          "inputs",
+          "targets_scored",
+          "non_clinical",
+          "advisory",
+          "authority",
+          "model_versions"
         ],
         "title": "PredictionOut",
         "type": "object"

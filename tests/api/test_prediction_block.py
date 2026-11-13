@@ -94,7 +94,7 @@ def test_an_earlier_visit_that_is_not_comparable_is_unavailable_not_used(model):
 
 def test_missing_history_and_feeding_never_invalidate_the_anthropometric_result(model):
     b = _post(_client(prediction_model=model), LOW_BASE).json()["ml_prediction"]
-    assert b["not_scored_reason"] != "essential_input_unavailable" and "clinical" in b["inputs"]["not_assessed"]
+    assert all(n["reason"] != "essential_input_unavailable" for n in b["not_scored"]) and "clinical" in b["inputs"]["not_assessed"]
 
 
 def test_an_anthropometric_pathway_model_scores_with_history_and_feeding_empty(pre):  # noqa: F811
@@ -106,4 +106,43 @@ def test_an_anthropometric_pathway_model_scores_with_history_and_feeding_empty(p
     spec["schema"] = SCHEMA
     m = PredictionModel(json.loads(json.dumps(spec, sort_keys=True)))
     b = _post(_client(prediction_model=m), LOW_BASE).json()["ml_prediction"]
-    assert b["scored"] is True and b["pathway"] == "anthropometric" and "clinical" in b["inputs"]["not_assessed"]
+    assert b["scored"] is True and "clinical" in b["inputs"]["not_assessed"] and b["targets_scored"] == ["future_wasting"]
+
+
+# ---- several models, one summary (Phase 8) ----
+def _two(pre, **over):  # noqa: F811
+    def spec(name, plain):
+        s = _spec(pre, target={"name": name, "plain": plain, "definition": "t", "horizon_min_days": 28, "horizon_max_days": 180},
+                  strata={"cutoffs": {"elevated": 0.0001, "high": 0.9999}}, **over)
+        s["version"] = name + "-t"
+        return PredictionModel(s)
+    return [spec("future_wasting", "wasting"), spec("future_sam", "severe acute malnutrition")]
+
+
+def test_two_models_give_one_consolidated_result_and_the_rules_do_not_move(pre):  # noqa: F811
+    base = _post(_client(), SAM_BASE).json()
+    out = _post(_client(prediction_model=_two(pre)), SAM_BASE).json()
+    b = out.pop("ml_prediction")
+    assert out == base
+    assert len(b["targets_scored"]) + len(b["not_scored"]) == 2          # every target is either scored or listed with its reason
+    assert "models" not in b and b["authority"] and set(b) >= {"concerns", "not_scored", "inputs"}
+
+
+def test_audit_view_carries_each_models_result(pre):  # noqa: F811
+    c = TestClient(create_app(gateway_key=GW, audit_key="audit-key-0123456789", prediction_model=_two(pre)))
+    b = _post(c, LOW_BASE, "audit", {**HG, "X-Audit-Key": "audit-key-0123456789"}).json()["ml_prediction"]
+    assert len(b["models"]) == 2 and {m["target"] for m in b["models"]} == {"future_wasting", "future_sam"}
+
+
+def test_a_folder_of_files_loads_and_one_bad_file_is_skipped_as_degraded(pre, tmp_path, monkeypatch):  # noqa: F811
+    for m in _two(pre):
+        (tmp_path / f"{m.target['name']}.json").write_text(json.dumps(m.spec))
+    (tmp_path / "bad.json").write_text("{}")
+    (tmp_path / "results.json").write_text("{}")
+    monkeypatch.setenv("THANZI_PREDICTION_ENABLED", "1")
+    monkeypatch.setenv("THANZI_PREDICTION_MODEL", str(tmp_path))
+    monkeypatch.setenv("THANZI_PREDICTION_ALLOW_SIMULATED", "1")
+    c = _client()
+    comp = [x for x in c.get("/v1/about", headers=HG).json()["components"] if x["name"] == "ml_prediction"][0]
+    assert comp["state"] == "degraded" and comp["version"] == "future_sam-t, future_wasting-t"
+    assert _post(c, LOW_BASE).json()["ml_prediction"]["model_versions"]

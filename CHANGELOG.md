@@ -6,6 +6,10 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
 
 ## Unreleased
 
+- **One summary from several prediction models (Phase 8).** `THANZI_PREDICTION_MODEL` may be a file, a folder or a comma-separated list. `ml_prediction`
+  is now one consolidated summary (concerns, not_scored, inputs, one message, authority statement), with each model's result under `models` in
+  the audit view only. **Contract change** to the unreleased Phase 5 block (per-model fields moved under `models`). `prediction_model_version`
+  lists every version. `openapi.json` regenerated.
 - **Anthropometric pathway (Phase 7).** `export_prediction.py --pathway anthropometric` builds a measurements-only model that scores without
   history, feeding, birth, maternal or household answers, and without an earlier visit. Model files may use a subset of inputs. No API change.
 - **Pathway minimums and input states (Phase 6).** `ml_prediction` is `not scored` for missing inputs only when they are essential to the model's

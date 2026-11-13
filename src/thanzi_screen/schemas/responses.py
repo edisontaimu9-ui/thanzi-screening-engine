@@ -37,7 +37,7 @@ class RiskDriver(BaseModel):
     direction: str = Field(description="Always raises: only findings that raise the estimate are shown.")
 
 
-class PredictionOut(BaseModel):
+class PredictionModelOut(BaseModel):
     """Advisory longitudinal prediction (under-five, 28 to 180 days ahead). It can only add a concern: it never changes the
     classification, tier or referral. No concern (`elevated` false, no message) is NOT reassurance, and a child the model
     could not score (`scored` false) has no estimate at all."""
@@ -53,6 +53,7 @@ class PredictionOut(BaseModel):
     inputs: dict[str, list[str]] | None = Field(description="Input groups with an empty input, by reason: not_assessed (not asked), not_applicable (cannot exist for this child), "
                                                            "unavailable (given but not usable). Empty inputs never stop a score unless essential for the pathway. null when not checked.")
     target: str
+    target_plain: str
     horizon_days: list[int]
     model_version: str
     non_clinical: bool = Field(description="true for a model trained on simulated outcomes. Never use such a result for care.")
@@ -64,6 +65,44 @@ class PredictionOut(BaseModel):
     provenance: str | None = Field(default=None, description="simulated or real. Audit view only.")
     n_missing_inputs: int | None = Field(default=None, description="Audit view only.")
     explanation: dict[str, Any] | None = Field(default=None, description="Exact per-feature contributions. Audit view only.")
+
+
+class PredictionConcern(BaseModel):
+    target: str
+    plain: str
+    stratum: str = Field(description="elevated or high.")
+    horizon_days: list[int]
+    pathway: str
+
+
+class PredictionNotScored(BaseModel):
+    target: str
+    pathway: str
+    reason: str = Field(description="age_outside_model_range, essential_input_unavailable, gap_never_seen_in_training, invalid_input or model_error.")
+    message: str
+
+
+class PredictionOut(BaseModel):
+    """One advisory summary from the one-target prediction models (under-five, 28 to 180 days ahead). It can only add a concern: it never
+    changes the classification, tier or referral, which the deterministic rules decide. No concern (`elevated` false, no message) is NOT
+    reassurance, and a target the models could not score has no estimate at all (see not_scored)."""
+    available: bool
+    scored: bool = Field(description="true when at least one target could be scored.")
+    elevated: bool | None = Field(description="true: a concern was found. false: none found (not reassurance). null: nothing scored.")
+    stratum: str | None = Field(description="The highest stratum among the concerns: elevated or high. There is no low-risk label.")
+    message: str | None = Field(description="One consolidated sentence. Present only when elevated.")
+    drivers: list[Any] = Field(description="Up to 3 plain-language findings that raised the estimates. Only when elevated.")
+    concerns: list[PredictionConcern] = Field(description="Each target with a concern, most severe stratum first.")
+    not_scored: list[PredictionNotScored] = Field(description="Each target that could not be scored, with the reason. Never dropped.")
+    inputs: dict[str, list[str]] | None = Field(description="Input groups with an empty input, by reason: not_assessed (not asked), not_applicable "
+                                                           "(cannot exist for this child), unavailable (given but not usable). Empty inputs never stop a score "
+                                                           "unless essential for the pathway.")
+    targets_scored: list[str]
+    non_clinical: bool = Field(description="true if any model was trained on simulated outcomes. Never use such a result for care.")
+    advisory: str
+    authority: str
+    model_versions: list[str]
+    models: list[PredictionModelOut] | None = Field(default=None, description="Audit view only: the result of each model.")
 
 
 class RiskOut(BaseModel):

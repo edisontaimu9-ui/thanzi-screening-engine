@@ -9,6 +9,7 @@ sign-off references are filled in AND acceptance thresholds were set in advance 
 from __future__ import annotations
 
 import json
+import logging
 import math
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from .features import FEATURE_NAMES
 from .preprocess import PreprocessError, Preprocessor, UnseenMissingError
 from .trees import TreeEnsemble, logit, sigmoid
 
+log = logging.getLogger("thanzi.api")
 SCHEMA = "thanzi-prediction-model/1"
 GOVERNANCE_FIELDS = ("ethics_ref", "data_agreement_ref", "clinical_signoff")
 KINDS = ("logistic", "gbm_logit", "rf_prob")
@@ -201,5 +203,26 @@ def load_prediction_model(path, allow_simulated: bool = False) -> PredictionMode
     return model
 
 
-__all__ = ["GOVERNANCE_FIELDS", "KINDS", "NOT_SCORED", "PredictionModel", "SCHEMA", "STRATA", "UnseenMissingError",
+def load_prediction_models(where: str | None, allow_simulated: bool = False) -> tuple[list[PredictionModel], int]:
+    """(models, number refused). `where` is one file, a folder of exported files, or a comma-separated list. Each file stands alone: one
+    that is refused or unreadable is counted and skipped, never a failed start. Put the fullest pathway first when covering one target twice."""
+    paths: list[Path] = []
+    for part in (where or "").split(","):
+        if not part.strip():
+            continue
+        p = Path(part.strip())
+        paths += sorted(q for q in p.glob("*.json") if q.name != "results.json") if p.is_dir() else [p]
+    # a target's full-pathway file ahead of its other pathways, so it is tried first
+    paths.sort(key=lambda q: q.name.count("."))
+    models, refused = [], 0
+    for q in paths:
+        try:
+            models.append(load_prediction_model(q, allow_simulated))
+        except Exception as exc:        # type only: never the message
+            log.warning("Prediction model file refused (%s).", type(exc).__name__)
+            refused += 1
+    return models, refused
+
+
+__all__ = ["load_prediction_models", "GOVERNANCE_FIELDS", "KINDS", "NOT_SCORED", "PredictionModel", "SCHEMA", "STRATA", "UnseenMissingError",
            "load_prediction_model"]

@@ -107,10 +107,15 @@ strata, loss-to-follow-up check, subgroup tables (age band, sex, district) and t
 
 - No acceptance thresholds, clinical sign-off or ethics approval exist, so nothing is approved for clinical use. A model trained on
   real data needs all three in the file or the service refuses it.
-- The service loads one exported file (`THANZI_PREDICTION_ENABLED=1`, `THANZI_PREDICTION_MODEL=<file>`) and adds an `ml_prediction`
-  block to `/v1/screen` on the plain under-5 route. It never changes the classification, tier or referral, and it is off by default.
-  A refused or missing file gives no block and `degraded` in `/v1/about`. One file means one target: run one service per target
-  until a clinical reviewer chooses which target a worker should see.
+- The service loads exported files (`THANZI_PREDICTION_ENABLED=1`, `THANZI_PREDICTION_MODEL` = one file, a folder of them, or a
+  comma-separated list) and adds one `ml_prediction` summary to `/v1/screen` on the plain under-5 route. Each model predicts one target; the
+  summary consolidates them (`prediction/consolidate.py`). A file that is refused is skipped and `/v1/about` says `degraded`; none usable means
+  no block. The block never changes the classification, tier or referral, and it is off by default.
+- **Consolidation rules:** escalate only and no low-risk label; one result per target (where a target has several models, for example a full and
+  an anthropometric pathway, the first that could be scored is used, and files with the plainest name, the full pathway, are tried first); one
+  sentence for the worker, most severe stratum first, then `future_sam`, `future_wasting`, `future_faltering`; up to three distinct drivers;
+  every target that could not be scored is listed with its reason; the consolidation never receives the classification, so it cannot change it.
+  The worker view carries the summary only. The audit view adds each model's own result under `models`.
 - The request carries no clinical history or feeding questions, so those inputs are reported `not_assessed` in the block's `inputs`, never filled
   in. Empty inputs that cannot exist (no earlier visit, deworming under 12 months, a first birth) are `not_applicable`. An earlier visit that
   is not valid and comparable (no length or height with its position, or under 14 days earlier) is not used and its inputs are `unavailable`.
