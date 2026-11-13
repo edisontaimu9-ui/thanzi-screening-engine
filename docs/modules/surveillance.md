@@ -43,6 +43,7 @@ For the latest period, per district:
 6. `data_quality_review` is set when 20% or more of screened children were UNABLE_TO_CLASSIFY.
 
 ## Privacy
+District level only on this route. Facility-level reports and the DHIS2 export are a separate, off-by-default module: see [surveillance-reports](surveillance-reports.md).
 District level only. If either the SAM or the MAM count is between 1 and 4, `sam`, `mam`, `gam_cases`, `prevalence`, the
 interval and `previous_prevalence` are withheld (`counts_suppressed: true`). The status is kept so a real hotspot is not
 hidden. The service logs and stores nothing from the request.

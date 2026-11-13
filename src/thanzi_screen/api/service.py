@@ -32,7 +32,9 @@ from ..factors import Clinical, Feeding, Visit
 from ..ml.flags import Models, flag_record
 from ..preterm import integration as preterm_integration
 from ..preterm.routing import PATH_CORRECTED, PATH_PRETERM, route as route_birth
-from ..surveillance import Row, SurveillanceInputError, assess as assess_hotspots
+from ..surveillance import (
+    Dhis2Mapping, FacilityRow, OrgUnit, Row, SurveillanceInputError, assess as assess_hotspots, build_data_value_set, build_report,
+)
 from ..rules import (
     Appetite, ClinicalInputs, Complication, DangerSign, OedemaGrade, RULE_SET_VERSION,
 )
@@ -552,5 +554,27 @@ def hotspots(payload: dict) -> dict:
     rows = [Row(**r) for r in payload["rows"]]
     try:
         return assess_hotspots(rows, payload.get("reference_rate"))
+    except SurveillanceInputError as exc:
+        raise ApiError(422, exc.code, exc.message) from None
+
+
+def _org_units_rows(payload: dict) -> tuple[list[OrgUnit], list[FacilityRow]]:
+    return [OrgUnit(**u) for u in payload["org_units"]], [FacilityRow(**r) for r in payload["rows"]]
+
+
+def surveillance_report(payload: dict) -> dict:
+    """Facility, district and national report for one month from grouped facility counts. Advisory, stateless, no child data."""
+    units, rows = _org_units_rows(payload)
+    try:
+        return build_report(units, rows, payload.get("period"), payload.get("reference_rate"))
+    except SurveillanceInputError as exc:
+        raise ApiError(422, exc.code, exc.message) from None
+
+
+def dhis2_export(payload: dict) -> dict:
+    """The facility counts of one month as a DHIS2 data value set, using the caller's mapping. Nothing is sent to DHIS2."""
+    units, rows = _org_units_rows(payload)
+    try:
+        return build_data_value_set(units, rows, Dhis2Mapping(**payload["mapping"]), payload.get("period"))
     except SurveillanceInputError as exc:
         raise ApiError(422, exc.code, exc.message) from None

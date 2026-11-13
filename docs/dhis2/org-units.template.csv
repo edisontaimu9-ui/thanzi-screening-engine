@@ -1,0 +1,4 @@
+code,name,level,parent,dhis2_org_unit_id
+MW,Malawi,national,,
+EXAMPLE-D1,Example District,district,MW,
+EXAMPLE-D1-F1,Example Health Centre,facility,EXAMPLE-D1,

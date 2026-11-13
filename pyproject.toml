@@ -33,7 +33,7 @@ where = ["src"]
 "thanzi_screen.growth" = ["aspen_weight_velocity.json"]
 
 # Hotspot surveillance thresholds (placeholders until the Ministry confirms them).
-"thanzi_screen.surveillance" = ["hotspot_config.json"]
+"thanzi_screen.surveillance" = ["hotspot_config.json", "report_config.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

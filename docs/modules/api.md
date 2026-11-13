@@ -36,6 +36,8 @@ Environment variables: see [configuration](../configuration.md).
 | `POST /v1/screen?view=worker` | gateway | Default view. One child per call |
 | `POST /v1/screen?view=audit` | gateway + `X-Audit-Key` | Full detail. May contain HIV information |
 | `POST /v1/report` | gateway | Same request as `/v1/screen`. Individual child report from the worker view. Off unless `THANZI_CHILD_REPORT_ENABLED=1`. Draft wording. See [child-report](child-report.md) |
+| `POST /v1/surveillance/report` | gateway | Grouped facility counts and the org unit list in, facility, district and national report out. Off unless `THANZI_SURVEILLANCE_REPORTS_ENABLED=1`. No child data. Body limit 1 MB. See [surveillance-reports](surveillance-reports.md) |
+| `POST /v1/surveillance/dhis2` | gateway | Same input plus a mapping. DHIS2 data value set out (facility level, `dryRun=true` advised). Off unless `THANZI_SURVEILLANCE_REPORTS_ENABLED=1`. Nothing is sent to DHIS2 |
 | `POST /v1/surveillance/hotspots` | gateway | Grouped district counts in, hotspot assessment out. No child data. Body limit 256 KB. See [surveillance](surveillance.md) |
 | `GET /v1/llm/health`, `POST /v1/llm/generate` | gateway | Only when `THANZI_LLM_ENABLED=1`. See [llm](llm.md) |
 
@@ -120,7 +122,7 @@ monitoring still work. Missing or mismatched deep-model files leave `deep_record
 
 ## Not provided, by design
 
-No database, no stored requests, no request-body logging, no per-child batch endpoint, no child identifiers. The hotspot route takes grouped counts only.
+No database, no stored requests, no request-body logging, no per-child batch endpoint, no child identifiers. The hotspot, report and DHIS2 routes take grouped counts only.
 
 ## Optional language-model routes
 

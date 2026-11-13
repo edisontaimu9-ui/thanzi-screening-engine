@@ -21,8 +21,9 @@ from ..ml.risk import RiskModel, load_risk_model
 from ..prediction import PredictionModel
 from ..prediction.model import load_prediction_models
 from ..schemas import (
-    AboutResponse, AuditResponse, ChildReportResponse, ErrorBody, HealthResponse, HotspotRequest, HotspotResponse, MetricsResponse, PretermAuditResponse, PretermResponse,
-    ScreenRequest, VersionResponse, WorkerResponse,
+    AboutResponse, AuditResponse, ChildReportResponse, Dhis2ExportRequest, Dhis2Response, ErrorBody, HealthResponse, HotspotRequest, HotspotResponse,
+    MetricsResponse, PretermAuditResponse, PretermResponse, ScreenRequest, SurveillanceReportRequest, SurveillanceReportResponse, VersionResponse,
+    WorkerResponse,
 )
 from ..llm import LLMClient
 from . import llm_routes, security, service
@@ -32,10 +33,14 @@ log = logging.getLogger("thanzi.api")
 MAX_BODY_BYTES = 16_384
 HOTSPOT_PATH = "/v1/surveillance/hotspots"
 REPORT_PATH = "/v1/report"
+SURVEILLANCE_REPORT_PATH = "/v1/surveillance/report"
+DHIS2_PATH = "/v1/surveillance/dhis2"
+MAX_SURVEILLANCE_BODY_BYTES = 1_048_576   # up to 3,000 org units and 3,000 facility rows; still no child-level data
 MAX_HOTSPOT_BODY_BYTES = 262_144      # up to 1,000 grouped rows; still no child-level data
 HEALTH_PATH = "/health"
 _KNOWN_FIELDS = frozenset(service.ALLOWED) | {"view", "rows", "reference_rate", "district", "period", "screened", "sam", "mam",
-                                              "unable"}
+                                              "unable",
+                                              "org_units", "org_unit", "code", "level", "parent", "mapping", "elements", "data_set"}
 
 
 def _error(status: int, code: str, message: str, **extra) -> JSONResponse:
@@ -109,6 +114,12 @@ def _child_report_enabled(explicit: bool | None) -> bool:
     return explicit if explicit is not None else _flag("THANZI_CHILD_REPORT_ENABLED")
 
 
+def _surveillance_reports_enabled(explicit: bool | None) -> bool:
+    """Aggregated reports and DHIS2 export (Phase 10). Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1: facility-level output and
+    its placeholder thresholds need Ministry sign-off first."""
+    return explicit if explicit is not None else _flag("THANZI_SURVEILLANCE_REPORTS_ENABLED")
+
+
 @contextlib.asynccontextmanager
 async def _lifespan(app: FastAPI):
     yield
@@ -120,7 +131,7 @@ async def _lifespan(app: FastAPI):
 def create_app(models: Models | None = None, gateway_key: str | None = None, audit_key: str | None = None,
                dev_mode: bool = False, models_dir=None, llm: LLMClient | None = None,
                deep_models: DeepModels | None = None, risk_model: RiskModel | None = None, prediction_model: "PredictionModel | list | tuple | None" = None,
-               child_report: bool | None = None) -> FastAPI:
+               child_report: bool | None = None, surveillance_reports: bool | None = None) -> FastAPI:
     """Build the app. Raises security.ConfigError if no gateway key is configured (unless dev mode).
 
     The local LLM routes exist only when `llm` is given or THANZI_LLM_ENABLED=1 (an invalid LLM configuration
@@ -146,6 +157,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     app.state.risk, app.state.risk_state = loaded_risk, risk_state
     app.state.prediction, app.state.prediction_state = loaded_pred, pred_state
     app.state.child_report = _child_report_enabled(child_report)
+    app.state.surveillance_reports = _surveillance_reports_enabled(surveillance_reports)
     app.state.metrics = metrics = Metrics()
 
     # ---- access control: before routing and before body validation, so nothing leaks to unauthenticated callers ----
@@ -155,7 +167,8 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
             if not security.gateway_ok(cfg, request.headers.get(security.GATEWAY_HEADER)):
                 return _error(401, "unauthorised", "Unauthorised.")
             length = request.headers.get("content-length")
-            limit = MAX_HOTSPOT_BODY_BYTES if request.url.path == HOTSPOT_PATH else MAX_BODY_BYTES
+            limit = (MAX_HOTSPOT_BODY_BYTES if request.url.path == HOTSPOT_PATH
+                     else MAX_SURVEILLANCE_BODY_BYTES if request.url.path in (SURVEILLANCE_REPORT_PATH, DHIS2_PATH) else MAX_BODY_BYTES)
             if length and length.isdigit() and int(length) > limit:
                 return _error(413, "payload_too_large", "Request body is too large.")
         return await call_next(request)
@@ -253,6 +266,25 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         """Flag districts with higher SAM+MAM prevalence among screened children. Takes counts already grouped by the
         caller (no child records, no fine geography). Advisory only: never changes an individual classification."""
         return JSONResponse(service.hotspots(body.model_dump()))
+
+    @app.post(SURVEILLANCE_REPORT_PATH, response_model=SurveillanceReportResponse, tags=["surveillance"], responses={
+        401: {"model": ErrorBody}, 404: {"model": ErrorBody}, 413: {"model": ErrorBody}, 422: {"model": ErrorBody}})
+    def surveillance_report(body: SurveillanceReportRequest):
+        """Facility, district and national report for one month from counts already grouped by the caller (no child records).
+        Shows reporting completeness, district hotspot status and small-cell suppression. Advisory only.
+        Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1 (404 surveillance_reports_off)."""
+        if not app.state.surveillance_reports:
+            return _error(404, "surveillance_reports_off", "The aggregated surveillance reports are switched off.")
+        return JSONResponse(service.surveillance_report(body.model_dump()))
+
+    @app.post(DHIS2_PATH, response_model=Dhis2Response, tags=["surveillance"], responses={
+        401: {"model": ErrorBody}, 404: {"model": ErrorBody}, 413: {"model": ErrorBody}, 422: {"model": ErrorBody}})
+    def dhis2_export(body: Dhis2ExportRequest):
+        """The facility counts of one month as a DHIS2 data value set, using the mapping in the request. Nothing is sent to DHIS2:
+        the caller imports it, with dryRun=true first. Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1."""
+        if not app.state.surveillance_reports:
+            return _error(404, "surveillance_reports_off", "The aggregated surveillance reports are switched off.")
+        return JSONResponse(service.dhis2_export(body.model_dump()))
 
     if llm_client is not None:
         llm_routes.install(app, llm_client)

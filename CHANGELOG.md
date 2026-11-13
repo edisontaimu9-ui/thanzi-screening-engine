@@ -6,6 +6,16 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
 
 ## Unreleased
 
+- **Aggregated surveillance reports and DHIS2 export (Phase 10).** `POST /v1/surveillance/report` takes counts already grouped per facility and month plus the org unit
+  list (national, districts, facilities) and returns a facility, district and national report: sums that always agree, reporting completeness (a facility that did not
+  report is `not_reported`, never zero), district hotspot status from the existing hotspot rule, `data_status` (`insufficient_data` shows counts but no rate), and small-cell
+  suppression with secondary suppression so a hidden count cannot be worked out by subtraction. `POST /v1/surveillance/dhis2` returns the facility counts as a DHIS2
+  `dataValueSets` body from a caller-supplied mapping (data elements, id schemes, org unit ids): facility level only (DHIS2 rolls up), counts not rates, zero exported and a missing
+  report not, an incomplete or invalid mapping stops the export, `dryRun=true` advised. Both routes are **off by default**: `THANZI_SURVEILLANCE_REPORTS_ENABLED=1` switches them on,
+  otherwise `404 surveillance_reports_off`. Body limit 1 MB on these two routes only. New `thanzi_screen.surveillance.reports` and `.dhis2` (standard library) and `report_config.json`;
+  `scripts/export_dhis2.py` writes the mapping template and org unit template (`docs/dhis2/`) and builds a data value set offline. Additive; `/v1/surveillance/hotspots` is unchanged and
+  stays district only. `openapi.json` regenerated. **Awaiting Ministry decisions:** thresholds, whether facility SAM or MAM counts of 1 to 4 may be exported
+  (`dhis2_export_suppresses_small_cells`, default `true`), DHIS2 ids. See `docs/modules/surveillance-reports.md`.
 - **Individual child report (Phase 9).** `POST /v1/report` takes the `/v1/screen` request and returns one report: screening result, action, items to
   check, growth, prediction status, limits and sources. Built from the worker view only (no HIV information, no audit version). The result is copied,
   never recomputed, and growth or prediction findings can only lift `routine` to `raised`. Off by default: `THANZI_CHILD_REPORT_ENABLED=1` switches it on, otherwise

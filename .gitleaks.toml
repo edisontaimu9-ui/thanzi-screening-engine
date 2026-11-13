@@ -2,14 +2,17 @@
 # The only allowlisted values are the two throwaway keys that the Phase 6 CI smoke step printed in plain text
 # (commit 7b59256, .github/workflows/ci.yml). They were test values for a container that exists only for the
 # length of a CI run. CI now generates fresh keys on every run, so nothing new should ever match these.
+# `wrong-key-0123456789` is a made-up, deliberately wrong key that tests send to prove a bad key is refused (tests/api/test_llm_routes.py,
+# and commit 94120bc of tests/api/test_child_report_http.py). It opens nothing.
 title = "Thanzi screening engine"
 
 [extend]
 useDefault = true
 
 [allowlist]
-description = "Historical throwaway CI test keys (D99)"
+description = "Historical throwaway CI test keys (D99) and the deliberately wrong gateway key used in tests"
 regexes = [
   '''ci-gateway-key-0123456789''',
   '''ci-audit-key-0123456789ab''',
+  '''wrong-key-0123456789''',
 ]

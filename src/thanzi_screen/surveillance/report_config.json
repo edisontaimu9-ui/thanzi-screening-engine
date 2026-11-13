@@ -1,0 +1,7 @@
+{
+  "version": "surveillance-report-0.1",
+  "status": "PLACEHOLDER settings. The Ministry of Health and Sanitation nutrition unit and the DHIS2 administrators must confirm every value before real use.",
+  "max_rows": 3000,
+  "max_org_units": 3000,
+  "dhis2_export_suppresses_small_cells": true
+}

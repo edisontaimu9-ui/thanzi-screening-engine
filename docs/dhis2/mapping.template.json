@@ -1,0 +1,47 @@
+{
+  "_note": "Fill in the data element ids (CODE or UID) and set the id schemes. Leave org_units empty when the engine codes are the DHIS2 org unit codes. Remove the keys that start with an underscore before use.",
+  "data_set": null,
+  "data_element_id_scheme": "CODE",
+  "org_unit_id_scheme": "CODE",
+  "elements": {
+    "screened": "<screened-data-element>",
+    "sam": "<sam-data-element>",
+    "mam": "<mam-data-element>",
+    "unable": "<unable-data-element>"
+  },
+  "org_units": {},
+  "_elements_guide": {
+    "screened": {
+      "required": true,
+      "suggested_name": "Under-5 children screened",
+      "description": "Children under five screened for acute malnutrition in the month.",
+      "value_type": "INTEGER_ZERO_OR_POSITIVE",
+      "aggregation": "SUM"
+    },
+    "sam": {
+      "required": true,
+      "suggested_name": "Under-5 screened classified SAM",
+      "description": "Of those screened, classified SAM (SAM_OTP, SAM_INPATIENT or SAM_ASSESS).",
+      "value_type": "INTEGER_ZERO_OR_POSITIVE",
+      "aggregation": "SUM"
+    },
+    "mam": {
+      "required": true,
+      "suggested_name": "Under-5 screened classified MAM",
+      "description": "Of those screened, classified MAM.",
+      "value_type": "INTEGER_ZERO_OR_POSITIVE",
+      "aggregation": "SUM"
+    },
+    "unable": {
+      "required": false,
+      "suggested_name": "Under-5 screened, unable to classify",
+      "description": "Of those screened, UNABLE_TO_CLASSIFY. Used for a data-quality indicator.",
+      "value_type": "INTEGER_ZERO_OR_POSITIVE",
+      "aggregation": "SUM"
+    }
+  },
+  "_indicators_to_define_in_dhis2": {
+    "gam_prevalence": "numerator sam + mam, denominator screened",
+    "unable_share": "numerator unable, denominator screened"
+  }
+}

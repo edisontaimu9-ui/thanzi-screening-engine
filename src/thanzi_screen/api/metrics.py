@@ -13,7 +13,8 @@ from collections import deque
 
 # Fixed route labels, so a caller cannot grow the table by requesting made-up paths.
 KNOWN_PATHS = frozenset({"/health", "/version", "/v1/about", "/v1/metrics", "/v1/screen",
-                         "/v1/llm/health", "/v1/llm/generate", "/v1/surveillance/hotspots", "/v1/report"})
+                         "/v1/llm/health", "/v1/llm/generate", "/v1/surveillance/hotspots", "/v1/report",
+                         "/v1/surveillance/report", "/v1/surveillance/dhis2"})
 LATENCY_WINDOW = 1000          # the most recent /v1/screen calls the percentiles are taken over
 SCREEN_PATH = "/v1/screen"
 

@@ -364,3 +364,57 @@ class HotspotResponse(BaseModel):
     summary: dict[str, int]
     min_screened: int
     advisory: str
+
+
+class SurveillanceUnit(BaseModel):
+    org_unit: str
+    name: str
+    level: str = Field(description="national, district or facility.")
+    parent: str | None
+    data_status: str = Field(description="ok, insufficient_data (rate not shown) or not_reported. not_reported is not zero and not low risk.")
+    facilities_expected: int | None = Field(description="District and national only.")
+    facilities_reported: int | None
+    reporting_rate: float | None
+    screened: int | None
+    sam: int | None = Field(description="null when counts_suppressed.")
+    mam: int | None = Field(description="null when counts_suppressed.")
+    gam_cases: int | None = Field(description="SAM plus MAM. null when counts_suppressed.")
+    unable: int | None
+    prevalence: float | None
+    ci_low: float | None = Field(description="Lower bound of the Wilson 95% interval.")
+    ci_high: float | None
+    hotspot_status: str | None = Field(description="Districts only: hotspot, watch, not_flagged, insufficient_data or no_data.")
+    trend: str | None
+    reference_rate: float | None
+    reference_kind: str | None
+    data_quality_review: bool
+    counts_suppressed: bool
+    reasons: list[str]
+
+
+class SurveillanceReportSummary(BaseModel):
+    districts: dict[str, int]
+    facilities_expected: int | None
+    facilities_reported: int | None
+    reporting_rate: float | None
+
+
+class SurveillanceReportResponse(BaseModel):
+    period: str
+    report_version: str
+    config_version: str
+    national: SurveillanceUnit
+    districts: list[SurveillanceUnit]
+    facilities: list[SurveillanceUnit]
+    summary: SurveillanceReportSummary
+    min_screened: int
+    advisory: str
+    limits: list[str]
+
+
+class Dhis2Response(BaseModel):
+    data_value_set: dict[str, Any] = Field(description="Body for POST /api/dataValueSets. Facility level only: DHIS2 rolls up.")
+    import_parameters: dict[str, str] = Field(description="Query parameters for the import. dryRun is true: run it first and check the summary.")
+    summary: dict[str, Any]
+    report_version: str
+    advisory: str

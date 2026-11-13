@@ -103,3 +103,57 @@ class HotspotRequest(BaseModel):
     reference_rate: Number | None = Field(
         default=None, description="Optional fixed reference rate of SAM+MAM (0 to 1), for example a national survey figure. "
                                   "Default: the rate of all the other districts in the same batch.")
+
+
+class OrgUnitIn(BaseModel):
+    """One org unit of the reporting hierarchy: the national unit, a district or a facility. Names are place names only."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    code: str = Field(description="Org unit code, for example the DHIS2 code. Letters, digits, dot, dash and underscore, up to 50.")
+    name: str = Field(description="Place name of the district or facility. Never a person.")
+    level: Literal["national", "district", "facility"]
+    parent: str | None = Field(default=None, description="Code of the parent: the national unit for a district, a district for a facility. "
+                                                         "None for the national unit.")
+
+
+class FacilityRowIn(BaseModel):
+    """Counts for one facility in one month, already grouped by the caller. No child-level data."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    org_unit: str = Field(description="Code of a facility in org_units.")
+    period: str = Field(description="Month, YYYY-MM.")
+    screened: int = Field(ge=0, description="Children under five screened in that month.")
+    sam: int = Field(ge=0, description="Of those, classified SAM (SAM_OTP, SAM_INPATIENT or SAM_ASSESS).")
+    mam: int = Field(ge=0, description="Of those, classified MAM.")
+    unable: int = Field(default=0, ge=0, description="Of those, UNABLE_TO_CLASSIFY.")
+
+
+class SurveillanceReportRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    org_units: list[OrgUnitIn] = Field(min_length=1, max_length=3000, description="The whole hierarchy, so facilities that did not report are shown as not reported.")
+    rows: list[FacilityRowIn] = Field(min_length=1, max_length=3000, description="One row per reporting facility and month. Earlier months give the district trend.")
+    period: str | None = Field(default=None, description="Month to report, YYYY-MM. Default: the latest month in rows.")
+    reference_rate: Number | None = Field(default=None, description="Optional fixed reference rate of SAM+MAM (0 to 1) for district hotspot status. "
+                                                                    "Default: the other districts in the same batch.")
+
+
+class Dhis2MappingIn(BaseModel):
+    """Which DHIS2 data element and org unit each count goes to. Supplied by the DHIS2 administrators, never guessed."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    elements: dict[str, str] = Field(description="Data element id for each count: screened, sam and mam are required, unable is optional.")
+    data_set: str | None = Field(default=None, description="Optional data set id, in the data element id scheme.")
+    data_element_id_scheme: Literal["CODE", "UID"] = "CODE"
+    org_unit_id_scheme: Literal["CODE", "UID"] = "CODE"
+    org_units: dict[str, str] = Field(default_factory=dict, description="Engine org unit code to DHIS2 org unit id. Needed for every facility with the UID scheme. "
+                                                                         "With the CODE scheme it overrides the engine code.")
+
+
+class Dhis2ExportRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    org_units: list[OrgUnitIn] = Field(min_length=1, max_length=3000)
+    rows: list[FacilityRowIn] = Field(min_length=1, max_length=3000)
+    mapping: Dhis2MappingIn
+    period: str | None = Field(default=None, description="Month to export, YYYY-MM. Default: the latest month in rows.")

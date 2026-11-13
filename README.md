@@ -23,6 +23,8 @@ advisory data-quality and growth flags.
   See [docs/modules/ml-risk.md](docs/modules/ml-risk.md).
 - Area-level hotspot surveillance (add-on): districts with SAM+MAM prevalence above a reference rate, from counts the
   caller has already grouped. Advisory only. See [docs/modules/surveillance.md](docs/modules/surveillance.md).
+- Aggregated surveillance reports (add-on, off by default): facility, district and national from grouped counts, with reporting completeness, secondary
+  small-cell suppression and a DHIS2 data value set export. See [docs/modules/surveillance-reports.md](docs/modules/surveillance-reports.md).
 - Plain-language worker summary and a full audit trace.
 - Individual child report (add-on, off by default): one report per child from the worker view, escalate only, with draft wording awaiting clinical review.
   See [docs/modules/child-report.md](docs/modules/child-report.md).
@@ -70,6 +72,8 @@ The service refuses to start without `THANZI_GATEWAY_KEY`.
 | `POST /v1/screen?view=worker` | gateway | Screen one child (default view) |
 | `POST /v1/screen?view=audit` | gateway + audit | Full detail, may contain HIV information |
 | `POST /v1/report` | gateway | Individual child report (off unless `THANZI_CHILD_REPORT_ENABLED=1`, draft wording) |
+| `POST /v1/surveillance/report` | gateway | Facility, district and national report from grouped counts (off unless `THANZI_SURVEILLANCE_REPORTS_ENABLED=1`) |
+| `POST /v1/surveillance/dhis2` | gateway | The facility counts as a DHIS2 data value set (same switch) |
 | `POST /v1/surveillance/hotspots` | gateway | District hotspot assessment from grouped counts (advisory) |
 | `GET /v1/llm/health`, `POST /v1/llm/generate` | gateway | Only when `THANZI_LLM_ENABLED=1` |
 
@@ -83,7 +87,7 @@ src/thanzi_screen/
   rules/      Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 classification, review check
   preterm/    Preterm and low-birth-weight engine and routing
   growth/     Weight-gain and z-score trend monitoring
-  surveillance/ District hotspot assessment from grouped counts
+  surveillance/ District hotspot assessment, facility/district/national reports and DHIS2 export from grouped counts
   ml/         Recording-error flags, neural network (dl), note checker (nlp), advisory risk model (risk)
   explain/    Worker summary and audit trace
   childreport/ Individual child report and its draft wording

@@ -516,6 +516,148 @@
         "title": "ComponentInfo",
         "type": "object"
       },
+      "Dhis2ExportRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "mapping": {
+            "$ref": "#/components/schemas/Dhis2MappingIn"
+          },
+          "org_units": {
+            "items": {
+              "$ref": "#/components/schemas/OrgUnitIn"
+            },
+            "maxItems": 3000,
+            "minItems": 1,
+            "title": "Org Units",
+            "type": "array"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Month to export, YYYY-MM. Default: the latest month in rows.",
+            "title": "Period"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/FacilityRowIn"
+            },
+            "maxItems": 3000,
+            "minItems": 1,
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "org_units",
+          "rows",
+          "mapping"
+        ],
+        "title": "Dhis2ExportRequest",
+        "type": "object"
+      },
+      "Dhis2MappingIn": {
+        "additionalProperties": false,
+        "description": "Which DHIS2 data element and org unit each count goes to. Supplied by the DHIS2 administrators, never guessed.",
+        "properties": {
+          "data_element_id_scheme": {
+            "default": "CODE",
+            "enum": [
+              "CODE",
+              "UID"
+            ],
+            "title": "Data Element Id Scheme",
+            "type": "string"
+          },
+          "data_set": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional data set id, in the data element id scheme.",
+            "title": "Data Set"
+          },
+          "elements": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Data element id for each count: screened, sam and mam are required, unable is optional.",
+            "title": "Elements",
+            "type": "object"
+          },
+          "org_unit_id_scheme": {
+            "default": "CODE",
+            "enum": [
+              "CODE",
+              "UID"
+            ],
+            "title": "Org Unit Id Scheme",
+            "type": "string"
+          },
+          "org_units": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Engine org unit code to DHIS2 org unit id. Needed for every facility with the UID scheme. With the CODE scheme it overrides the engine code.",
+            "title": "Org Units",
+            "type": "object"
+          }
+        },
+        "required": [
+          "elements"
+        ],
+        "title": "Dhis2MappingIn",
+        "type": "object"
+      },
+      "Dhis2Response": {
+        "properties": {
+          "advisory": {
+            "title": "Advisory",
+            "type": "string"
+          },
+          "data_value_set": {
+            "additionalProperties": true,
+            "description": "Body for POST /api/dataValueSets. Facility level only: DHIS2 rolls up.",
+            "title": "Data Value Set",
+            "type": "object"
+          },
+          "import_parameters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Query parameters for the import. dryRun is true: run it first and check the summary.",
+            "title": "Import Parameters",
+            "type": "object"
+          },
+          "report_version": {
+            "title": "Report Version",
+            "type": "string"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "title": "Summary",
+            "type": "object"
+          }
+        },
+        "required": [
+          "data_value_set",
+          "import_parameters",
+          "summary",
+          "report_version",
+          "advisory"
+        ],
+        "title": "Dhis2Response",
+        "type": "object"
+      },
       "ErrorBody": {
         "properties": {
           "code": {
@@ -546,6 +688,56 @@
           "message"
         ],
         "title": "ErrorBody",
+        "type": "object"
+      },
+      "FacilityRowIn": {
+        "additionalProperties": false,
+        "description": "Counts for one facility in one month, already grouped by the caller. No child-level data.",
+        "properties": {
+          "mam": {
+            "description": "Of those, classified MAM.",
+            "minimum": 0.0,
+            "title": "Mam",
+            "type": "integer"
+          },
+          "org_unit": {
+            "description": "Code of a facility in org_units.",
+            "title": "Org Unit",
+            "type": "string"
+          },
+          "period": {
+            "description": "Month, YYYY-MM.",
+            "title": "Period",
+            "type": "string"
+          },
+          "sam": {
+            "description": "Of those, classified SAM (SAM_OTP, SAM_INPATIENT or SAM_ASSESS).",
+            "minimum": 0.0,
+            "title": "Sam",
+            "type": "integer"
+          },
+          "screened": {
+            "description": "Children under five screened in that month.",
+            "minimum": 0.0,
+            "title": "Screened",
+            "type": "integer"
+          },
+          "unable": {
+            "default": 0,
+            "description": "Of those, UNABLE_TO_CLASSIFY.",
+            "minimum": 0.0,
+            "title": "Unable",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "org_unit",
+          "period",
+          "screened",
+          "sam",
+          "mam"
+        ],
+        "title": "FacilityRowIn",
         "type": "object"
       },
       "GrowthMonitoring": {
@@ -1346,6 +1538,50 @@
           "review"
         ],
         "title": "MlFlagsOut",
+        "type": "object"
+      },
+      "OrgUnitIn": {
+        "additionalProperties": false,
+        "description": "One org unit of the reporting hierarchy: the national unit, a district or a facility. Names are place names only.",
+        "properties": {
+          "code": {
+            "description": "Org unit code, for example the DHIS2 code. Letters, digits, dot, dash and underscore, up to 50.",
+            "title": "Code",
+            "type": "string"
+          },
+          "level": {
+            "enum": [
+              "national",
+              "district",
+              "facility"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "name": {
+            "description": "Place name of the district or facility. Never a person.",
+            "title": "Name",
+            "type": "string"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Code of the parent: the national unit for a district, a district for a facility. None for the national unit.",
+            "title": "Parent"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "level"
+        ],
+        "title": "OrgUnitIn",
         "type": "object"
       },
       "PredictionConcern": {
@@ -3311,6 +3547,424 @@
         "title": "ScreenRequest",
         "type": "object"
       },
+      "SurveillanceReportRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "org_units": {
+            "description": "The whole hierarchy, so facilities that did not report are shown as not reported.",
+            "items": {
+              "$ref": "#/components/schemas/OrgUnitIn"
+            },
+            "maxItems": 3000,
+            "minItems": 1,
+            "title": "Org Units",
+            "type": "array"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Month to report, YYYY-MM. Default: the latest month in rows.",
+            "title": "Period"
+          },
+          "reference_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional fixed reference rate of SAM+MAM (0 to 1) for district hotspot status. Default: the other districts in the same batch.",
+            "title": "Reference Rate"
+          },
+          "rows": {
+            "description": "One row per reporting facility and month. Earlier months give the district trend.",
+            "items": {
+              "$ref": "#/components/schemas/FacilityRowIn"
+            },
+            "maxItems": 3000,
+            "minItems": 1,
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "org_units",
+          "rows"
+        ],
+        "title": "SurveillanceReportRequest",
+        "type": "object"
+      },
+      "SurveillanceReportResponse": {
+        "properties": {
+          "advisory": {
+            "title": "Advisory",
+            "type": "string"
+          },
+          "config_version": {
+            "title": "Config Version",
+            "type": "string"
+          },
+          "districts": {
+            "items": {
+              "$ref": "#/components/schemas/SurveillanceUnit"
+            },
+            "title": "Districts",
+            "type": "array"
+          },
+          "facilities": {
+            "items": {
+              "$ref": "#/components/schemas/SurveillanceUnit"
+            },
+            "title": "Facilities",
+            "type": "array"
+          },
+          "limits": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limits",
+            "type": "array"
+          },
+          "min_screened": {
+            "title": "Min Screened",
+            "type": "integer"
+          },
+          "national": {
+            "$ref": "#/components/schemas/SurveillanceUnit"
+          },
+          "period": {
+            "title": "Period",
+            "type": "string"
+          },
+          "report_version": {
+            "title": "Report Version",
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/SurveillanceReportSummary"
+          }
+        },
+        "required": [
+          "period",
+          "report_version",
+          "config_version",
+          "national",
+          "districts",
+          "facilities",
+          "summary",
+          "min_screened",
+          "advisory",
+          "limits"
+        ],
+        "title": "SurveillanceReportResponse",
+        "type": "object"
+      },
+      "SurveillanceReportSummary": {
+        "properties": {
+          "districts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Districts",
+            "type": "object"
+          },
+          "facilities_expected": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Facilities Expected"
+          },
+          "facilities_reported": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Facilities Reported"
+          },
+          "reporting_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reporting Rate"
+          }
+        },
+        "required": [
+          "districts",
+          "facilities_expected",
+          "facilities_reported",
+          "reporting_rate"
+        ],
+        "title": "SurveillanceReportSummary",
+        "type": "object"
+      },
+      "SurveillanceUnit": {
+        "properties": {
+          "ci_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci High"
+          },
+          "ci_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Lower bound of the Wilson 95% interval.",
+            "title": "Ci Low"
+          },
+          "counts_suppressed": {
+            "title": "Counts Suppressed",
+            "type": "boolean"
+          },
+          "data_quality_review": {
+            "title": "Data Quality Review",
+            "type": "boolean"
+          },
+          "data_status": {
+            "description": "ok, insufficient_data (rate not shown) or not_reported. not_reported is not zero and not low risk.",
+            "title": "Data Status",
+            "type": "string"
+          },
+          "facilities_expected": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "District and national only.",
+            "title": "Facilities Expected"
+          },
+          "facilities_reported": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Facilities Reported"
+          },
+          "gam_cases": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "SAM plus MAM. null when counts_suppressed.",
+            "title": "Gam Cases"
+          },
+          "hotspot_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Districts only: hotspot, watch, not_flagged, insufficient_data or no_data.",
+            "title": "Hotspot Status"
+          },
+          "level": {
+            "description": "national, district or facility.",
+            "title": "Level",
+            "type": "string"
+          },
+          "mam": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null when counts_suppressed.",
+            "title": "Mam"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "org_unit": {
+            "title": "Org Unit",
+            "type": "string"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent"
+          },
+          "prevalence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prevalence"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "reference_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Kind"
+          },
+          "reference_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Rate"
+          },
+          "reporting_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reporting Rate"
+          },
+          "sam": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null when counts_suppressed.",
+            "title": "Sam"
+          },
+          "screened": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screened"
+          },
+          "trend": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trend"
+          },
+          "unable": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unable"
+          }
+        },
+        "required": [
+          "org_unit",
+          "name",
+          "level",
+          "parent",
+          "data_status",
+          "facilities_expected",
+          "facilities_reported",
+          "reporting_rate",
+          "screened",
+          "sam",
+          "mam",
+          "gam_cases",
+          "unable",
+          "prevalence",
+          "ci_low",
+          "ci_high",
+          "hotspot_status",
+          "trend",
+          "reference_rate",
+          "reference_kind",
+          "data_quality_review",
+          "counts_suppressed",
+          "reasons"
+        ],
+        "title": "SurveillanceUnit",
+        "type": "object"
+      },
       "VersionResponse": {
         "properties": {
           "api_version": {
@@ -3837,6 +4491,83 @@
         ]
       }
     },
+    "/v1/surveillance/dhis2": {
+      "post": {
+        "description": "The facility counts of one month as a DHIS2 data value set, using the mapping in the request. Nothing is sent to DHIS2:\nthe caller imports it, with dryRun=true first. Off unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1.",
+        "operationId": "dhis2_export_v1_surveillance_dhis2_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Dhis2ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dhis2Response"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "GatewayKey": []
+          }
+        ],
+        "summary": "Dhis2 Export",
+        "tags": [
+          "surveillance"
+        ]
+      }
+    },
     "/v1/surveillance/hotspots": {
       "post": {
         "description": "Flag districts with higher SAM+MAM prevalence among screened children. Takes counts already grouped by the\ncaller (no child records, no fine geography). Advisory only: never changes an individual classification.",
@@ -3899,6 +4630,83 @@
           }
         ],
         "summary": "Hotspots",
+        "tags": [
+          "surveillance"
+        ]
+      }
+    },
+    "/v1/surveillance/report": {
+      "post": {
+        "description": "Facility, district and national report for one month from counts already grouped by the caller (no child records).\nShows reporting completeness, district hotspot status and small-cell suppression. Advisory only.\nOff unless THANZI_SURVEILLANCE_REPORTS_ENABLED=1 (404 surveillance_reports_off).",
+        "operationId": "surveillance_report_v1_surveillance_report_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveillanceReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveillanceReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "GatewayKey": []
+          }
+        ],
+        "summary": "Surveillance Report",
         "tags": [
           "surveillance"
         ]
