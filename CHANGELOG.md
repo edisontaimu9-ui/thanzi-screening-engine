@@ -6,6 +6,10 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
 
 ## Unreleased
 
+- **Prediction block in the API (Phase 5).** With `THANZI_PREDICTION_ENABLED=1` and `THANZI_PREDICTION_MODEL`, `/v1/screen` adds an
+  advisory `ml_prediction` block (plain under-5 route). Additive: off by default, fail-safe, never changes the rules. `/version`
+  gains `prediction_model_version` and `/v1/about` gains the `ml_prediction` component (after `ml_risk`). `openapi.json` regenerated.
+  See `docs/modules/prediction-export.md`.
 - **References use full official titles.** Citations in rule traces, messages, API descriptions, the case pack, the traceability
   report, tests and documentation now give the full title with the abbreviation and year (for example *Community-Based
   Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016* and *Care of the Infant and Newborn (COIN), Malawi, 2017*),

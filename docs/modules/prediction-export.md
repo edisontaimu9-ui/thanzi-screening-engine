@@ -106,8 +106,14 @@ strata, loss-to-follow-up check, subgroup tables (age band, sex, district) and t
 
 - No acceptance thresholds, clinical sign-off or ethics approval exist, so nothing is approved for clinical use. A model trained on
   real data needs all three in the file or the service refuses it.
-- The service does not load these files yet. The API route, report wiring and OpenAPI are Phase 5. `assess_child` is the function that
-  step will call.
+- The service loads one exported file (`THANZI_PREDICTION_ENABLED=1`, `THANZI_PREDICTION_MODEL=<file>`) and adds an `ml_prediction`
+  block to `/v1/screen` on the plain under-5 route. It never changes the classification, tier or referral, and it is off by default.
+  A refused or missing file gives no block and `degraded` in `/v1/about`. One file means one target: run one service per target
+  until a clinical reviewer chooses which target a worker should see.
+- The request carries no clinical history or feeding questions, so those inputs count as not assessed. The model then often returns
+  `too_many_missing_inputs` or `gap_never_seen_in_training`. That is the safe result, not a bug. An earlier visit is used only when
+  `previous_measurement` has `length_height_cm` and `measure_position`.
+- The report package does not show the block yet. That wiring needs a clinical decision on wording and is not part of Phase 5.
 - The strata are defined by alert rate on validation children. They are relative, not absolute, and must be monitored after rollout.
 - Fixed settings were not tuned. Tuning would need its own nested validation, agreed before real data.
 - The 28 to 180 day horizon and the faltering definition are still engineering choices for clinical reviewers.

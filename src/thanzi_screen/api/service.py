@@ -21,6 +21,10 @@ from ..ml.dl import DeepModels
 from ..ml.dl.predict import flag_from_features
 from ..ml.features import features_from_inputs
 from ..ml.risk import RiskModel, assess_risk
+from ..prediction import PredictionModel, assess_child
+from ..prediction.predict import _not_scored as _pred_not_scored
+from ..prediction.records import Child, Observation
+from ..factors import Clinical, Feeding, Visit
 from ..ml.flags import Models, flag_record
 from ..preterm import integration as preterm_integration
 from ..preterm.routing import PATH_CORRECTED, PATH_PRETERM, route as route_birth
@@ -340,7 +344,8 @@ def build_audit_view(result: ClassificationResult, expl: Explanation, flags, dee
 
 def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[str] = (), context: dict | None = None,
             assessment: dict | None = None, deep: DeepModels | None = None, growth: dict | None = None,
-            risk: RiskModel | None = None, previous: PreviousVisit | None = None) -> dict:
+            risk: RiskModel | None = None, previous: PreviousVisit | None = None,
+            prediction: PredictionModel | None = None) -> dict:
     """The existing under-5 flow. `context` (birth context) is added only when a route other than plain under5 ran."""
     clinical = args[-1]
     features, anthro, result = features_from_inputs(*args)
@@ -362,9 +367,28 @@ def _under5(args: tuple, view: str, models: Models | None, extra_warnings: list[
     if risk is not None:             # advisory risk block (escalate only): added last, never read back by the rules
         recording = None if flags is None else bool(flags.recording_error.flagged or (deep_flag is not None and deep_flag.flagged))
         out = {**out, "ml_risk": assess_risk(risk, *args, previous, recording, audit=view == "audit")}
+    if prediction is not None:       # advisory longitudinal prediction (escalate only): added last, never read back by the rules
+        out = {**out, "ml_prediction": _prediction_block(prediction, args, previous, view == "audit")}
     if extra_warnings:
         out["warnings"] = [*out["warnings"], *extra_warnings]
     return out if view == "audit" else scrub_worker(display_wording(out))
+
+
+def _prediction_block(model: PredictionModel, args: tuple, previous: PreviousVisit | None, audit: bool) -> dict:
+    """Score the child at this visit. The earlier visit is used only when it has a length or height (the model needs both).
+    Clinical history and feeding are not asked by this API, so they count as not assessed. Never raises."""
+    try:
+        sex, age, weight, length, position, clinical = args
+        obs = []
+        if previous is not None and previous.length_height_cm is not None and previous.measure_position is not None:
+            obs.append(Observation(Visit(previous.age_days, previous.weight_kg, previous.length_height_cm, previous.measure_position, hc_cm=previous.hc_cm)))
+        obs.append(Observation(Visit(age, weight, length, position, clinical.muac_cm, clinical.oedema, clinical.appetite, clinical.danger_signs,
+                                     clinical.complications, clinical.clinically_well_and_alert), Clinical(), Feeding()))
+        child = Child("request", sex, tuple(obs))
+        return assess_child(model, child, len(child.observations) - 1, audit)
+    except Exception as exc:        # type only: never the message or the input
+        log.warning("Prediction inputs failed (%s). Screening continues without it.", type(exc).__name__)
+        return _pred_not_scored(model, "invalid_input")
 
 
 _DISPLAY_WORDING = (("Failure to gain weight", "Faltering growth (not gaining weight)"),
@@ -398,7 +422,7 @@ def _preterm_hint(payload) -> bool:
 
 
 def screen(payload: dict, view: str = "worker", models: Models | None = None, deep: DeepModels | None = None,
-           risk: RiskModel | None = None) -> dict:
+           risk: RiskModel | None = None, prediction: PredictionModel | None = None) -> dict:
     """Screen one child. `models=None` is degraded mode: rules result, summary and review check, no ML flag.
     `deep` adds the second advisory flag (D153); without it the response is exactly as before.
     `risk` adds the advisory `ml_risk` block on the plain under-5 route only; without it the response is exactly as before.
@@ -447,12 +471,13 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None, de
         if ignored:
             warns.append("Preterm-only fields were given but this baby is not screened by the preterm engine: they were ignored.")
         return _under5(args, view, models, warns, ctx, assessment, deep, _growth(args, previous, extra.get("hc_cm") if hc_used else None),
-                       risk=risk, previous=previous)
+                       risk=risk, previous=previous, prediction=prediction)
     except InputError as exc:
         raise ApiError(422, "invalid_input", _engine_message(exc)) from None
 
 
-def version_info(models: Models | None, deep: DeepModels | None = None, risk: RiskModel | None = None) -> dict:
+def version_info(models: Models | None, deep: DeepModels | None = None, risk: RiskModel | None = None,
+                 prediction: PredictionModel | None = None) -> dict:
     out = {"api_version": wording.API_VERSION, "engine_version": __version__, "rule_set_version": RULE_SET_VERSION,
            "model_version": "none" if models is None else models.version, "status": wording.STATUS,
            "disclaimer": "Decision support only. Not a diagnosis. A trained clinician makes the final decision."}
@@ -460,14 +485,17 @@ def version_info(models: Models | None, deep: DeepModels | None = None, risk: Ri
         out["deep_model_version"] = deep.version
     if risk is not None:
         out["risk_model_version"] = risk.version
+    if prediction is not None:
+        out["prediction_model_version"] = prediction.version
     return out
 
 
 def about_info(models: Models | None, deep: DeepModels | None, optional_components: list[dict], uptime_seconds: float,
-               routes: list[str], risk: RiskModel | None = None, risk_state: str = "off") -> dict:
+               routes: list[str], risk: RiskModel | None = None, risk_state: str = "off",
+               prediction: PredictionModel | None = None, prediction_state: str = "off") -> dict:
     """What is running inside this service (D176). No child data, no address, no key. Calls no other server.
     `optional_components` are reported after the built-in ones; the app supplies them."""
-    v = version_info(models, deep, risk)
+    v = version_info(models, deep, risk, prediction)
     comps = [
         {"name": "screening_engine", "state": "ok", "version": RULE_SET_VERSION,
          "detail": "Community-Based Management of Acute Malnutrition (CMAM) Guidelines, Malawi, 2016 rules, preterm engine and corrected-age route. Does not depend on the ML models."},
@@ -482,6 +510,9 @@ def about_info(models: Models | None, deep: DeepModels | None, optional_componen
         {"name": "ml_risk", "state": risk_state, "version": None if risk is None else risk.version,
          "detail": ("Advisory clinical risk estimate (escalate only), runs inside this service." + (" SIMULATED, NON-CLINICAL model." if risk is not None and risk.simulated else ""))
          if risk is not None else "Switched off (THANZI_RISK_ENABLED is not 1) or the model was refused. Screening is unaffected."},
+        {"name": "ml_prediction", "state": prediction_state, "version": None if prediction is None else prediction.version,
+         "detail": ("Advisory longitudinal prediction (escalate only), runs inside this service." + (" SIMULATED, NON-CLINICAL model." if not prediction.clinical_use else ""))
+         if prediction is not None else "Switched off (THANZI_PREDICTION_ENABLED is not 1) or the model file was refused. Screening is unaffected."},
         {"name": "growth_monitoring", "state": "ok", "version": None,
          "detail": "Advisory weight-gain and z-score trends. Needs previous_measurement. Under-5 route only."},
         *optional_components,

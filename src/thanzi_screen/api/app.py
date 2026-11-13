@@ -18,6 +18,7 @@ from .. import __version__
 from ..ml.dl import DeepModels, load_deep_models
 from ..ml.flags import Models, load_models
 from ..ml.risk import RiskModel, load_risk_model
+from ..prediction import PredictionModel, load_prediction_model
 from ..schemas import (
     AboutResponse, AuditResponse, ErrorBody, HealthResponse, HotspotRequest, HotspotResponse, MetricsResponse, PretermAuditResponse, PretermResponse,
     ScreenRequest, VersionResponse, WorkerResponse,
@@ -86,6 +87,20 @@ def _load_risk(risk: RiskModel | None, models_dir) -> tuple[RiskModel | None, st
         return None, "degraded"
 
 
+def _load_prediction(model: PredictionModel | None) -> tuple[PredictionModel | None, str]:
+    """Advisory prediction model. Off unless THANZI_PREDICTION_ENABLED=1; needs THANZI_PREDICTION_MODEL (one exported JSON file).
+    A refused or missing file means no ml_prediction block, never a failed start. Simulated files need THANZI_PREDICTION_ALLOW_SIMULATED=1."""
+    if model is not None:
+        return model, "ok"
+    if not _flag("THANZI_PREDICTION_ENABLED"):
+        return None, "off"
+    try:
+        return load_prediction_model(os.environ.get("THANZI_PREDICTION_MODEL"), allow_simulated=_flag("THANZI_PREDICTION_ALLOW_SIMULATED")), "ok"
+    except Exception as exc:        # type only: never the message
+        log.warning("Prediction model unavailable (%s). The prediction block is off.", type(exc).__name__)
+        return None, "degraded"
+
+
 @contextlib.asynccontextmanager
 async def _lifespan(app: FastAPI):
     yield
@@ -96,7 +111,7 @@ async def _lifespan(app: FastAPI):
 
 def create_app(models: Models | None = None, gateway_key: str | None = None, audit_key: str | None = None,
                dev_mode: bool = False, models_dir=None, llm: LLMClient | None = None,
-               deep_models: DeepModels | None = None, risk_model: RiskModel | None = None) -> FastAPI:
+               deep_models: DeepModels | None = None, risk_model: RiskModel | None = None, prediction_model: PredictionModel | None = None) -> FastAPI:
     """Build the app. Raises security.ConfigError if no gateway key is configured (unless dev mode).
 
     The local LLM routes exist only when `llm` is given or THANZI_LLM_ENABLED=1 (an invalid LLM configuration
@@ -106,6 +121,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     loaded = _load_models(models, models_dir)
     loaded_deep = _load_deep(deep_models, models_dir)
     loaded_risk, risk_state = _load_risk(risk_model, models_dir)
+    loaded_pred, pred_state = _load_prediction(prediction_model)
     llm_client = llm if llm is not None else llm_routes.client_from_env()
     docs = cfg.dev_mode
     app = FastAPI(
@@ -119,6 +135,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         openapi_url="/openapi.json" if docs else None, lifespan=_lifespan)
     app.state.models, app.state.config, app.state.deep = loaded, cfg, loaded_deep
     app.state.risk, app.state.risk_state = loaded_risk, risk_state
+    app.state.prediction, app.state.prediction_state = loaded_pred, pred_state
     app.state.metrics = metrics = Metrics()
 
     # ---- access control: before routing and before body validation, so nothing leaks to unauthenticated callers ----
@@ -183,7 +200,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
 
     @app.get("/version", response_model=VersionResponse, tags=["ops"])
     def version():
-        return service.version_info(app.state.models, app.state.deep, app.state.risk)
+        return service.version_info(app.state.models, app.state.deep, app.state.risk, app.state.prediction)
 
     @app.get("/v1/about", response_model=AboutResponse, tags=["ops"])
     def about():
@@ -191,7 +208,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         paths = sorted(p for p in app.openapi()["paths"] if p.startswith(("/v1/", "/health", "/version")))
         optional = [llm_routes.about_component(getattr(app.state, "llm", None))]
         return service.about_info(app.state.models, app.state.deep, optional, metrics.uptime_seconds(), paths,
-                                  app.state.risk, app.state.risk_state)
+                                  app.state.risk, app.state.risk_state, app.state.prediction, app.state.prediction_state)
 
     @app.get("/v1/metrics", response_model=MetricsResponse, tags=["ops"])
     def metrics_snapshot():
@@ -208,7 +225,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         """Screen one child. Worker view never contains HIV information. Audit view needs X-Audit-Key."""
         if view == "audit" and not security.audit_ok(cfg, x_audit_key):
             return _error(403, "audit_forbidden", "The audit view is not available.")
-        return JSONResponse(service.screen(body.model_dump(), view, app.state.models, app.state.deep, app.state.risk))
+        return JSONResponse(service.screen(body.model_dump(), view, app.state.models, app.state.deep, app.state.risk, app.state.prediction))
 
     @app.post(HOTSPOT_PATH, response_model=HotspotResponse, tags=["surveillance"], responses={
         401: {"model": ErrorBody}, 413: {"model": ErrorBody}, 422: {"model": ErrorBody}})

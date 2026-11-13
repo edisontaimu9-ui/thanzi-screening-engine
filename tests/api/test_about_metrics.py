@@ -60,7 +60,7 @@ def test_about_reports_versions_and_components(models):
     for key in ("api_version", "engine_version", "rule_set_version", "status", "disclaimer"):
         assert b[key] == v[key]
     assert b["health"] == "ok" and b["uptime_seconds"] >= 0
-    assert [x["name"] for x in b["components"]] == ["screening_engine", "ml_logistic", "ml_deep", "ml_risk", "growth_monitoring", "llm_service"]
+    assert [x["name"] for x in b["components"]] == ["screening_engine", "ml_logistic", "ml_deep", "ml_risk", "ml_prediction", "growth_monitoring", "llm_service"]
     k = comps(b)
     assert k["ml_logistic"]["state"] == "ok" and k["ml_logistic"]["version"] == models.version
     assert k["ml_deep"]["state"] == "ok" and k["ml_deep"]["version"] == v["deep_model_version"]

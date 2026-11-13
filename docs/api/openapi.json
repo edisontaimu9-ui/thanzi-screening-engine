@@ -9,7 +9,7 @@
             "type": "string"
           },
           "components": {
-            "description": "screening_engine, ml_logistic, ml_deep, ml_risk, growth_monitoring and llm_service, in that order.",
+            "description": "screening_engine, ml_logistic, ml_deep, ml_risk, ml_prediction, growth_monitoring and llm_service, in that order.",
             "items": {
               "$ref": "#/components/schemas/ComponentInfo"
             },
@@ -118,6 +118,17 @@
           },
           "ml_flags": {
             "$ref": "#/components/schemas/MlFlagsOut"
+          },
+          "ml_prediction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PredictionOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when the prediction model is switched on (THANZI_PREDICTION_ENABLED=1) and the baby is screened on the plain under-5 route. Advisory, escalate only: never changes the classification."
           },
           "ml_risk": {
             "anyOf": [
@@ -1258,6 +1269,214 @@
         "title": "MlFlagsOut",
         "type": "object"
       },
+      "PredictionOut": {
+        "description": "Advisory longitudinal prediction (under-five, 28 to 180 days ahead). It can only add a concern: it never changes the\nclassification, tier or referral. No concern (`elevated` false, no message) is NOT reassurance, and a child the model\ncould not score (`scored` false) has no estimate at all.",
+        "properties": {
+          "advisory": {
+            "title": "Advisory",
+            "type": "string"
+          },
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "cutoffs": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Audit view only.",
+            "title": "Cutoffs"
+          },
+          "drivers": {
+            "description": "Up to 3 plain-language findings that raised the estimate. Only when elevated.",
+            "items": {},
+            "title": "Drivers",
+            "type": "array"
+          },
+          "elevated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "true: higher than usual chance. false: no extra concern (not reassurance). null: not scored.",
+            "title": "Elevated"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Exact per-feature contributions. Audit view only.",
+            "title": "Explanation"
+          },
+          "horizon_days": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Horizon Days",
+            "type": "array"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only when elevated.",
+            "title": "Message"
+          },
+          "model_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Audit view only.",
+            "title": "Model Kind"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "n_missing_inputs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Audit view only.",
+            "title": "N Missing Inputs"
+          },
+          "non_clinical": {
+            "description": "true for a model trained on simulated outcomes. Never use such a result for care.",
+            "title": "Non Clinical",
+            "type": "boolean"
+          },
+          "not_scored_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Not Scored Message"
+          },
+          "not_scored_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "age_outside_model_range, too_many_missing_inputs, gap_never_seen_in_training, invalid_input or model_error.",
+            "title": "Not Scored Reason"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Calibrated probability. Audit view only.",
+            "title": "Probability"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "simulated or real. Audit view only.",
+            "title": "Provenance"
+          },
+          "raw_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Audit view only.",
+            "title": "Raw Probability"
+          },
+          "scored": {
+            "description": "false when the child could not be scored: see not_scored_reason.",
+            "title": "Scored",
+            "type": "boolean"
+          },
+          "stratum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "elevated or high. null: no extra concern, or not scored. There is no low-risk label.",
+            "title": "Stratum"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "available",
+          "scored",
+          "not_scored_reason",
+          "not_scored_message",
+          "stratum",
+          "elevated",
+          "message",
+          "drivers",
+          "target",
+          "horizon_days",
+          "model_version",
+          "non_clinical",
+          "advisory"
+        ],
+        "title": "PredictionOut",
+        "type": "object"
+      },
       "PretermAuditResponse": {
         "properties": {
           "actions": {
@@ -2370,6 +2589,18 @@
             "title": "Model Version",
             "type": "string"
           },
+          "prediction_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null when the prediction model is off or not loaded.",
+            "title": "Prediction Model Version"
+          },
           "risk_model_version": {
             "anyOf": [
               {
@@ -2446,6 +2677,17 @@
           },
           "ml_flags": {
             "$ref": "#/components/schemas/MlFlagsOut"
+          },
+          "ml_prediction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PredictionOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when the prediction model is switched on (THANZI_PREDICTION_ENABLED=1) and the baby is screened on the plain under-5 route. Advisory, escalate only: never changes the classification."
           },
           "ml_risk": {
             "anyOf": [

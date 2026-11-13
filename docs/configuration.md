@@ -13,6 +13,9 @@ content.
 | `THANZI_RISK_ENABLED` | no | off | Set `1` to switch on the advisory clinical risk block (`ml_risk`). Off by default. Screening is unchanged whether it is on or off. |
 | `THANZI_RISK_MODEL_DIR` | no | `<models dir>/risk` | Folder holding `risk_model.json`. |
 | `THANZI_RISK_ALLOW_SIMULATED` | no | off | Set `1` to allow a model trained on simulated outcomes. Demonstration only: such a result is marked `non_clinical` and must never be used for care. |
+| `THANZI_PREDICTION_ENABLED` | no | off | Set `1` to switch on the advisory longitudinal prediction block (`ml_prediction`). Off by default. Screening is unchanged whether it is on or off. |
+| `THANZI_PREDICTION_MODEL` | with the above | none | Path to one exported prediction model file (see `docs/modules/prediction-export.md`). A missing or refused file means no block and `degraded` in `/v1/about`, never a failed start. |
+| `THANZI_PREDICTION_ALLOW_SIMULATED` | no | off | Set `1` to allow a model trained on simulated outcomes. Demonstration only: such a result is marked `non_clinical` and must never be used for care. |
 | `THANZI_DEEP_ENABLED` | no | on | Set `0`, `false`, `no` or `off` to disable the neural-network recording-error flag. Screening and the logistic flag are unchanged. |
 | `PORT` | no | `8080` | Listening port in the container image. |
 | `THANZI_DEV_MODE` | no | off | `1` exposes the documentation routes and allows a missing key. **Local development only. Never set in production.** |
