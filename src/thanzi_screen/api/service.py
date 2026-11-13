@@ -13,6 +13,7 @@ from enum import Enum
 
 from .. import __version__
 from ..anthro import InputError
+from ..childreport import build_child_report
 from ..explain import Explanation, explain_parts, explain_rules_only
 from ..explain import messages as M
 from ..explain.compose import IGNORED_IN_WHY
@@ -485,6 +486,18 @@ def screen(payload: dict, view: str = "worker", models: Models | None = None, de
                        risk=risk, previous=previous, prediction=prediction)
     except InputError as exc:
         raise ApiError(422, "invalid_input", _engine_message(exc)) from None
+
+
+def child_report(payload: dict, models: Models | None = None, deep: DeepModels | None = None, risk: RiskModel | None = None,
+                 prediction: tuple | None = None) -> dict:
+    """Individual child report (Phase 9): the worker view of `screen`, laid out as a report. Draft wording. Escalate only.
+    The audit view is never used here, so the report carries no HIV information and needs no audit key."""
+    worker = screen(payload, "worker", models, deep, risk, prediction)
+    try:
+        return build_child_report(worker)
+    except ValueError:
+        log.error("Child report could not be built.")
+        raise ApiError(500, "report_unavailable", "The report could not be built. Use the screening result.") from None
 
 
 def version_info(models: Models | None, deep: DeepModels | None = None, risk: RiskModel | None = None,

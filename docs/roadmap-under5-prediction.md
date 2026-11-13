@@ -11,8 +11,8 @@ Two independent modules, one reporting interface. Each phase ends with passing t
 | 5 | API block on `/v1/screen`, OpenAPI, release notes (report wiring is not done: see the limits in `docs/modules/prediction-export.md`) | done |
 | 6 | Pathway-specific minimum inputs, three empty-input states (not assessed, not applicable, unavailable), comparable-earlier-visit rules, `inputs` in the API block | done (this change) |
 | 7 | Pathway training and export: an anthropometric pathway model trained and tested with clinical, feeding, maternal and household inputs empty, so they never stop a score and are never filled in | done (this change) |
-| 8 | Several one-target models run together and consolidated into one `ml_prediction` summary for the worker. Escalate only. Rules stay authoritative (tested) | done (this change) |
-| 9 | Individual child report: clinically reviewed wording, screening is not diagnosis | planned |
+| 8 | Several one-target models run together and consolidated into one `ml_prediction` summary for the worker. Escalate only. Rules stay authoritative (tested) | done |
+| 9 | Individual child report (`POST /v1/report`, off by default): screening is not diagnosis, escalate only, worker view only. Wording is a draft with a review sheet; clinical review is outstanding | built, wording awaiting review (this change) |
 | 10 | Aggregated surveillance reports (facility, district, national) with DHIS2 export (data value sets, mapping file, org unit codes) | planned |
 | 11 | Clinical review pack and deployment gates: wording sign-off file, reviewer checklist, nothing switched on without them | planned |
 

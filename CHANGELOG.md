@@ -6,6 +6,12 @@ yet tagged. API changes are additive unless stated, and `docs/api/openapi.json` 
 
 ## Unreleased
 
+- **Individual child report (Phase 9).** `POST /v1/report` takes the `/v1/screen` request and returns one report: screening result, action, items to
+  check, growth, prediction status, limits and sources. Built from the worker view only (no HIV information, no audit version). The result is copied,
+  never recomputed, and growth or prediction findings can only lift `routine` to `raised`. Off by default: `THANZI_CHILD_REPORT_ENABLED=1` switches it on, otherwise
+  `404 report_off`. **The wording is a draft pending clinical review** and every report says so. New `thanzi_screen.childreport` (standard library), the review sheet
+  `docs/review/child-report-wording.md` (written by `scripts/export_report_wording.py`, covers the Phase 8 wording and severity order too), and `/v1/report` in
+  the route list and metrics. Additive. `openapi.json` regenerated. See `docs/modules/child-report.md`.
 - **One summary from several prediction models (Phase 8).** `THANZI_PREDICTION_MODEL` may be a file, a folder or a comma-separated list. `ml_prediction`
   is now one consolidated summary (concerns, not_scored, inputs, one message, authority statement), with each model's result under `models` in
   the audit view only. **Contract change** to the unreleased Phase 5 block (per-model fields moved under `models`). `prediction_model_version`

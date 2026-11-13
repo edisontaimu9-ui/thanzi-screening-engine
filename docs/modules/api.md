@@ -35,6 +35,7 @@ Environment variables: see [configuration](../configuration.md).
 | `GET /v1/metrics` | gateway | Request counts by route and status, 5xx count, `/v1/screen` latency (p50, p95, max, mean). Counts and durations only, in memory, reset on restart, per worker process |
 | `POST /v1/screen?view=worker` | gateway | Default view. One child per call |
 | `POST /v1/screen?view=audit` | gateway + `X-Audit-Key` | Full detail. May contain HIV information |
+| `POST /v1/report` | gateway | Same request as `/v1/screen`. Individual child report from the worker view. Off unless `THANZI_CHILD_REPORT_ENABLED=1`. Draft wording. See [child-report](child-report.md) |
 | `POST /v1/surveillance/hotspots` | gateway | Grouped district counts in, hotspot assessment out. No child data. Body limit 256 KB. See [surveillance](surveillance.md) |
 | `GET /v1/llm/health`, `POST /v1/llm/generate` | gateway | Only when `THANZI_LLM_ENABLED=1`. See [llm](llm.md) |
 

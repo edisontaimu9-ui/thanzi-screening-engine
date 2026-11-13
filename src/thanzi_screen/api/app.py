@@ -21,7 +21,7 @@ from ..ml.risk import RiskModel, load_risk_model
 from ..prediction import PredictionModel
 from ..prediction.model import load_prediction_models
 from ..schemas import (
-    AboutResponse, AuditResponse, ErrorBody, HealthResponse, HotspotRequest, HotspotResponse, MetricsResponse, PretermAuditResponse, PretermResponse,
+    AboutResponse, AuditResponse, ChildReportResponse, ErrorBody, HealthResponse, HotspotRequest, HotspotResponse, MetricsResponse, PretermAuditResponse, PretermResponse,
     ScreenRequest, VersionResponse, WorkerResponse,
 )
 from ..llm import LLMClient
@@ -31,6 +31,7 @@ from .metrics import Metrics
 log = logging.getLogger("thanzi.api")
 MAX_BODY_BYTES = 16_384
 HOTSPOT_PATH = "/v1/surveillance/hotspots"
+REPORT_PATH = "/v1/report"
 MAX_HOTSPOT_BODY_BYTES = 262_144      # up to 1,000 grouped rows; still no child-level data
 HEALTH_PATH = "/health"
 _KNOWN_FIELDS = frozenset(service.ALLOWED) | {"view", "rows", "reference_rate", "district", "period", "screened", "sam", "mam",
@@ -103,6 +104,11 @@ def _load_prediction(model) -> tuple[tuple | None, str]:
     return tuple(models), "degraded" if refused else "ok"
 
 
+def _child_report_enabled(explicit: bool | None) -> bool:
+    """Child report route (Phase 9). Off unless THANZI_CHILD_REPORT_ENABLED=1: its wording is a draft until clinicians sign it off."""
+    return explicit if explicit is not None else _flag("THANZI_CHILD_REPORT_ENABLED")
+
+
 @contextlib.asynccontextmanager
 async def _lifespan(app: FastAPI):
     yield
@@ -113,7 +119,8 @@ async def _lifespan(app: FastAPI):
 
 def create_app(models: Models | None = None, gateway_key: str | None = None, audit_key: str | None = None,
                dev_mode: bool = False, models_dir=None, llm: LLMClient | None = None,
-               deep_models: DeepModels | None = None, risk_model: RiskModel | None = None, prediction_model: "PredictionModel | list | tuple | None" = None) -> FastAPI:
+               deep_models: DeepModels | None = None, risk_model: RiskModel | None = None, prediction_model: "PredictionModel | list | tuple | None" = None,
+               child_report: bool | None = None) -> FastAPI:
     """Build the app. Raises security.ConfigError if no gateway key is configured (unless dev mode).
 
     The local LLM routes exist only when `llm` is given or THANZI_LLM_ENABLED=1 (an invalid LLM configuration
@@ -138,6 +145,7 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
     app.state.models, app.state.config, app.state.deep = loaded, cfg, loaded_deep
     app.state.risk, app.state.risk_state = loaded_risk, risk_state
     app.state.prediction, app.state.prediction_state = loaded_pred, pred_state
+    app.state.child_report = _child_report_enabled(child_report)
     app.state.metrics = metrics = Metrics()
 
     # ---- access control: before routing and before body validation, so nothing leaks to unauthenticated callers ----
@@ -228,6 +236,16 @@ def create_app(models: Models | None = None, gateway_key: str | None = None, aud
         if view == "audit" and not security.audit_ok(cfg, x_audit_key):
             return _error(403, "audit_forbidden", "The audit view is not available.")
         return JSONResponse(service.screen(body.model_dump(), view, app.state.models, app.state.deep, app.state.risk, app.state.prediction))
+
+    @app.post(REPORT_PATH, response_model=ChildReportResponse, tags=["screen"], responses={
+        401: {"model": ErrorBody}, 404: {"model": ErrorBody}, 413: {"model": ErrorBody}, 422: {"model": ErrorBody}})
+    def report(body: ScreenRequest):
+        """Individual child screening report from the same request as /v1/screen. Built from the worker view only: no HIV information, no audit key.
+        Screening is not diagnosis. Wording is a DRAFT pending clinical review. Escalate only: it never changes the classification, tier or referral.
+        Off unless THANZI_CHILD_REPORT_ENABLED=1 (404 report_off)."""
+        if not app.state.child_report:
+            return _error(404, "report_off", "The child report is switched off.")
+        return JSONResponse(service.child_report(body.model_dump(), app.state.models, app.state.deep, app.state.risk, app.state.prediction))
 
     @app.post(HOTSPOT_PATH, response_model=HotspotResponse, tags=["surveillance"], responses={
         401: {"model": ErrorBody}, 413: {"model": ErrorBody}, 422: {"model": ErrorBody}})

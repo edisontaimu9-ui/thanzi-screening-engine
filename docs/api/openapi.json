@@ -363,6 +363,85 @@
         "title": "BirthContext",
         "type": "object"
       },
+      "ChildReportResponse": {
+        "description": "Individual child screening report, built from the worker view only. Screening is not diagnosis. Wording is draft.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ReportAction"
+          },
+          "attention": {
+            "$ref": "#/components/schemas/ReportAttention"
+          },
+          "check_before_acting": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportCheck"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when there is nothing to check."
+          },
+          "growth": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportGrowth"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when previous_measurement was given on the under-5 route."
+          },
+          "limits": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limits",
+            "type": "array"
+          },
+          "not_a_diagnosis": {
+            "title": "Not A Diagnosis",
+            "type": "string"
+          },
+          "prediction": {
+            "$ref": "#/components/schemas/ReportPrediction"
+          },
+          "report_version": {
+            "title": "Report Version",
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ReportResult"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "wording": {
+            "$ref": "#/components/schemas/ReportWording"
+          }
+        },
+        "required": [
+          "report_version",
+          "wording",
+          "not_a_diagnosis",
+          "attention",
+          "result",
+          "action",
+          "check_before_acting",
+          "growth",
+          "prediction",
+          "limits",
+          "sources"
+        ],
+        "title": "ChildReportResponse",
+        "type": "object"
+      },
       "ClinicalAssessment": {
         "properties": {
           "needed": {
@@ -2212,6 +2291,433 @@
         "title": "RecordingError",
         "type": "object"
       },
+      "ReportAction": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          },
+          "steps": {
+            "description": "Preterm route: the actions of the preterm engine, as in the worker view.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "statement",
+          "steps"
+        ],
+        "title": "ReportAction",
+        "type": "object"
+      },
+      "ReportAttention": {
+        "properties": {
+          "changes_classification": {
+            "description": "Always false.",
+            "title": "Changes Classification",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "level": {
+            "description": "routine, raised, recheck or urgent. Set by the screening tier. A growth or prediction finding can lift routine to raised. Nothing lowers a level.",
+            "title": "Level",
+            "type": "string"
+          },
+          "raised_by_findings": {
+            "description": "true when a growth or prediction finding lifted the level above the one the screening tier sets.",
+            "title": "Raised By Findings",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "level",
+          "label",
+          "raised_by_findings",
+          "changes_classification"
+        ],
+        "title": "ReportAttention",
+        "type": "object"
+      },
+      "ReportCheck": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReportCheckItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "lead": {
+            "title": "Lead",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lead",
+          "items"
+        ],
+        "title": "ReportCheck",
+        "type": "object"
+      },
+      "ReportCheckItem": {
+        "properties": {
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "source": {
+            "description": "recording_error, review, clinical_assessment or warning.",
+            "title": "Source",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "text"
+        ],
+        "title": "ReportCheckItem",
+        "type": "object"
+      },
+      "ReportConcern": {
+        "properties": {
+          "plain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plain"
+          },
+          "stratum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stratum"
+          }
+        },
+        "title": "ReportConcern",
+        "type": "object"
+      },
+      "ReportGrowth": {
+        "properties": {
+          "assessed": {
+            "title": "Assessed",
+            "type": "boolean"
+          },
+          "lead": {
+            "title": "Lead",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "review_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
+          },
+          "review_suggested": {
+            "title": "Review Suggested",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "assessed",
+          "review_suggested",
+          "lead",
+          "messages"
+        ],
+        "title": "ReportGrowth",
+        "type": "object"
+      },
+      "ReportNotScored": {
+        "properties": {
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          }
+        },
+        "title": "ReportNotScored",
+        "type": "object"
+      },
+      "ReportPrediction": {
+        "description": "Only the status of the advisory estimate. No concern is NOT reassurance, and a target that was not scored has no estimate.",
+        "properties": {
+          "concerns": {
+            "items": {
+              "$ref": "#/components/schemas/ReportConcern"
+            },
+            "title": "Concerns",
+            "type": "array"
+          },
+          "drivers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Drivers",
+            "type": "array"
+          },
+          "elevated": {
+            "title": "Elevated",
+            "type": "boolean"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The consolidated prediction sentence, copied. Present only for a concern.",
+            "title": "Message"
+          },
+          "not_scored": {
+            "items": {
+              "$ref": "#/components/schemas/ReportNotScored"
+            },
+            "title": "Not Scored",
+            "type": "array"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          },
+          "status": {
+            "description": "concern, no_concern, not_scored or not_run.",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "elevated",
+          "statement",
+          "message",
+          "concerns",
+          "drivers",
+          "not_scored"
+        ],
+        "title": "ReportPrediction",
+        "type": "object"
+      },
+      "ReportResult": {
+        "description": "The screening result, copied from the worker view. Never recomputed.",
+        "properties": {
+          "birth_classification": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Preterm route only.",
+            "title": "Birth Classification"
+          },
+          "classification": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null on the preterm route.",
+            "title": "Classification"
+          },
+          "preterm_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Preterm route only.",
+            "title": "Preterm Level"
+          },
+          "programme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null for every moderate case, as in the worker view.",
+            "title": "Programme"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "route": {
+            "title": "Route",
+            "type": "string"
+          },
+          "rule_set_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Set Version"
+          },
+          "rules_fired": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rules Fired",
+            "type": "array"
+          },
+          "summary": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Summary",
+            "type": "array"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          }
+        },
+        "required": [
+          "route",
+          "classification",
+          "tier",
+          "programme",
+          "rules_fired",
+          "preterm_level",
+          "birth_classification",
+          "summary",
+          "reasons",
+          "rule_set_version"
+        ],
+        "title": "ReportResult",
+        "type": "object"
+      },
+      "ReportWording": {
+        "properties": {
+          "notice": {
+            "title": "Notice",
+            "type": "string"
+          },
+          "status": {
+            "description": "draft_pending_clinical_review until the wording is signed off.",
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "status",
+          "notice"
+        ],
+        "title": "ReportWording",
+        "type": "object"
+      },
       "Review": {
         "properties": {
           "needed": {
@@ -3128,6 +3634,83 @@
         "summary": "Metrics Snapshot",
         "tags": [
           "ops"
+        ]
+      }
+    },
+    "/v1/report": {
+      "post": {
+        "description": "Individual child screening report from the same request as /v1/screen. Built from the worker view only: no HIV information, no audit key.\nScreening is not diagnosis. Wording is a DRAFT pending clinical review. Escalate only: it never changes the classification, tier or referral.\nOff unless THANZI_CHILD_REPORT_ENABLED=1 (404 report_off).",
+        "operationId": "report_v1_report_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "GatewayKey": []
+          }
+        ],
+        "summary": "Report",
+        "tags": [
+          "screen"
         ]
       }
     },

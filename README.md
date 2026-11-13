@@ -24,6 +24,8 @@ advisory data-quality and growth flags.
 - Area-level hotspot surveillance (add-on): districts with SAM+MAM prevalence above a reference rate, from counts the
   caller has already grouped. Advisory only. See [docs/modules/surveillance.md](docs/modules/surveillance.md).
 - Plain-language worker summary and a full audit trace.
+- Individual child report (add-on, off by default): one report per child from the worker view, escalate only, with draft wording awaiting clinical review.
+  See [docs/modules/child-report.md](docs/modules/child-report.md).
 - Optional local language-model client (disabled by default) and a free-text note checker (library only).
 
 ## Principles
@@ -67,6 +69,7 @@ The service refuses to start without `THANZI_GATEWAY_KEY`.
 | `GET /v1/metrics` | gateway | Request counts and `/v1/screen` latency |
 | `POST /v1/screen?view=worker` | gateway | Screen one child (default view) |
 | `POST /v1/screen?view=audit` | gateway + audit | Full detail, may contain HIV information |
+| `POST /v1/report` | gateway | Individual child report (off unless `THANZI_CHILD_REPORT_ENABLED=1`, draft wording) |
 | `POST /v1/surveillance/hotspots` | gateway | District hotspot assessment from grouped counts (advisory) |
 | `GET /v1/llm/health`, `POST /v1/llm/generate` | gateway | Only when `THANZI_LLM_ENABLED=1` |
 
@@ -83,6 +86,7 @@ src/thanzi_screen/
   surveillance/ District hotspot assessment from grouped counts
   ml/         Recording-error flags, neural network (dl), note checker (nlp), advisory risk model (risk)
   explain/    Worker summary and audit trace
+  childreport/ Individual child report and its draft wording
   api/        FastAPI service, security, metrics
   schemas/    Request and response models (the API contract)
   llm/        Optional local language-model client
@@ -107,7 +111,8 @@ tests/        Unit, property, robustness, API and safety tests
 | Monitoring and maintenance | [docs/operations.md](docs/operations.md) |
 | Testing and rule traceability | [docs/testing/test-report.md](docs/testing/test-report.md), [docs/testing/traceability.md](docs/testing/traceability.md) |
 | References and licences | [docs/references/register.md](docs/references/register.md) |
-| Modules | `docs/modules/`: anthro, rules, preterm, growth, surveillance, ml, ml-risk, dl, nlp, explain, data, llm |
+| Modules | `docs/modules/`: anthro, rules, preterm, growth, surveillance, ml, ml-risk, dl, nlp, explain, child-report, data, llm |
+| Wording review sheet | [docs/review/child-report-wording.md](docs/review/child-report-wording.md) |
 | Model cards | [models/MODEL_CARD.md](models/MODEL_CARD.md), [models/DL_MODEL_CARD.md](models/DL_MODEL_CARD.md) |
 | Changes | [CHANGELOG.md](CHANGELOG.md) |
 
